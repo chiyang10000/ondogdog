@@ -1,0 +1,7 @@
+settings set stop-line-count-before 5
+settings set stop-line-count-after 15
+settings set stop-disassembly-count 15
+# command script import /Users/admin/Library/Python/2.7/lib/python/site-packages/voltron/entry.py
+settings set frame-format "frame #${frame.index}: { \033[36m${module.file.basename}\033[39m  {\033[32m${line.file.basename}:${line.number}\033[39m} {` \033[33m${function.name-with-args} \033[39m${function.pc-offset}}}\n"
+
+settings set thread-format "thread #${thread.index}: tid = ${thread.id}{ \033[36m${module.file.basename}\033[39m{`${function.name-with-args}${function.pc-offset}}}{ at ${line.file.basename}:${line.number}}{, name = '\033[34m${thread.name}}\033[39m{, queue = '${thread.queue}}{, stop reason = ${thread.stop-reason}}{\nReturn value: ${thread.return-value}}\n"

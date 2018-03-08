@@ -1,0 +1,10 @@
+set -x
+hh ()
+{
+    cp ~/dev/incubator-hawq/$1 ~/dev/wcy-hawq/$1
+}
+for number in $@
+do
+	hh "$number "
+done
+
