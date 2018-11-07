@@ -1,0 +1,4 @@
+bin/cpplint.py
+bin/lava
+config/git-completion.bash
+config/git-prompt.sh

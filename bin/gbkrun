@@ -1,0 +1,14 @@
+#!/bin/bash
+# 使用GBK Profile
+echo -e "\033]50;SetProfile=GBK\a"
+# 环境编码切换为GBK
+export LANG=zh_CN.GBK
+export LC_ALL=zh_CN.GBK
+# 更改当前 iTerm2 tab title
+echo -ne "\033]0;"$@"\007"
+$@
+echo -ne "\033]0;"${PWD/#$HOME/~}"\007"
+# GBK任务完成后，自动切换回默认编码（UTF-8）
+echo -e "\033]50;SetProfile=Default\a"
+export LANG=zh_CN.UTF-8
+export LC_ALL=zh_CN.UTF-8

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+<language name="Object File">
+
+</language>
+<language name="Assembly Source File">
+
+</language>
+<language name="C++ Source File">
+<includepath workspace_path="true">/hornet/dbcommon/build/codegen/src</includepath>
+<includepath workspace_path="true">/hornet/dbcommon/src</includepath>
+<includepath workspace_path="true">/hornet/executor/src</includepath>
+<includepath workspace_path="true">/hornet/interconnect/src</includepath>
+<includepath workspace_path="true">/hornet/storage/src</includepath>
+<includepath workspace_path="true">/hornet/univplan/build/src</includepath>
+<includepath workspace_path="true">/hornet/univplan/src</includepath>
+<includepath workspace_path="true">/hornet/kv/build/src</includepath>
+<includepath workspace_path="true">/hornet/kv/src</includepath>
+<includepath workspace_path="true">/hornet/kv/test/unit/kv_server</includepath>
+<includepath workspace_path="true">/hornet/rpc/build/src</includepath>
+<includepath workspace_path="true">/hornet/rpc/src</includepath>
+<includepath workspace_path="true">/hornet/magma/build/src</includepath>
+<includepath workspace_path="true">/hornet/magma/src</includepath>
+<includepath workspace_path="true">/rocksdb/include</includepath>
+<includepath>/opt/dependency/package/include</includepath>
+
+</language>
+<language name="C Source File">
+
+</language>
+</section>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.Macros">
+<language name="Object File">
+
+</language>
+<language name="Assembly Source File">
+
+</language>
+<language name="C++ Source File">
+<macro>
+<name>__cplusplus</name><value>201103L</value>
+</macro>
+
+</language>
+<language name="C Source File">
+
+</language>
+</section>
+</cdtprojectproperties>
