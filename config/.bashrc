@@ -56,8 +56,8 @@ instrument() {
 	instruments -l $1 -t Time\ Profiler -p `hawq-qe 2`
 }
 format-code() {
-	git diff head --name-only| xargs clang-format -i -style=google
-	git diff head --name-only| xargs cpplint.py
+	git diff HEAD --name-only| xargs clang-format -i -style=google
+	git diff HEAD --name-only| xargs cpplint.py
 }
 
 find-latest() {
@@ -397,7 +397,7 @@ linux-login () {
 	$(docker ps| grep yizhiyang| cut -d ' ' -f1| tail -n 1) /bin/bash
 }
 docker-clean() {
-	sudo docker ps -a|cut -d ' ' -f 1|xargs sudo docker stop
+	sudo docker ps -a|grep Dead|cut -d ' ' -f 1|xargs sudo docker rm
 	sudo docker ps -a|grep Exit|cut -d ' ' -f 1|xargs sudo docker rm
 	sudo docker images|grep none|tr -s ' '|cut -d ' ' -f 3|xargs sudo docker rmi
 }
