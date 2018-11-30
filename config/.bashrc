@@ -28,11 +28,7 @@ export LC_ALL=en_US.utf-8
 export CC=clang
 export CXX=clang++
 export DEPENDENCY_PATH=/opt/dependency/package
-
-export CPATH=$DEPENDENCY_PATH/include:/usr/local/include
-export LIBRARY_PATH=$DEPENDENCY_PATH/lib
-export DYLD_FALLBACK_LIBRARY_PATH=$DEPENDENCY_PATH/lib
-export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/dependency/package/lib/:/usr/local/lib
+export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/dependency-Darwin/package/lib/:/usr/local/lib
 
 export GOPATH=~/dev/goprojects
 export PATH=$HOME/yizhiyang/bin:$HOME/yizhiyang/usr/bin:/usr/local/sbin/:$GOPATH:/Library/Developer/CommandLineTools/usr/bin/:/bin/:$PATH
@@ -352,7 +348,6 @@ hornet-coverage() {
 	open CodeCoverageReport/index.html
 }
 hornet-test() {
-	unset DYLD_LIBRARY_PATH
 	if [ -n "$1" ]; then
 		if [[ `pwd` =~ "magma" ]]; then
 			make -j8 unit && test/unit/magma_server/unit --gtest_filter=$1;
@@ -364,7 +359,6 @@ hornet-test() {
 	fi
 }
 hornet-test-list() {
-	unset DYLD_LIBRARY_PATH
 	if [[ `pwd` =~ "magma" ]]; then
 		make -j8 unit && test/unit/magma_server/unit --gtest_list_tests
 	else

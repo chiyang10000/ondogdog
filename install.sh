@@ -3,7 +3,6 @@ case $1 in
 	# rm -f ~/.bashrc
 	# rm -f ~/.bash_profile
 	rm -f ~/.vimrc
-	rm -rf ~/.vim
 	rm -rf ~/.lldbinit
         ;;
     *)
@@ -12,10 +11,10 @@ case $1 in
 esac
 git config --global color.ui auto
 git config --global core.editor vim
-git config --global push.default simple
-# git config --global core.autocrlf true
 git config --global core.safecrlf true
 git config --global credential.helper store
+# git config --global push.default simple
+# git config --global core.autocrlf true
 
 rm -rf ~/yizhiyang/config/git-*
 curl -o ~/yizhiyang/config/git-completion.bash https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash
