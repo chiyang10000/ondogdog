@@ -373,22 +373,29 @@ hornet-test-list() {
 #   Docker on Hawq
 #
 #-------------------------------------------------------------------------------
-linux-start ()
+yizhiyang-start()
 {
-docker run -d \
-	-v /Users/$USER/yizhiyang:/home/gpadmin/yizhiyang \
-	-v /Users/$USER/dev-linux/dependency:/opt/dependency \
-	-v /Users/$USER/dev-linux/hawq:/home/gpadmin/dev/hawq \
-	-v /Users/$USER/dev-linux/hornet-release:/home/gpadmin/dev/release/hornet \
-	-v /Users/$USER/dev-linux/hornet-debug:/home/gpadmin/dev/hornet \
-	-v /Users/$USER/dev/hornet:/home/gpadmin/hornet \
-	-v /Users/$USER/dev-linux/thirdparty:/home/gpadmin/dev/thirdparty \
-	-v /Users/$USER/dev-linux/libhdfs3:/home/gpadmin/dev/libhdfs3 \
-	--privileged=true hub.oushu.io/hawq:yizhiyang
+	sudo docker run -d -t --entrypoint bash                        \
+	-v /var/run/docker.sock:/var/run/docker.sock                   \
+	-v $HOME/dev-linux/dependency:/root/dependency                 \
+	-v $HOME/hadoopdepency/m2:/root/.m2                            \
+	-v $HOME/dev-linux/:/root/hawq                                 \
+	-v $HOME/dev/:/root/dev                                        \
+	-e BUILD_OPTION=debug                                          \
+	-e BUILD_NUMBER=38324                                          \
+	-e DB_VERSION=14122                                            \
+	-e MAKE_COMPONET=hawq                                          \
+	-e OVERWRITE_OPTION=YES                                        \
+	-e PS1='[\u@\h \w]\$ '                                         \
+	--name yizhiyang                                               \
+	--privileged=true hub.oushu-tech.com/hawq_compile:v4.0.0.0
 }
-linux-login () {
-	docker exec -e I_AM_DOCKER=1 -it \
-	$(docker ps| grep yizhiyang| cut -d ' ' -f1| tail -n 1) /bin/bash
+yizhiyang-login() {
+	sudo docker exec -it yizhiyang /bin/bash
+}
+yizhiyang-stop() {
+	sudo docker stop yizhiyang
+	sudo docker rm yizhiyang
 }
 docker-clean() {
 	sudo docker ps -a|grep Dead|cut -d ' ' -f 1|xargs sudo docker rm
