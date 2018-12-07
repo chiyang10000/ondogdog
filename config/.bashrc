@@ -342,7 +342,7 @@ hornet-coverage() {
 	lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
 	lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
 	'*/test/unit/*' '*/testutil/*' \
-	'*/protos/*' '*/proto/*' \
+	'*/protos/*' '*/proto/*' '*/thrift/*' \
 	--output-file CodeCoverage.info.cleaned
 	genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
 	open CodeCoverageReport/index.html
