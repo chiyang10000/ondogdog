@@ -1,0 +1,21 @@
+if [ -n "$1" ]; then
+	DIR=$1
+else
+	DIR=`pwd`
+fi
+
+echo -e "\033[32;1m$DIR\033[0m"
+echo
+
+for i in `find -H $DIR -maxdepth 1`
+do
+	# test ! -d $i && continue
+	test ! -d $i/.git && continue
+
+	echo -e "\033[33;1m$i\033[0m"
+	cd $i
+	git pull
+	git log -n 1
+	cd $DIR
+	echo
+done
