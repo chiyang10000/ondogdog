@@ -18,6 +18,7 @@ HORNET_SRC=~/dev/hornet
 
 alias vi=vim
 alias grep='grep --color'
+
 export PGDATABASE=postgres
 alias psql="psql -P pager=off -v ON_ERROR_STOP=1 -v \"file_format=FORMAT 'orc'\""
 
@@ -37,7 +38,6 @@ export PATH="$HOME/.cargo/bin:$PATH"
 git-writer() {
 	git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame  --line-porcelain HEAD |grep  "^author-mail"|sort|uniq -c|sort -nr
 }
-
 
 mytime() {
 	ts_start=`date +%s%3N`
@@ -74,14 +74,14 @@ alias lldb-recent='lldb -c /cores/`ls -rt /cores| tail -n 2| head -n 1`'
 alias vi-latest='vi `ls -1t|head -1`'
 alias cutf="tr -s ' '| cut -d ' ' -f "
 
-alias log-tpch='cd ~/dev/hawq/src/test/feature/tpchtest'
-alias log-segment='cd ~/hawq-data-directory/segmentdd/pg_log'
-alias log-master='cd ~/hawq-data-directory/masterdd/pg_log'
 alias log-hdfs='cd /usr/local/Cellar/hadoop/3.1.0/libexec/logs/'
+alias log-tpch='cd ~/dev/hawq/src/test/feature/tpchtest'
+alias log-master='cd ~/hawq-data-directory/masterdd/pg_log'
+alias log-segment='cd ~/hawq-data-directory/segmentdd/pg_log'
 
 alias vi-tpch='vi ~/dev/hawq/src/test/feature/tpchtest/tpchorc_newqe.xml'
-alias oushudb='source /usr/local/hawq/greenplum_path.sh'
 alias gpdb='source /usr/local/gpdb/greenplum_path.sh'
+alias oushudb='source /usr/local/hawq/greenplum_path.sh'
 alias apache-hawq='source /usr/local/apache-hawq/greenplum_path.sh'
 
 alias apache-diff='git diff oushu/wcy-merge-apache'
@@ -223,7 +223,6 @@ spark-sql() {
 #   Hawq 
 #
 #-------------------------------------------------------------------------------
-alias hawqps="ps -eo pid,ppid,start,%cpu,command|sort -k3,2|grep -E '([^ ]*[p]ostgres[ :]|[m]agma_server |[p]sql )'"
 hawq-qe() {
 	if [ -n "$1" ]; then
 		ps -ef| grep [p]ostgres.*con.*seg| tr -s ' '| cut -d ' ' -f 3| 
@@ -286,6 +285,7 @@ hawq-restart () {
 		hawq-config default_hash_table_bucket_number $val;
 		hawq-config default_magma_hash_table_nvseg_per_node $val;
 	fi;
+	hawq-config gp_vmem_idle_resource_timeout 3600000;
 	hawq-stop
 	hawq start cluster -a -M immediate
 }
