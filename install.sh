@@ -12,6 +12,7 @@ git config --global core.editor vim
 git config --global core.safecrlf true
 git config --global push.default current
 git config --global credential.helper store
+git config --global blame.date short
 
 rm -rf ~/yizhiyang/config/git-*
 curl -k -o ~/yizhiyang/config/git-completion.bash https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash
