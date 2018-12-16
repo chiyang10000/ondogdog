@@ -16,27 +16,29 @@ my $value = $ARGV[1];
 
 # Add property
 if (!$dom->exists("//name[text()='$name']/ancestor::property")) {
-	say $name, ": = ", $value;
-
-	my $nameElem = $dom->createElement('name');
-	$nameElem->appendText("$name");
-	my $valueElem = $dom->createElement('value');
-	$valueElem->appendText("$value");
-
-	my $propElem = $dom->createElement('property');
-	$propElem->appendChild($nameElem);
-	$propElem->appendChild($valueElem);
-
-	my $configElem = $dom->documentElement;
-	$configElem->appendChild($propElem);
-}
-else {
-# Modify property
-foreach my $propElem ($dom->findnodes("//name[text()='$name']/ancestor::property")) {
-	my $valueElem = $propElem->getChildrenByTagName('value')->get_node(0);
-	say $name, ": ", $valueElem->textContent, "  =>  ", $value;
-	$valueElem->firstChild->setData($value);
-}
+	if ($value) {
+		say $name, ": = ", $value;
+	
+		my $nameElem = $dom->createElement('name');
+		$nameElem->appendText("$name");
+		my $valueElem = $dom->createElement('value');
+		$valueElem->appendText("$value");
+	
+		my $propElem = $dom->createElement('property');
+		$propElem->appendChild($nameElem);
+		$propElem->appendChild($valueElem);
+	
+		my $configElem = $dom->documentElement;
+		$configElem->appendChild($propElem);
+	}
+} else {
+	# Modify property
+	foreach my $propElem ($dom->findnodes("//name[text()='$name']/ancestor::property")) {
+		my $valueElem = $propElem->getChildrenByTagName('value')->get_node(0);
+		if (!$value) { $value=$valueElem->textContent; }
+		say $name, ": ", $valueElem->textContent, "  =>  ", $value;
+		$valueElem->firstChild->setData($value);
+	}
 }
 
 

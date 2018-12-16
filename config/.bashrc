@@ -235,11 +235,14 @@ hawq-qe() {
 hawq-qd() {
 	ps -ef| grep [p]ostgres.*con.*cmd | tr -s ' '| cut -d ' ' -f 3
 }
+hawq_magma_locations_master=/db_data/magma_master
+hawq_magma_locations_segment=/db_data/magma_segment
 magma-clean() {
 	killall -9 magma_server
-	rm -rf /tmp/magma_*
-	mkdir -p /tmp/magma_master
-	mkdir -p /tmp/magma_segment
+	rm -rf $hawq_magma_locations_master
+	rm -rf $hawq_magma_locations_segment
+	mkdir -p $hawq_magma_locations_master
+	mkdir -p $hawq_magma_locations_segment
 }
 hawq-clean() {
 	ps -ef|grep [p]ostgres|tr -s ' '| cut -d ' ' -f3|xargs kill -9
@@ -264,12 +267,14 @@ magma-init() {
 	hawq-restart
 }
 hawq-init() {
-	# rm -rf /cores/*
+	rm -rf /cores/*
 	magma-clean
 	hawq-clean
-	if [ $system == Darwin ]; then
-		: # cp ~/yizhiyang/config/hawq-site.xml /usr/local/hawq/etc
-	fi
+	hawq-config hawq_rm_nvseg_perquery_perseg_limit 6
+	hawq-config default_hash_table_bucket_number 6
+	hawq-config default_magma_hash_table_nvseg_per_node 8
+	hawq-config hawq_magma_locations_master file://$hawq_magma_locations_master
+	hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
 	hawq init cluster -a
 	hawq-setup-feature-test
 }
@@ -279,20 +284,21 @@ hawq-stop() {
 }
 hawq-restart () {
 	if [ "$#" -eq 1 ]; then
-		val=$1;
-		echo "set QE num to $1";
-		hawq-config hawq_rm_nvseg_perquery_perseg_limit $val;
-		hawq-config default_hash_table_bucket_number $val;
-		hawq-config default_magma_hash_table_nvseg_per_node $val;
-	fi;
-	hawq-config gp_vmem_idle_resource_timeout 3600000;
+		val=$1
+		echo "set QE num to $1"
+		hawq-config hawq_rm_nvseg_perquery_perseg_limit $val
+		hawq-config default_hash_table_bucket_number $val
+		hawq-config default_magma_hash_table_nvseg_per_node $val
+	else
+		hawq-config hawq_rm_nvseg_perquery_perseg_limit
+		hawq-config default_hash_table_bucket_number
+		hawq-config default_magma_hash_table_nvseg_per_node
+	fi
+	hawq-config gp_vmem_idle_resource_timeout 3600000
+	hawq-config hawq_magma_locations_master file://$hawq_magma_locations_master
+	hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
 	hawq-stop
 	hawq start cluster -a -M immediate
-}
-hawq-install() {
-	cd ~/dev/hawq
-	make -j8 install && hawq-restart 2
-	cd -
 }
 hawq-setup-feature-test() {
 	TEST_DB_NAME="hawq_feature_test_db";
