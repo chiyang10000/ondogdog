@@ -362,7 +362,7 @@ hornet-test() {
 			make -j8 unit && test/unit/unit --gtest_filter=$1;
 		fi
 	else
-		make -j8 unittest
+		make -j8 unit && make punittest
 	fi
 }
 hornet-test-list() {
