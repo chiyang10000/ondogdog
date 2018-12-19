@@ -336,6 +336,16 @@ hawq-test() {
 #  Hornet 
 #
 #-------------------------------------------------------------------------------
+gen-coverage() {
+	lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
+	lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
+	'*/build/src/storage/format/orc/*' \
+	'*/test/unit/*' '*/testutil/*' \
+	'*/protos/*' '*/proto/*' '*/thrift/*' \
+	--output-file CodeCoverage.info.cleaned
+	genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
+	open CodeCoverageReport/index.html
+}
 hornet-debug() {
 	cd ~/dev/hornet && make incremental && cd -
 }
@@ -345,14 +355,7 @@ hornet-release() {
 hornet-coverage() {
 	cd ~/dev/coverage/hornet && make incremental && cd -
 	cd ~/dev/coverage/hornet
-	lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
-	lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
-	'*/build/src/storage/format/orc/*' \
-	'*/test/unit/*' '*/testutil/*' \
-	'*/protos/*' '*/proto/*' '*/thrift/*' \
-	--output-file CodeCoverage.info.cleaned
-	genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
-	open CodeCoverageReport/index.html
+	gen-coverage
 }
 hornet-test() {
 	if [ -n "$1" ]; then
