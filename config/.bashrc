@@ -76,6 +76,7 @@ alias cutf="tr -s ' '| cut -d ' ' -f "
 
 alias log-hdfs='cd /usr/local/Cellar/hadoop/3.1.0/libexec/logs/'
 alias log-tpch='cd ~/dev/hawq/src/test/feature/tpchtest'
+alias log-newqe='cd ~/dev/hawq/src/test/feature/newexecutor'
 alias log-master='cd ~/hawq-data-directory/masterdd/pg_log'
 alias log-segment='cd ~/hawq-data-directory/segmentdd/pg_log'
 

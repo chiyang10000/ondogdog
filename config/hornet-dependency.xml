@@ -20,6 +20,7 @@
 <includepath workspace_path="true">/hornet/magma/build/src</includepath>
 <includepath workspace_path="true">/hornet/magma/src</includepath>
 <includepath workspace_path="true">/rocksdb/include</includepath>
+<includepath>/opt/dependency/package/include</includepath>
 <includepath>/opt/dependency-Darwin/package/include</includepath>
 
 </language>

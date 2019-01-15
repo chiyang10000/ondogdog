@@ -10,6 +10,7 @@
 <language name="C++ Source File">
 <includepath workspace_path="true">/hawq/src/include</includepath>
 <includepath workspace_path="true">/hawq/src/test/feature</includepath>
+<includepath>/opt/dependency/package/include</includepath>
 <includepath>/opt/dependency-Darwin/package/include</includepath>
 
 </language>
@@ -23,8 +24,8 @@
 <includepath workspace_path="true">/hornet/scheduler</includepath>
 <includepath workspace_path="true">/hawq/src/include</includepath>
 <includepath workspace_path="true">/hawq/src/backend/gp_libpq_fe</includepath>
-<includepath>/opt/dependency-Darwin/package/include</includepath>
 <includepath>/opt/dependency/package/include</includepath>
+<includepath>/opt/dependency-Darwin/package/include</includepath>
 
 </language>
 </section>
