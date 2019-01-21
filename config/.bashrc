@@ -105,40 +105,6 @@ ci-get() {
 	find ~/.lava -name *.json |xargs sed -i '' "s|/var/jenkins_home/|$HOME/|g"
 	find ~/.lava -name *.json |xargs sed -i '' "s|/Users/[^/]*/|$HOME/|g"
 }
-ci-upload-lib() {
-		local lib_path=~/dev-linux/dependency/package/lib
-		case $2 in
-		dbcommon)
-			lava scp $lib_path/libdbcommon.so $1:/tmp/
-		;;
-		univplan)
-			lava scp $lib_path/libunivplan.so $1:/tmp/
-		;;
-		interconnect)
-			lava scp $lib_path/libinterconnect.so $1:/tmp/
-		;;
-		kv-client)
-			lava scp $lib_path/libkv-client.so $1:/tmp/
-		;;
-		storage)
-			lava scp $lib_path/libstorage.so $1:/tmp/
-		;;
-		executor)
-			lava scp $lib_path/libexecutor.so $1:/tmp/
-		;;
-		kv-server)
-			lava scp $lib_path/libkv-server.so $1:/tmp/
-		;;
-		*)
-			lava scp $lib_path/libdbcommon.so $1:/tmp/
-			lava scp $lib_path/libunivplan.so $1:/tmp/
-			lava scp $lib_path/libinterconnect.so $1:/tmp/
-			lava scp $lib_path/libkv-client.so $1:/tmp/
-			lava scp $lib_path/libstorage.so $1:/tmp/
-			lava scp $lib_path/libexecutor.so $1:/tmp/
-			lava scp $lib_path/libkv-server.so $1:/tmp/
-		esac
-}
 lava-clean() {
 	nodes=`lava ls| grep Error| tr -s ' '| cut -d ' ' -f 1`
 	for node in $nodes
@@ -322,9 +288,13 @@ hawq-test() {
 	TEST_DB_NAME="hawq_feature_test_db";
 	export PGDATABASE=$TEST_DB_NAME;
 	if [ -n "$1" ]; then
-		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=$1;
+		bash -c "
+		source /usr/local/hawq/greenplum_path.sh
+		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=$1";
 	else
-		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=TestNewExec*;
+		bash -c "
+		source /usr/local/hawq/greenplum_path.sh
+		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=TestNewExec*";
 	fi
 	cd -
 	export PGDATABASE=postgres;
@@ -447,3 +417,4 @@ fi
 
 # Iterm
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
