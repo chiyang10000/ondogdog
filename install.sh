@@ -15,7 +15,7 @@ git config --global credential.helper store
 git config --global blame.date short
 
 rm -rf ~/yizhiyang/config/git-*
-curl -k -o ~/yizhiyang/config/git-completion.bash https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash
+curl -k -o ~/yizhiyang/config/git-completion.bash https://raw.githubusercontent.com/git/git/v2.17.0/contrib/completion/git-completion.bash
 curl -k -o ~/yizhiyang/config/git-prompt.sh https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh
 
 rm -rf ~/yizhiyang/bin/cpplint.py

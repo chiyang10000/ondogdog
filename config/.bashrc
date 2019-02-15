@@ -406,7 +406,7 @@ export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5
 # Disable git prompt in docker to improve response time.
 if [ -f ~/yizhiyang/config/git-completion.bash -a -z "${I_AM_DOCKER+x}" ]
 then
-	# source ~/yizhiyang/config/git-completion.bash
+	source ~/yizhiyang/config/git-completion.bash
 	source ~/yizhiyang/config/git-prompt.sh
 	GIT_PS1_SHOWDIRTYSTATE=true
 	GIT_PS1_SHOWUNTRACKEDFILES=true
