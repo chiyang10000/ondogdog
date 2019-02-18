@@ -10,6 +10,7 @@ esac
 git config --global color.ui auto
 git config --global core.editor vim
 git config --global core.safecrlf true
+git config --global pull.ff only
 git config --global push.default current
 git config --global credential.helper store
 git config --global blame.date short

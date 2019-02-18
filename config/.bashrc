@@ -349,6 +349,14 @@ hornet-test-list() {
 		make -j8 unit && test/unit/unit --gtest_list_tests
 	fi
 }
+hornet-test-lldb() {
+	if [[ `pwd` =~ "magma" ]]; then
+		make -j8 unit && lldb test/unit/magma_server/unit -- --gtest_filter=$1;
+	else
+		make -j8 unit && lldb test/unit/unit -- --gtest_filter=$1;
+	fi
+}
+
 
 
 
