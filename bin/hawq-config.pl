@@ -35,9 +35,12 @@ if (!$dom->exists("//name[text()='$name']/ancestor::property")) {
 	# Modify property
 	foreach my $propElem ($dom->findnodes("//name[text()='$name']/ancestor::property")) {
 		my $valueElem = $propElem->getChildrenByTagName('value')->get_node(0);
-		if (!$value) { $value=$valueElem->textContent; }
-		say $name, ": ", $valueElem->textContent, "  =>  ", $value;
-		$valueElem->firstChild->setData($value);
+		if (!$value) {
+			say $name, ": ", $valueElem->textContent;
+		} else {
+			say $name, ": ", $valueElem->textContent, "  =>  ", $value;
+			$valueElem->firstChild->setData($value);
+		}
 	}
 }
 
