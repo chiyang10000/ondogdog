@@ -10,16 +10,16 @@
 <language name="C++ Source File">
 <includepath workspace_path="true">/hornet/dbcommon/build/codegen/src</includepath>
 <includepath workspace_path="true">/hornet/dbcommon/src</includepath>
-<includepath workspace_path="true">/hornet/executor/src</includepath>
-<includepath workspace_path="true">/hornet/interconnect/src</includepath>
-<includepath workspace_path="true">/hornet/storage/build/src</includepath>
-<includepath workspace_path="true">/hornet/storage/src</includepath>
 <includepath workspace_path="true">/hornet/univplan/build/src</includepath>
 <includepath workspace_path="true">/hornet/univplan/src</includepath>
-<includepath workspace_path="true">/hornet/scheduler/src</includepath>
+<includepath workspace_path="true">/hornet/interconnect/src</includepath>
 <includepath workspace_path="true">/hornet/magma/build/src</includepath>
 <includepath workspace_path="true">/hornet/magma/src</includepath>
-<includepath workspace_path="true">/rocksdb/include</includepath>
+<includepath workspace_path="true">/hornet/storage/build/src</includepath>
+<includepath workspace_path="true">/hornet/storage/src</includepath>
+<includepath workspace_path="true">/hornet/executor/src</includepath>
+<includepath workspace_path="true">/hornet/scheduler/build/src</includepath>
+<includepath workspace_path="true">/hornet/scheduler/src</includepath>
 <includepath>/opt/dependency/package/include</includepath>
 <includepath>/opt/dependency-Darwin/package/include</includepath>
 
@@ -39,9 +39,15 @@
 <macro>
 <name>__cplusplus</name><value>201103L</value>
 </macro>
+<macro>
+<name>DATA_DIR</name><value>""</value>
+</macro>
 
 </language>
 <language name="C Source File">
+<macro>
+<name>DATA_DIR</name><value>""</value>
+</macro>
 
 </language>
 </section>

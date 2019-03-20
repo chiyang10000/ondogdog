@@ -1,6 +1,7 @@
 filetype plugin indent on
 syntax on
 set nu
+set incsearch
 set hlsearch
 set clipboard=unnamed
 set mouse=i
