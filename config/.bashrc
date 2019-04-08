@@ -152,8 +152,10 @@ hawq-qe() {
 hawq-qd() {
 	ps -ef| grep [p]ostgres.*con.*cmd | tr -s ' '| cut -d ' ' -f 3
 }
-hawq_magma_locations_master=/db_data/magma_master
-hawq_magma_locations_segment=/db_data/magma_segment
+hawq_magma_locations_master=/db_data/hawq-data-directory/magma_master
+hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
+hawq_master_directory=/db_data/hawq-data-directory/masterdd
+hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
 magma-clean() {
 	killall -9 magma_server
 	rm -rf $hawq_magma_locations_master
@@ -163,7 +165,10 @@ magma-clean() {
 }
 hawq-clean() {
 	ps -ef|grep [p]ostgres|tr -s ' '| cut -d ' ' -f3|xargs kill -9
-	rm -rf ~/hawq-*
+	rm -rf $hawq_master_directory
+	rm -rf $hawq_segment_directory
+	mkdir -p $hawq_master_directory
+	mkdir -p $hawq_segment_directory
 	hdfs dfs -rmr /hawq_default*
 	if [ $system == Linux ]; then
 		rm -rf /data*/hawq/gsmaster/*
@@ -193,11 +198,14 @@ hawq-init() {
 	hawq-config default_magma_hash_table_nvseg_per_node 8
 	hawq-config hawq_magma_locations_master file://$hawq_magma_locations_master
 	hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
+	hawq-config hawq_master_directory $hawq_master_directory
+	hawq-config hawq_segment_directory $hawq_segment_directory
 	hawq init cluster -a --locale='C' --lc-collate='C' \
         --lc-ctype='C' --lc-messages='C' \
         --lc-monetary='C' --lc-numeric='C' \
         --lc-time='C'
 	hawq-setup-feature-test
+	rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
 	ps -ef|grep [p]ostgres|tr -s ' '| cut -d ' ' -f3|xargs kill -9
@@ -219,6 +227,8 @@ hawq-restart () {
 	hawq-config gp_vmem_idle_resource_timeout 3600000
 	hawq-config hawq_magma_locations_master file://$hawq_magma_locations_master
 	hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
+	hawq-config hawq_master_directory $hawq_master_directory
+	hawq-config hawq_segment_directory $hawq_segment_directory
 	hawq-stop
 	hawq start cluster -a -M immediate
 }
