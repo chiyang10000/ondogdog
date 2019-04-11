@@ -259,7 +259,7 @@ hawq-test() {
 	else
 		bash -c "
 		source /usr/local/hawq/greenplum_path.sh
-		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=TestNewExec*";
+		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=TestNewExec*:-*MagmaTP*";
 	fi
 	cd -
 	export PGDATABASE=postgres;
@@ -332,7 +332,7 @@ yizhiyang-start()
 	sudo docker run -d -t --entrypoint bash                        \
 	-v /var/run/docker.sock:/var/run/docker.sock                   \
 	-v $HOME/dev-linux/dependency:/root/dependency                 \
-	-v $HOME/hadoopdepency/m2:/root/.m2                            \
+	-v $HOME/.m2:/root/.m2                                         \
 	-v $HOME/dev-linux/:/root/hawq                                 \
 	-v $HOME/dev/:/root/dev                                        \
 	-e BUILD_OPTION=debug                                          \
