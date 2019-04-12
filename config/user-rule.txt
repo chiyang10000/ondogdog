@@ -1,0 +1,26 @@
+! Put user rules line by line in this file.
+! See https://adblockplus.org/en/filter-cheatsheet
+apache.org
+apple.com
+atlassian.com
+blog.jobbole.com
+cockroachlabs.com
+coursera.org
+cplusplus.com
+cppreference.com
+digitalocean.com
+disqus.com
+docker.com
+git-scm.com
+github.com
+grpc.io
+keybr.com
+llvm.org
+rescuetime.com
+semanticscholar.org
+sourceforge.net
+sqlalchemy.org
+stackexchange.com
+stackoverflow.com
+suse.com
+dbaref.com
