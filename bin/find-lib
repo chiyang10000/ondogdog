@@ -1,0 +1,11 @@
+#!/bin/bash
+
+count=0
+for lib in $(find /opt/dependency/package/lib -name '*dylib'); do
+  if [[ -n $(otool -L $lib | sed -n '2{p;q;}' | grep package) ]]; then
+    # echo $lib
+    otool -L $lib
+    count=$((count + 1))
+  fi
+done
+echo $count

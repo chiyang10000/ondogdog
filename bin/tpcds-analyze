@@ -1,0 +1,50 @@
+#!/bin/bash
+# set -x
+
+# Check NewQE planner support
+for i in `seq 1 99`; do
+  break
+  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/1g/stream_1/stream0/query${i}_rept1.sql"
+  option=''
+  option="${option}set client_min_messages=debug1;set new_executor=auto;"
+  option="${option}set optimizer=off;" # disable orca
+  option="${option}set enable_groupagg=off;set gp_enable_fallback_plan=off;"
+
+  output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af $file 2>&1)
+  echo "$output" > /dev/null
+
+  mode=$(echo "${output}" | grep 'New executor mode:')
+  if [[ -n "$mode" ]]; then mode=1; else mode=0; fi
+  if [[ ! -f $file ]]; then mode=''; fi
+
+  plannode=$(echo "${output}" |
+            grep 'not support plan ' |
+            sed -E 's|.* not support plan node of {([^ ]+).*}|\1|' |
+            cut -c 1-40 | tr '\n' ' ' | xargs echo)
+
+  expression=$(echo "${output}" |
+              grep 'not support expression ' |
+              sed -E 's|.* not support expression of {([^ ]+).*}|\1|' |
+              cut -c 1-40 | tr '\n' ' ' | xargs echo)
+  echo -e "${mode}\t${plannode}\t${expression}" # > /dev/null
+done
+
+# Compare ORC/Parquet old QE
+query_set=''
+query_set="${query_set} `seq 1 13`"
+query_set="${query_set} `seq 15 22`"
+query_set="${query_set} `seq 25 38`"
+query_set="${query_set} `seq 40 99`"
+echo $query_set
+for i in $query_set; do
+  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/1g/stream_1/stream0/query${i}_rept1.sql"
+  echo $file
+  option=''
+  option="${option}set new_executor=off;"
+  option="${option}set optimizer=off;" # disable orca
+  output_orc=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set search_path=orc_hash_notpartition_lz4_dict08_notpk_1g;EXPLAIN ANALYZE" -f $file)
+  output_parquet=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set search_path=parquet_hash_notpartition_snappy_none_notpk_numeric_1g;EXPLAIN ANALYZE" -f $file)
+  echo "$output_orc"     > /tmp/orc.txt
+  echo "$output_parquet" > /tmp/parquet.txt
+  hawq_analyze.py /tmp/orc.txt /tmp/parquet.txt
+done

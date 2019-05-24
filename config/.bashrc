@@ -18,6 +18,7 @@ HORNET_SRC=~/dev/hornet
 
 export PGDATABASE=postgres
 
+export DISPLAY=:0
 export LESS=eFRX
 export LANG=en_US
 export LC_ALL=en_US.utf-8
@@ -29,7 +30,7 @@ export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/depende
 export MACOSX_DEPLOYMENT_TARGET=10.12
 
 export GOPATH=~/dev/goprojects
-export PATH=$HOME/yizhiyang/bin:$HOME/yizhiyang/usr/bin:/usr/local/sbin/:$GOPATH:/Library/Developer/CommandLineTools/usr/bin/:/bin/:$PATH
+export PATH=$HOME/yizhiyang/bin:$HOME/yizhiyang/usr/bin:/usr/local/sbin/:/usr/local/bin/:$GOPATH:/Library/Developer/CommandLineTools/usr/bin/:/bin/:$PATH
 export PATH="$HOME/.cargo/bin:$PATH"
 
 git-writer() {
@@ -282,8 +283,12 @@ gen-coverage() {
 	genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
 	open CodeCoverageReport/index.html
 }
+export RUN_UNITTEST=no
 hornet-debug() {
 	cd ~/dev/hornet && make incremental && cd -
+}
+hornet-unittest() {
+	cd ~/dev/hornet && RUN_UNITTEST=YES make incremental && cd -
 }
 hornet-release() {
 	cd ~/dev/release/hornet && make incremental && cd -
