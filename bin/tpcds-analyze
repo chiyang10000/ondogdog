@@ -6,6 +6,7 @@ for i in `seq 1 99`; do
   break
   file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/1g/stream_1/stream0/query${i}_rept1.sql"
   option=''
+  option="${option}set search_path=orc_hash_notpartition_lz4_dict08_notpk_numeric_1g;"
   option="${option}set client_min_messages=debug1;set new_executor=auto;"
   option="${option}set optimizer=off;" # disable orca
   option="${option}set enable_groupagg=off;set gp_enable_fallback_plan=off;"
@@ -19,14 +20,17 @@ for i in `seq 1 99`; do
 
   plannode=$(echo "${output}" |
             grep 'not support plan ' |
-            sed -E 's|.* not support plan node of {([^ ]+).*}|\1|' |
+            sed 's|.* not support plan node of {\([^ ]\+\).*}|\1|' |
             cut -c 1-40 | tr '\n' ' ' | xargs echo)
 
   expression=$(echo "${output}" |
               grep 'not support expression ' |
-              sed -E 's|.* not support expression of {([^ ]+).*}|\1|' |
+              sed 's|.* not support expression of {\([^ ]\+\).*}|\1|' |
               cut -c 1-40 | tr '\n' ' ' | xargs echo)
   echo -e "${mode}\t${plannode}\t${expression}" # > /dev/null
+  if [[ "$i" =~ ^(14|23|24|39)$ ]]; then
+    echo
+  fi
 done
 
 # Compare ORC/Parquet old QE
@@ -37,6 +41,7 @@ query_set="${query_set} `seq 25 38`"
 query_set="${query_set} `seq 40 99`"
 echo $query_set
 for i in $query_set; do
+  # break
   file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/1g/stream_1/stream0/query${i}_rept1.sql"
   echo $file
   option=''
