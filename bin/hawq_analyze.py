@@ -70,7 +70,7 @@ if __name__ == "__main__":
         parquet_t = float(parquet.timings[i])
         if (orc_t > parquet_t and
             parquet_t > 10 and
-            (orc_t - parquet_t) / parquet_t > 0.2
+            (orc_t - parquet_t) / parquet_t > 0
            ):
             print(orc_t, parquet_t)
             print(node)

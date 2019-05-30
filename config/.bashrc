@@ -18,7 +18,6 @@ HORNET_SRC=~/dev/hornet
 
 export PGDATABASE=postgres
 
-export DISPLAY=:0
 export LESS=eFRX
 export LANG=en_US
 export LC_ALL=en_US.utf-8
