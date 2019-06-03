@@ -83,19 +83,19 @@ log-featuretest() {
 	fi
 }
 log-master() {
-	d=$(ps -ef| grep 'hawq.*-M master' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
+	d=$(ps -eo pid,command| grep 'hawq.*-M master' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
 	cd $d/pg_log
 }
 log-segment() {
-	d=$(ps -ef| grep 'hawq.*-M segment' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
+	d=$(ps -eo pid,command| grep 'hawq.*-M segment' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
 	cd $d/pg_log
 }
 log-namenode() {
-	d=$(ps -ef|grep proc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
+	d=$(ps -eo pid,command|grep proc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
 	cd $d
 }
 log-datanode() {
-	d=$(ps -ef|grep proc_datanode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
+	d=$(ps -eo pid,command|grep proc_datanode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
 	cd $d
 }
 
@@ -142,15 +142,15 @@ lava-clean() {
 #-------------------------------------------------------------------------------
 hawq-qe() {
 	if [ -n "$1" ]; then
-		ps -ef| grep [p]ostgres.*con.*seg| tr -s ' '| cut -d ' ' -f 3| 
+		ps -eo pid,command| grep [p]ostgres.*con.*seg| awk '{print $1}' |
 		sort|head -n $1|tail -n 1
 	else
-		ps -ef| grep [p]ostgres.*con.*seg| tr -s ' '| cut -d ' ' -f 3|
+		ps -eo pid,command| grep [p]ostgres.*con.*seg| awk '{print $1}' |
 		sort
 	fi
 }
 hawq-qd() {
-	ps -ef| grep [p]ostgres.*con.*cmd | tr -s ' '| cut -d ' ' -f 3
+	ps -eo pid,command| grep [p]ostgres.*con.*cmd | awk '{print $1}'
 }
 hawq_magma_locations_master=/db_data/hawq-data-directory/magma_master
 hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
@@ -164,7 +164,6 @@ magma-clean() {
 	mkdir -p $hawq_magma_locations_segment
 }
 hawq-clean() {
-	ps -ef|grep [p]ostgres|tr -s ' '| cut -d ' ' -f3|xargs kill -9
 	rm -rf $hawq_master_directory
 	rm -rf $hawq_segment_directory
 	mkdir -p $hawq_master_directory
@@ -191,6 +190,7 @@ magma-init() {
 }
 hawq-init() {
 	rm -rf /cores/*
+  hawq-stop
 	magma-clean
 	hawq-clean
 	hawq-config hawq_rm_nvseg_perquery_perseg_limit 6
@@ -208,8 +208,8 @@ hawq-init() {
 	rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
-	ps -ef|grep [p]ostgres|tr -s ' '| cut -d ' ' -f3|xargs kill -9
-	killall magma_server
+	ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs kill -9
+	ps -eo pid,command | grep [m]agma_server | awk '{print $1}' | xargs kill -9
 }
 hawq-restart () {
 	rm -rf /cores/*;
