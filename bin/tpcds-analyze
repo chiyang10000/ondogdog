@@ -2,9 +2,10 @@
 # set -x
 scale=1
 
+export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+
 # Check NewQE planner support
 for i in `seq 1 99`; do
-  break
   file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${i}_rept1.sql"
   option=''
   option="${option}set search_path=orc_hash_notpartition_lz4_dict08_notpk_numeric_${scale}g;"
@@ -30,7 +31,7 @@ for i in `seq 1 99`; do
               cut -c 1-40 | tr '\n' ' ' | xargs echo)
   echo -e "${mode}\t${plannode}\t${expression}" # > /dev/null
   if [[ "$i" =~ ^(14|23|24|39)$ ]]; then # these sql files run two queries
-    echo
+    echo -e "${mode}\t${plannode}\t${expression}" # > /dev/null
   fi
 done
 
@@ -46,7 +47,7 @@ if [[ -n "$@" ]]; then
 fi
 echo $query_set
 for i in $query_set; do
-  # break
+  break
   file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${i}_rept1.sql"
   echo $file
   option=''
