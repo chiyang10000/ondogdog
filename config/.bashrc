@@ -250,6 +250,9 @@ hawq-test-list() {
 hawq-test() {
 	cd $HAWQ_SRC;
 	make -j8 feature-test > /dev/null;
+	if [[ ! $? -eq 0 ]]; then
+		return
+	fi
 	TEST_DB_NAME="hawq_feature_test_db";
 	export PGDATABASE=$TEST_DB_NAME;
 	if [ -n "$1" ]; then
