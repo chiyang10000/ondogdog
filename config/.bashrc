@@ -84,11 +84,13 @@ log-featuretest() {
 }
 log-master() {
 	d=$(ps -eo pid,command| grep 'hawq.*-M master' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
-	cd $d/pg_log
+	log=$(ls -tr $d/pg_log | grep hawq | tail -n1)
+	tail -f $d/pg_log/$log
 }
 log-segment() {
 	d=$(ps -eo pid,command| grep 'hawq.*-M segment' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
-	cd $d/pg_log
+	log=$(ls -tr $d/pg_log | grep hawq | tail -n1)
+	tail -f $d/pg_log/$log
 }
 log-namenode() {
 	d=$(ps -eo pid,command|grep proc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
