@@ -5,7 +5,12 @@ scale=1
 export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
 
 # Check NewQE planner support
-for i in `seq 1 99`; do
+query_set=`seq 1 99`
+if [[ -n "$@" ]]; then
+  query_set=$@
+  echo "Query Set: $query_set"
+fi
+for i in $query_set; do
   file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${i}_rept1.sql"
   option=''
   option="${option}set search_path=orc_hash_notpartition_lz4_dict08_notpk_numeric_${scale}g;"
@@ -41,11 +46,9 @@ query_set="${query_set} `seq 1 13`"
 query_set="${query_set} `seq 15 22`"
 query_set="${query_set} `seq 25 38`"
 query_set="${query_set} `seq 40 99`"
-echo $@
 if [[ -n "$@" ]]; then
   query_set=$@
 fi
-echo $query_set
 for i in $query_set; do
   break
   file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${i}_rept1.sql"
