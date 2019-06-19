@@ -264,7 +264,7 @@ hawq-test() {
 	else
 		bash -c "
 		source /usr/local/hawq/greenplum_path.sh
-		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=TestNewExec*:-*MagmaTP*";
+		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*";
 	fi
 	cd -
 	export PGDATABASE=postgres;
