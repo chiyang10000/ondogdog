@@ -250,21 +250,26 @@ hawq-test-list() {
 	$HAWQ_SRC/src/test/feature/feature-test --gtest_list_tests
 }
 hawq-test() {
-	cd $HAWQ_SRC;
-	make -j8 feature-test > /dev/null;
-	if [[ ! $? -eq 0 ]]; then
-		return
-	fi
+  ftest="$HAWQ_SRC/src/test/feature/feature-test"
+  if [[ -f /usr/local/hawq/feature-test/feature-test ]]; then
+    ftest="/usr/local/hawq/feature-test/feature-test"
+  else
+    cd $HAWQ_SRC;
+    make -j8 feature-test > /dev/null;
+    if [[ ! $? -eq 0 ]]; then
+      return
+    fi
+  fi
 	TEST_DB_NAME="hawq_feature_test_db";
 	export PGDATABASE=$TEST_DB_NAME;
 	if [ -n "$1" ]; then
 		bash -c "
 		source /usr/local/hawq/greenplum_path.sh
-		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=$1";
+		$ftest --gtest_filter=$1";
 	else
 		bash -c "
 		source /usr/local/hawq/greenplum_path.sh
-		$HAWQ_SRC/src/test/feature/feature-test --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*";
+		$ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*";
 	fi
 	cd -
 	export PGDATABASE=postgres;
