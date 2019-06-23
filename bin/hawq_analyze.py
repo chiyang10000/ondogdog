@@ -6,7 +6,7 @@ import sys
 '''
 response table format
 
-Query Plan, Offset, First, End, Node, Prct
+Summary, Query Plan, Offset, First, End, Node, Prct
 '''
 class MyHTMLParser(HTMLParser):
     def __init__(self):
@@ -20,7 +20,7 @@ class MyHTMLParser(HTMLParser):
         self.timings = []
 
     def handle_starttag(self, tag, attrs):
-        if (tag == 'tr'): # new row
+        if (tag == 'tr'): # newqe row
             self.tr += 1
             self.curr_node = ''
         if (tag == 'td'):
@@ -37,11 +37,11 @@ class MyHTMLParser(HTMLParser):
     def handle_data(self, data):
         if (self.td == 0): return
 
-        if (self.td == 1):
+        if (self.td == 2):
             self.curr_node += data
-        if (self.td == 5):
-            self.curr_timing = data
         if (self.td == 6):
+            self.curr_timing = data
+        if (self.td == 7):
             self.curr_prct = data
 
 def parse(file):
@@ -59,18 +59,19 @@ def parse(file):
 
 if __name__ == "__main__":
     assert(len(sys.argv) == 3)
-    orc = parse(sys.argv[1])
-    parquet = parse(sys.argv[2])
+    newqe = parse(sys.argv[1])
+    oldqe = parse(sys.argv[2])
     
-    assert(len(orc.timings) == len(parquet.timings))
-    for i in range(0, len(orc.timings)):
-        if (len(orc.timings[i]) == 0): continue
-        node = orc.nodes[i]
-        orc_t = float(orc.timings[i])
-        parquet_t = float(parquet.timings[i])
-        if (orc_t > parquet_t and
-            parquet_t > 10 and
-            (orc_t - parquet_t) / parquet_t > 0
+    assert(len(newqe.timings) == len(oldqe.timings))
+    for i in range(0, len(newqe.timings)):
+        if (len(newqe.timings[i]) == 0): continue
+        new_t = float(newqe.timings[i])
+        old_t = float(oldqe.timings[i])
+        if (old_t > 30 and new_t > 30 and
+            (
+              old_t / new_t < 2
+            )
            ):
-            print(orc_t, parquet_t)
-            print(node)
+            print(new_t, old_t)
+            print(newqe.nodes[i])
+            print(oldqe.nodes[i])
