@@ -25,7 +25,10 @@ for i in $query_set; do
   # option="${option}set enable_groupagg=off;set gp_enable_fallback_plan=off;"
   option="${option}set enable_groupagg=off;set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
 
+  ts_start=`date +%s%3N`
   output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af $file 2>&1)
+  ts_end=`date +%s%3N`;
+  planner_time=`expr $ts_end - $ts_start`;
   echo "$output" > /dev/null
 
   mode=$(echo "${output}" | grep 'New executor mode:')
@@ -41,9 +44,9 @@ for i in $query_set; do
               grep 'not support expression ' |
               sed 's|.* not support expression of {\([^ ]\+\).*}|\1|' |
               cut -c 1-40 | tr '\n' ' ' | xargs echo)
-  echo -e "${mode}\t${plannode}\t${expression}" # > /dev/null
+  echo -e "${planner_time}\t${mode}\t${plannode}\t${expression}" # > /dev/null
   if [[ "$i" =~ ^(14|23|24|39)$ ]]; then # these sql files run two queries
-    echo -e "${mode}\t${plannode}\t${expression}" # > /dev/null
+    echo -e "${planner_time}\t${mode}\t${plannode}\t${expression}" # > /dev/null
   fi
 done
 
