@@ -22,8 +22,6 @@ export LESS=eFRX
 export LANG=en_US
 export LC_ALL=en_US.utf-8
 
-export CC=clang
-export CXX=clang++
 export DEPENDENCY_PATH=/opt/dependency/package
 export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/dependency/package/lib/:/usr/local/lib
 export MACOSX_DEPLOYMENT_TARGET=10.12
@@ -153,6 +151,17 @@ hawq-qe() {
 }
 hawq-qd() {
   ps -eo pid,command| grep [p]ostgres.*con.*cmd | awk '{print $1}'
+}
+hawq-perf() {
+  t=100
+  tt=0
+  while [[ -z `hawq-qe` || $t -ne $tt ]]; do
+    t=$tt
+    tt=`hawq-qe|wc -l`
+  done
+  hawq-qe |
+    awk 'BEGIN {ORS=","} {print $1}' |
+    xargs perf record -p
 }
 hawq_magma_locations_master=/db_data/hawq-data-directory/magma_master
 hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
