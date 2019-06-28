@@ -13,10 +13,10 @@ postgres-init() {
   pg_ctl init -D $postgres_data
 }
 postgres-start() {
-  pg_ctl -D $postgres_data -o "-F -p $postgres_port -k $postgres_data" start
+  pg_ctl -D $postgres_data -o "-p $postgres_port -k $postgres_data" start
 }
 postgres-stop() {
-  pg_ctl -D $postgres_data -o "-F -p $postgres_port -k $postgres_data" stop
+  pg_ctl -D $postgres_data -o "-p $postgres_port -k $postgres_data" stop
 }
 postgres-sql() {
   psql -p $postgres_port -h $postgres_data $@
