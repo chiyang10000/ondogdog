@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+echo haha
+
+scale=1000
+schemas="magmaap_${scale}g parquet_${scale}g"
+
+query_set=`seq 1 99`
+for query_id in $query_set; do
+  input_file="$HOME/chiyang/stream0/query${query_id}_rept1.sql"
+  line_output="$input_file"
+  for search_path in $schemas; do
+    output_file="$HOME/chiyang/output/${search_path}/query${query_id}_rept1.sql"
+    mkdir -p $(dirname $output_file)
+    if [[ -f $output_file ]]; then
+      output=$(cat $output_file)
+    else
+      option="set search_path=${search_path};"
+      option="${option}"
+      output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af $input_file 2>&1)
+      echo "$output" > $output_file
+    fi
+    slice_count=$(echo "$output" | grep 'slice' | wc -l)
+    scan_count=$(echo "$output" | grep 'Scan on' | wc -l)
+    motion_count=$(echo "$output" | grep 'Motion' | wc -l)
+    line_output="${line_output}\t${slice_count}\t${scan_count}\t${motion_count}"
+  done
+  echo -e "$line_output"
+  [[ $query_id =~ ^(14|23|24|39)$ ]] && echo -e "$line_output"
+done
