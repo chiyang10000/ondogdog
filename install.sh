@@ -30,4 +30,5 @@ cp ~/yizhiyang/config/cpp.vim ~/.vim/
 
 echo 'source $HOME/yizhiyang/config/.bashrc' >> ~/.bashrc
 
+[[ -f ~/.bash_profile ]] || ln -s ~/.bashrc ~/.bash_profile
 source ~/.bashrc
