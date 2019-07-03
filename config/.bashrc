@@ -163,7 +163,7 @@ hawq-perf() {
   done
   hawq-qe |
     awk 'BEGIN {ORS=","} {print $1}' |
-    xargs perf record -p
+    xargs perf record $@ -p
 }
 hawq_magma_locations_master=/db_data/hawq-data-directory/magma_master
 hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
