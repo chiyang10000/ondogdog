@@ -3,9 +3,11 @@ system=`uname -s`
 if [ $system == Linux ]; then
   shopt -s checkwinsize
   alias ls='ls --color'
+  alias toolchain='source ~/dev/hornet/thirdparty/toolchain-clang-x86_64-Linux.sh'
 else
   CLICOLOR=1 #for mac and BSD
   export LSCOLORS=gxfxcxdxbxegedabagacad
+  alias toolchain='source /opt/dependency-Darwin/package/env.sh'
   if [ `which gls`_ == _ ]; then
     alias ls='ls -G'
   else
