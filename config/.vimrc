@@ -5,7 +5,6 @@ set incsearch
 set hlsearch
 set clipboard=unnamed
 set paste
-set mouse=i
 set backspace=indent,eol,start
 set autoindent
 set ruler
