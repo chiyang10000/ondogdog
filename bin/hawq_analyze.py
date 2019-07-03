@@ -69,7 +69,7 @@ if __name__ == "__main__":
         old_t = float(oldqe.timings[i])
         if (old_t > 30 and new_t > 30 and
             (
-              old_t / new_t < 2
+              old_t / new_t < 3
             )
            ):
             print(new_t, old_t)

@@ -3,7 +3,7 @@
 
 export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
 
-scale=10
+scale=1
 search_path="orc_hash_notpartition_lz4_dict08_notpk_numeric_${scale}g"
 #search_path="magmaap_hash_notpartition_none_none_notpk_numeric_${scale}g"
 
@@ -67,7 +67,7 @@ for i in $query_set; do
   option="${option}set optimizer=off;" # disable orca
   option="${option}set enable_groupagg=off;set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
   option="${option}set orc_enable_filter_pushdown=off;"
-  option="${option}set enforce_virtual_segment_number = 1;"
+  # option="${option}set enforce_virtual_segment_number = 1;"
   output_orc_new=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=on;set search_path=${search_path};EXPLAIN ANALYZE" -f $file)
   output_orc_old=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=off;set search_path=${search_path};EXPLAIN ANALYZE" -f $file)
   # output_parquet=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set search_path=parquet_hash_notpartition_snappy_none_notpk_numeric_${scale}g;EXPLAIN ANALYZE" -f $file)
