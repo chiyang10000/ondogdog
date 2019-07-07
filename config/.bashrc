@@ -202,13 +202,15 @@ magma-init() {
   hawq-restart
 }
 hawq-init() {
+  num=${1-4}
   rm -rf /cores/*
   hawq-stop
   magma-clean
   hawq-clean
-  hawq-config hawq_rm_nvseg_perquery_perseg_limit 6
-  hawq-config default_hash_table_bucket_number 6
-  hawq-config default_magma_hash_table_nvseg_per_node 8
+  hawq-config default_hash_table_bucket_number $num
+  hawq-config default_magma_hash_table_nvseg_per_node $num
+  hawq-config hawq_rm_nvseg_perquery_perseg_limit $num
+  hawq-config magma_range_number $num
   hawq-config hawq_magma_locations_master file://$hawq_magma_locations_master
   hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
   hawq-config hawq_master_directory $hawq_master_directory
