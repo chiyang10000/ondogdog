@@ -5,9 +5,9 @@ set -ex
 # Check basic directories
 ################################################################################
 pkg_path="$( cd "$( dirname "${BASH_SOURCE[0]-$0}" )" && pwd )"
-src_dir=${pkg_path}/src
-tar_dir=${pkg_path}/deps
-rpm_dir=${pkg_path}/deps
+src_dir=${pkg_path}/tool-base
+tar_dir=${pkg_path}/tool-deps
+rpm_dir=${pkg_path}/tool-deps
 temp_dir=${pkg_path}/tempdir
 
 if [[ ! -d ${src_dir} || ! -d ${tar_dir} || ! -d ${rpm_dir} ]]; then
@@ -67,6 +67,7 @@ export DEPENDENCY_PATH=${temp_dir}/dependency/package
 # Build OushuDB
 ################################################################################
 # make -C ${src_dir}/libhdfs3
+export RUN_UNITTEST=no
 make -j8 release -C ${src_dir}/hornet
 
 cd ${src_dir}/hawq
