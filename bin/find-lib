@@ -1,11 +1,48 @@
 #!/bin/bash
+# set -ex
 
-count=0
-for lib in $(find /opt/dependency/package/lib -name '*dylib'); do
-  if [[ -n $(otool -L $lib | sed -n '2{p;q;}' | grep package) ]]; then
-    # echo $lib
-    otool -L $lib
-    count=$((count + 1))
+change_install_name() {
+  files=$1
+  dir=$2
+  count=0
+
+  for target in $files; do
+    if [[ -n $(otool -L $target | sed -n '2,$p' | grep ${dir}) ]]; then
+      echo '**********************************************************************'
+      otool -L $target
+
+      chmod +w $target
+      keyvals=$(otool -L $target | sed -n '2,$p' | grep ${dir} | awk '{print $1}' | sed -E "s|$dir/(.*)|\0 \1|")
+      echo $keyvals
+      IFS=$'\n'
+      for kv in ${keyvals}; do
+        key=$(echo $kv | cut -d' ' -f1)
+        val=$(echo $kv | cut -d' ' -f2)
+        install_name_tool -change ${key} @rpath/${val} $target
+      done
+      install_name_tool -id @rpath/$(basename ${target}) $target
+      unset IFS
+
+      count=$((count + 1))
+
+      echo '============================================='
+      otool -L $target
+      echo; echo; echo
+    fi
+  done
+
+  echo $count
+}
+
+bin_files=
+for file in $(find /usr/local/hawq/bin -type f -name '*') $(find /opt/dependency-Darwin/package/bin -type f -name '*'); do
+  if [[ $(file $file | grep Mach-O) ]]; then
+    bin_files="$file $bin_files"
   fi
 done
-echo $count
+lib_files=$(find /opt/dependency-Darwin/package/lib -type f -name *.dylib -o -name *.so)
+
+change_install_name "$bin_files" /opt/dependency-Darwin/package/lib
+change_install_name "$bin_files" /opt/dependency-Darwin/package//lib
+change_install_name "$lib_files" /opt/dependency-Darwin/package/lib
+change_install_name "$lib_files" /opt/dependency-Darwin/package//lib
