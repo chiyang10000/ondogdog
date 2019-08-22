@@ -304,6 +304,7 @@ gen-coverage() {
   '*/protos/*' '*/proto/*' '*/thrift/*' \
   --output-file CodeCoverage.info.cleaned
   genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
+  test -d /var/www/html/ && sudo cp -r CodeCoverageReport/* /var/www/html/
   open CodeCoverageReport/index.html
 }
 export RUN_UNITTEST=no
@@ -317,8 +318,20 @@ hornet-release() {
   cd ~/dev/release/hornet && make incremental && cd -
 }
 hornet-coverage() {
-  cd ~/dev/coverage/hornet && make incremental && cd -
-  cd ~/dev/coverage/hornet
+  test $? -eq 1 || echo 'Error'
+  case $1 in
+    storage);;
+    executor);;
+    *) return;;
+  esac
+  hornet-debug
+  component=$1
+  cd ~/dev/coverage/hornet && ~/dev/hornet/bootstrap
+  mkdir -p ~/dev/coverage/hornet/$component/build
+  cd ~/dev/coverage/hornet/$component/build
+  ~/dev/hornet/$component/bootstrap --enable-coverage
+  make resetcoverage
+  make -j8 unittest
   gen-coverage
 }
 hornet-test() {
