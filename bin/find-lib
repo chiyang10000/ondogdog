@@ -2,6 +2,7 @@
 # set -ex
 
 change_install_name() {
+  echo "Changing install_name ..."
   files=$1
   dir=$2
   count=0
@@ -33,16 +34,35 @@ change_install_name() {
 
   echo $count
 }
+add_rpath() {
+  echo "Adding RPATH ..."
+  files=$1
+  rpath=$2
+
+  for target in $files; do
+      chmod +w $target
+      [[ `otool -l $target | grep $rpath` ]] && install_name_tool -delete_rpath $rpath $target
+      install_name_tool -add_rpath $rpath $target
+  done
+}
+
+
 
 bin_files=
-for file in $(find /usr/local/hawq/bin -type f -name '*') $(find /opt/dependency-Darwin/package/bin -type f -name '*'); do
+for file in $(find /usr/local/hawq/bin -type f -name '*') $(find /usr/local/hawq/lib -type f -name '*') $(find /opt/dependency-Darwin/package/bin -type f -name '*'); do
   if [[ $(file $file | grep Mach-O) ]]; then
     bin_files="$file $bin_files"
   fi
 done
 lib_files=$(find /opt/dependency-Darwin/package/lib -type f -name *.dylib -o -name *.so)
 
+add_rpath "$bin_files" /usr/local/opt/oushudb/lib
+add_rpath "$lib_files" /usr/local/opt/oushudb/lib
+
+change_install_name "$bin_files" /usr/local/hawq/lib
 change_install_name "$bin_files" /opt/dependency-Darwin/package/lib
 change_install_name "$bin_files" /opt/dependency-Darwin/package//lib
+
+change_install_name "$lib_files" /usr/local/hawq/lib
 change_install_name "$lib_files" /opt/dependency-Darwin/package/lib
 change_install_name "$lib_files" /opt/dependency-Darwin/package//lib

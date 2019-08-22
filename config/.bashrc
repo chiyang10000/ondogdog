@@ -195,7 +195,7 @@ hawq-clean() {
   fi
 }
 magma-init() {
-  psql -c "drop database hawq_feature_test_db;"
+  hawq sql -c "drop database hawq_feature_test_db;"
   hawq-setup-feature-test
   magma-clean
   rm -rf /cores/*
@@ -219,8 +219,7 @@ hawq-init() {
         --lc-ctype='C' --lc-messages='C' \
         --lc-monetary='C' --lc-numeric='C' \
         --lc-time='C'
-  hawq-setup-feature-test
-  rm -rf ~/hawqAdminLogs
+  hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
   ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs kill -9
@@ -249,15 +248,17 @@ hawq-restart () {
 }
 hawq-setup-feature-test() {
   TEST_DB_NAME="hawq_feature_test_db";
-  # psql -c "drop database if exists $TEST_DB_NAME;";
-  psql -d postgres -c "create database $TEST_DB_NAME;";
-  psql -c "alter database $TEST_DB_NAME set lc_messages to 'C';";
-  psql -c "alter database $TEST_DB_NAME set lc_monetary to 'C';";
-  psql -c "alter database $TEST_DB_NAME set lc_numeric to 'C';";
-  psql -c "alter database $TEST_DB_NAME set lc_time to 'C';";
-  psql -c "alter database $TEST_DB_NAME set timezone_abbreviations to 'Default';";
-  psql -c "alter database $TEST_DB_NAME set timezone to 'PST8PDT';";
-  psql -c "alter database $TEST_DB_NAME set datestyle to 'postgres,MDY';";
+  hawq sql -d postgres << EOF
+  drop database if exists $TEST_DB_NAME;
+  create database $TEST_DB_NAME;
+  alter database $TEST_DB_NAME set lc_messages to 'C';
+  alter database $TEST_DB_NAME set lc_monetary to 'C';
+  alter database $TEST_DB_NAME set lc_numeric to 'C';
+  alter database $TEST_DB_NAME set lc_time to 'C';
+  alter database $TEST_DB_NAME set timezone_abbreviations to 'Default';
+  alter database $TEST_DB_NAME set timezone to 'PST8PDT';
+  alter database $TEST_DB_NAME set datestyle to 'postgres,MDY';
+EOF
 }
 hawq-test-list() {
   $HAWQ_SRC/src/test/feature/feature-test --gtest_list_tests

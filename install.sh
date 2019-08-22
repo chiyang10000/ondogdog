@@ -1,12 +1,13 @@
 case $1 in
-    -f)
-	rm -f ~/.vimrc
-	rm -rf ~/.lldbinit
-        ;;
-    *)
-	set -e
-        ;;
+  -f)
+    rm -f ~/.vimrc
+    rm -rf ~/.lldbinit
+  ;;
+  *)
+    set -e
+  ;;
 esac
+
 git config --global color.ui auto
 git config --global core.editor vim
 git config --global core.safecrlf true
