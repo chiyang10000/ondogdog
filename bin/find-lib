@@ -47,14 +47,15 @@ add_rpath() {
 }
 
 
-
+echo "Checking file list ..."
 bin_files=
 for file in $(find /usr/local/hawq/bin -type f -name '*') $(find /usr/local/hawq/lib -type f -name '*') $(find /opt/dependency-Darwin/package/bin -type f -name '*'); do
   if [[ $(file $file | grep Mach-O) ]]; then
+    echo $file
     bin_files="$file $bin_files"
   fi
 done
-lib_files=$(find /opt/dependency-Darwin/package/lib -type f -name *.dylib -o -name *.so)
+lib_files=$(find /opt/dependency*/package/lib -type f -name *.dylib -o -name *.so)
 
 add_rpath "$bin_files" /usr/local/opt/oushudb/lib
 add_rpath "$lib_files" /usr/local/opt/oushudb/lib
