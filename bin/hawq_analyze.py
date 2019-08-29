@@ -2,47 +2,48 @@
 from html.parser import HTMLParser
 import requests
 import sys
+import os
+import re
 
 '''
-response table format
+table format of the reponsed HTML
 
 Summary, Query Plan, Offset, First, End, Node, Prct
 '''
 class MyHTMLParser(HTMLParser):
     def __init__(self):
         super().__init__()
-        self.tr = 0
+        self.tr = 0 # parsed rows index count from 1
         self.td = 0 # zero to mark non-table data
-        self.curr_node = ''
-        self.curr_prct = ''
-        self.curr_timing = ''
-        self.nodes = []
+        self.curr_plannode = ''
+        self.curr_timing = 0.0
+        self.plannodes = []
         self.timings = []
 
     def handle_starttag(self, tag, attrs):
-        if (tag == 'tr'): # newqe row
+        if (tag == 'tr'): # new row
             self.tr += 1
-            self.curr_node = ''
+            self.curr_plannode = ''
         if (tag == 'td'):
             self.td += 1
 
     def handle_endtag(self, tag):
-        if (tag == 'tr'): # end row
+        if (tag == 'tr'): # end new row
             self.td = 0
-            self.nodes.append(self.curr_node)
-            self.timings.append(self.curr_timing)
-            # print(self.curr_timing)
-            # print(self.curr_node)
+            if (self.curr_plannode != ''): # skip invalid parsed row
+              self.plannodes.append(self.curr_plannode)
+              self.timings.append(self.curr_timing)
+              # print(self.curr_timing)
+              # print(self.curr_plannode)
 
     def handle_data(self, data):
-        if (self.td == 0): return
+        # skip first two line of header
+        if (self.tr <= 2): return 
 
         if (self.td == 2):
-            self.curr_node += data
+            self.curr_plannode += data
         if (self.td == 6):
             self.curr_timing = data
-        if (self.td == 7):
-            self.curr_prct = data
 
 def parse(file):
     parser = MyHTMLParser()
@@ -53,25 +54,63 @@ def parse(file):
         print('Fails to parse EXPLAIN ANALYZE result!')
         raise ValueError
     parser.feed(r.text)
-    # print(parser.nodes)
+    # print(parser.plannodes)
     # print(parser.timings)
     return parser
 
 if __name__ == "__main__":
-    assert(len(sys.argv) == 3)
-    newqe = parse(sys.argv[1])
-    oldqe = parse(sys.argv[2])
+    if (len(sys.argv) == 2):
+      path = sys.argv[1]
+      assert(os.path.isdir(path))
+
+      queryfiles = [os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+      
+      plannode_matcher = re.compile(r'([A-Z][a-z]+ )+')
+
+      counter = {}
+      for queryfile in queryfiles:
+        # skip query file that contains multiple queries
+        # print(queryfile)
+        if "14" in queryfile or "23" in queryfile or "24" in queryfile or "39" in queryfile: continue
+
+        res = parse(queryfile)
+        for node_idx in range(0, len(res.timings)):
+          time = float(res.timings[node_idx])
+          if (time < 0): continue # skip dirty data
+
+          lines = res.plannodes[node_idx].splitlines()
+
+          if 'Slice' in lines[0]:
+            node = lines[1].strip()
+          else:
+            node = lines[0].strip()
+
+          search = plannode_matcher.search(node)
+          if search: node = (search.group())
+          node = node.replace(' ', '')
+
+          if node not in counter: counter[node] = 0
+          counter[node] += time
+
+          # print(node, time)
+
+      # Print group by counter
+      print()
+      for k,v in sorted(counter.items()):
+        print('{}\t{}'.format(k, v))
+      exit()
     
-    assert(len(newqe.timings) == len(oldqe.timings))
-    for i in range(0, len(newqe.timings)):
-        if (len(newqe.timings[i]) == 0): continue
-        new_t = float(newqe.timings[i])
-        old_t = float(oldqe.timings[i])
+    assert(len(sys.argv) == 3)
+    old_file = parse(sys.argv[1])
+    new_file = parse(sys.argv[2])
+    
+    assert(len(new_file.timings) == len(old_file.timings))
+    for node_idx in range(0, len(new_file.timings)):
+        old_t = float(old_file.timings[node_idx])
+        new_t = float(new_file.timings[node_idx])
         if (old_t > 30 and new_t > 30 and
-            (
-              old_t / new_t < 3
-            )
+              (old_t / new_t < 3)
            ):
-            print(new_t, old_t)
-            print(newqe.nodes[i])
-            print(oldqe.nodes[i])
+            print(old_t, new_t)
+            print(old_file.plannodes[node_idx])
+            print(new_file.plannodes[node_idx])

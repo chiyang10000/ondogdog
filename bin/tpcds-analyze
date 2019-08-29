@@ -16,8 +16,8 @@ if [[ -n "$@" ]]; then
   query_set=$@
   echo "Query Set: $query_set"
 fi
-for i in $query_set; do
-  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${i}_rept1.sql"
+for query_idx in $query_set; do
+  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${query_idx}_rept1.sql"
   option=''
   option="${option}set search_path=${search_path};"
   option="${option}set client_min_messages=debug1;set new_executor=auto;"
@@ -45,7 +45,7 @@ for i in $query_set; do
               sed 's|.* not support expression of {\([^ ]\+\).*}|\1|' |
               cut -c 1-40 | tr '\n' ' ' | xargs echo)
   echo -e "${planner_time}\t${mode}\t${plannode}\t${expression}" # > /dev/null
-  if [[ "$i" =~ ^(14|23|24|39)$ ]]; then # these sql files run two queries
+  if [[ "$query_idx" =~ ^(14|23|24|39)$ ]]; then # these sql files run two queries
     echo -e "${planner_time}\t${mode}\t${plannode}\t${expression}" # > /dev/null
   fi
 done
@@ -59,22 +59,34 @@ query_set="${query_set} `seq 40 99`"
 if [[ -n "$@" ]]; then
   query_set=$@
 fi
-for i in $query_set; do
-  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${i}_rept1.sql"
-  echo $file
+for query_idx in $query_set; do
+  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${query_idx}_rept1.sql"
+  # echo $file
+  echo "Running $query_idx ..."
+  check_error=0
   option=''
   option="${option}set new_executor=off;"
   option="${option}set optimizer=off;" # disable orca
   option="${option}set enable_groupagg=off;set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
   option="${option}set orc_enable_filter_pushdown=off;"
   # option="${option}set enforce_virtual_segment_number = 1;"
+
+  # enable ORCA for problematic query
+  [[ "$query_idx" =~ ^(10|35|64|95)$ ]] && option="${option}set optimizer=on;"
+
   output_orc_new=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=on;set search_path=${search_path};EXPLAIN ANALYZE" -f $file)
+  check_error=$(($check_error+$?))
   output_orc_old=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=off;set search_path=${search_path};EXPLAIN ANALYZE" -f $file)
+  check_error=$(($check_error+$?))
   # output_parquet=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set search_path=parquet_hash_notpartition_snappy_none_notpk_numeric_${scale}g;EXPLAIN ANALYZE" -f $file)
-  echo "Checking $i"
+
+  if [[ $check_error -gt 0 ]]; then echo; continue; fi
+
+  echo "Checking $query_idx ..."
   echo "$output_orc_new"     > /tmp/orc_new.txt
   echo "$output_orc_old"     > /tmp/orc_old.txt
   echo "$output_parquet"     > /tmp/parquet.txt
   # hawq_analyze.py /tmp/orc_old.txt /tmp/parquet.txt
-  hawq_analyze.py /tmp/orc_new.txt /tmp/orc_old.txt
+  hawq_analyze.py /tmp/orc_old.txt /tmp/orc_new.txt 
+  echo
 done
