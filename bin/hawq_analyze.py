@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from html.parser import HTMLParser
+from collections import Counter
 import requests
 import sys
 import os
 import re
+
 
 '''
 table format of the reponsed HTML
@@ -19,6 +21,7 @@ class MyHTMLParser(HTMLParser):
         self.curr_timing = 0.0
         self.plannodes = []
         self.timings = []
+        self.new_executor = False
 
     def handle_starttag(self, tag, attrs):
         if (tag == 'tr'): # new row
@@ -38,6 +41,7 @@ class MyHTMLParser(HTMLParser):
 
     def handle_data(self, data):
         # skip first two line of header
+        if 'New Executor' in data: self.new_executor = True
         if (self.tr <= 2): return 
 
         if (self.td == 2):
@@ -56,7 +60,68 @@ def parse(file):
     parser.feed(r.text)
     # print(parser.plannodes)
     # print(parser.timings)
+    # print(parser.new_executor)
     return parser
+
+'''
+  return counter of { <Operator, Time>, }
+'''
+def parse_group_by_operator(querynum, queryfile):
+  plannode_matcher = re.compile(r'([A-Z][a-z]+ )+')
+  query_counter = {}
+
+  res = parse(queryfile)
+  if (res.new_executor is False): return
+
+  for node_idx in range(0, len(res.timings)):
+    time = float(res.timings[node_idx])
+    if (time < 0): continue # skip dirty data
+
+    lines = res.plannodes[node_idx].splitlines()
+
+    if 'Slice' in lines[0]:
+      node = lines[1].strip()
+    else:
+      node = lines[0].strip()
+
+    search = plannode_matcher.search(node)
+    if search: node = (search.group())
+    node = node.replace(' ', '')
+
+    if node not in query_counter: query_counter[node] = 0
+    query_counter[node] += time
+
+  for k,v in sorted(query_counter.items(), key = lambda x : x[1]):
+    print('{}\t{}\t{}'.format(querynum, v, k))
+
+  return query_counter
+
+
+
+'''
+  return split file list
+'''
+def split(file):
+  ret = []
+  input = open(file, 'r')
+  mark_matcher = re.compile(r'Time: [0-9.]+ ms')
+
+  output_base = '/tmp/planchecker.'
+  count = 1
+  output = open(output_base + str(count) + '.txt', 'w')
+  for line in input:
+    output.write(line)
+    if mark_matcher.search(line):
+      output.close()
+      ret.append(output_base + str(count) + '.txt')
+      count += 1
+      output = open(output_base + str(count) + '.txt', 'w')
+  if output:
+      output.close()
+
+  return ret
+
+
 
 if __name__ == "__main__":
     if (len(sys.argv) == 2):
@@ -64,40 +129,32 @@ if __name__ == "__main__":
       assert(os.path.isdir(path))
 
       queryfiles = [os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-      
-      plannode_matcher = re.compile(r'([A-Z][a-z]+ )+')
 
-      counter = {}
+      querynum_matcher = re.compile(r'query([0-9]+)')
+
+      tot_counter = Counter()
+      print('{}\t{}\t{}'.format('Query', 'Time','PlanNode'))
       for queryfile in queryfiles:
+        querynum = queryfile
+        search = querynum_matcher.search(queryfile)
+        if search: querynum = (search.group(1))
+
         # skip query file that contains multiple queries
-        # print(queryfile)
-        if "14" in queryfile or "23" in queryfile or "24" in queryfile or "39" in queryfile: continue
+        if querynum in ['query4', 'query14']:
+          continue
 
-        res = parse(queryfile)
-        for node_idx in range(0, len(res.timings)):
-          time = float(res.timings[node_idx])
-          if (time < 0): continue # skip dirty data
+        split_files = split(queryfile)
+        for queryfile in split_files:
+          query_counter = parse_group_by_operator(querynum, queryfile)
+          tot_counter.update(query_counter)
 
-          lines = res.plannodes[node_idx].splitlines()
 
-          if 'Slice' in lines[0]:
-            node = lines[1].strip()
-          else:
-            node = lines[0].strip()
-
-          search = plannode_matcher.search(node)
-          if search: node = (search.group())
-          node = node.replace(' ', '')
-
-          if node not in counter: counter[node] = 0
-          counter[node] += time
-
-          # print(node, time)
-
-      # Print group by counter
+      # Print group by tot_counter
+      # exit()
       print()
-      for k,v in sorted(counter.items()):
-        print('{}\t{}'.format(k, v))
+      print('{}\t{}'.format('Time', 'PlanNode'))
+      for k,v in sorted(tot_counter.items(), key = lambda x : x[1]):
+        print('{}\t{}'.format(v, k))
       exit()
     
     assert(len(sys.argv) == 3)
