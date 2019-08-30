@@ -318,8 +318,11 @@ hornet-release() {
   cd ~/dev/release/hornet && make incremental && cd -
 }
 hornet-coverage() {
-  test $? -eq 1 || echo 'Error'
+  test $# -eq 1 || echo 'Error'
   case $1 in
+    dbcommon);;
+    univplan);;
+    interconnect);;
     storage);;
     executor);;
     *) return;;
