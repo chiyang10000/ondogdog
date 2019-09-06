@@ -15,6 +15,7 @@ git config --global pull.ff only
 git config --global push.default current
 git config --global credential.helper store
 git config --global blame.date short
+git config --global core.whitespace
 
 rm -rf ~/yizhiyang/config/git-*
 curl -k -o ~/yizhiyang/config/git-completion.bash https://raw.githubusercontent.com/git/git/v2.17.0/contrib/completion/git-completion.bash
