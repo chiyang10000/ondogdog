@@ -71,7 +71,7 @@ def parse_group_by_operator(querynum, queryfile):
   query_counter = {}
 
   res = parse(queryfile)
-  if (res.new_executor is False): return
+  # if (res.new_executor is False): return
 
   for node_idx in range(0, len(res.timings)):
     time = float(res.timings[node_idx])
@@ -92,7 +92,7 @@ def parse_group_by_operator(querynum, queryfile):
     query_counter[node] += time
 
   for k,v in sorted(query_counter.items(), key = lambda x : x[1]):
-    print('{}\t{}\t{}'.format(querynum, v, k))
+    print('{}\t{}\t{}\t{}'.format(querynum, v, k, 'NewQE' if res.new_executor else 'OldQE'))
 
   return query_counter
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
 
       # Print group by tot_counter
-      # exit()
+      exit()
       print()
       print('{}\t{}'.format('Time', 'PlanNode'))
       for k,v in sorted(tot_counter.items(), key = lambda x : x[1]):
