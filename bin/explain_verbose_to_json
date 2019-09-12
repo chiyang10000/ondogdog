@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+import re
+import sys
+import json
+
+
+def get_indent(line):
+    return re.search(r'^( +)', line).group(1)
+
+
+def get_name_value(line, pg_mode):
+    match = re.search(r'( +):(\S+) (.*)', line)
+    if not match:
+        assert False
+        return ['', '']
+    name = match.group(2).strip()
+    value = match.group(3).strip()
+
+    if pg_mode:
+        name = pg_json_name(name)
+    return [name, value]
+
+
+def pg_json_name(src_name):
+    if not hasattr(pg_json_name, 'name_map'):
+        pg_json_name.name_map = {
+            "planTree": "Plan",
+            "startup_cost": "Startup Cost",
+            "total_cost": "Total Cost",
+            "plan_rows": "Plan Rows",
+            "plan_width": "Plan Width",
+        }
+    if src_name in pg_json_name.name_map:
+        return pg_json_name.name_map[src_name]
+    else:
+        return src_name
+
+
+def convert_to_json_str(input_stream, pg_mode=False):
+    """
+    :param pg_mode: group `lefttree`, `righttree` and `initPlan` into "Plans": []
+    """
+    plan_start = False
+    plan_end = False
+    unsolved_element_stack = []
+    plan_tree_stack = [' ']  # extra space for sentinel
+    curr_indent = ''
+    curr_line_parsed = False
+    plan_json_str = ''
+
+    for curr_line in input_stream:
+        curr_line = curr_line.replace('"', "'").replace('\\', "")  # .replace("'", "")
+
+        # Detect structured plan text
+        if re.search(r'{PLANNEDSTMT', curr_line):
+            plan_start = True
+            plan_json_str += '[\n'
+        if not plan_start:
+            continue
+        if re.search(r'^    }', curr_line):
+            plan_end = True
+
+        # Add comma to separate elements
+        last_line_parsed = curr_line_parsed
+        last_indent = curr_indent
+        curr_indent = get_indent(curr_line)
+        if last_line_parsed:
+            curr_line_is_first = curr_indent > last_indent
+            curr_line_end_object = ('}' in curr_line)
+            curr_line_end_array = (')' in curr_line and '(' not in curr_line)
+            if curr_line_is_first or curr_line_end_object or curr_line_end_array:
+                plan_json_str += '\n'
+            else:
+                if pg_mode and ('righttree' in curr_line or 'initPlan' in curr_line):
+                    pass
+                else:
+                    plan_json_str += ',\n'
+
+        if len(unsolved_element_stack):
+            if get_indent(unsolved_element_stack[-1]) == curr_indent:  # Member with empty value
+                last_line = unsolved_element_stack.pop()
+                name, value = get_name_value(last_line, pg_mode)
+                assert value == ''
+                plan_json_str += get_indent(last_line) + '"{}": "",\n'.format(name)
+            else:  # New object or new array
+                last_line = unsolved_element_stack.pop()
+                name, value = get_name_value(last_line, pg_mode)
+                assert value == ''
+                if pg_mode and (name == 'lefttree' or name == 'righttree' or name == 'initPlan'):
+                    if get_indent(last_line) > get_indent(plan_tree_stack[-1]):
+                        plan_json_str += get_indent(last_line) + '"Plans": [\n'
+                        plan_tree_stack.append(last_line)
+                    else:
+                        plan_json_str += ',\n'
+                else:
+                    plan_json_str += get_indent(last_line) + '"{}": \n'.format(name)
+
+        curr_line_parsed = False
+        # New Object
+        match = re.search(r'^( +){(\S+)', curr_line)
+        if not curr_line_parsed and match:
+            curr_line_parsed = True
+            name = match.group(2)
+            plan_json_str += curr_indent + '{{ "Node Type": "{}"'.format(name)
+
+        # New name-value
+        match = re.search(r'( +):(\S+) (.+)', curr_line)
+        if not curr_line_parsed and match:
+            curr_line_parsed = True
+            name, value = get_name_value(curr_line, pg_mode)
+
+            # For pev skip empty subtree
+            if pg_mode and value == '<>' and (name == 'lefttree' or name == 'righttree' or name == 'initPlan'):
+                curr_line_parsed = False
+                continue
+
+            # For pev end subtree array
+            if pg_mode and name == 'operatorMemKB':
+                if len(get_indent(plan_tree_stack[-1])) == len(curr_indent):
+                    plan_tree_stack.pop()
+                    plan_json_str += '\n'
+                    plan_json_str += curr_indent + '],\n'
+
+            if value != '(' and '(' in value and ')' not in value:  # Multiple line array for `uriList`, `fmtOpts`
+                forward_line = input_stream.readline()
+                while ')' not in forward_line:
+                    value += forward_line.strip().replace('"', "'").replace('\\', "")
+                    forward_line = input_stream.readline()
+                value += forward_line.strip().replace('"', "'").replace('\\', "")
+
+            if value == '(':  # Normal array start
+                plan_json_str += curr_indent + '"{}": ['.format(name)
+            else:  # Normal member
+                plan_json_str += curr_indent + '"{}": "{}"'.format(name, value)
+
+        # Object end
+        match = re.search(r'}', curr_line)
+        if not curr_line_parsed and match:
+            curr_line_parsed = True
+            plan_json_str += curr_indent + '}'
+
+        # Array end
+        match = re.search(r'\)', curr_line)
+        if not curr_line_parsed and match:
+            curr_line_parsed = True
+            plan_json_str += curr_indent + ']'
+
+        if not curr_line_parsed:
+            # print(curr_line, file=sys.stderr)
+            unsolved_element_stack.append(curr_line)
+
+        if plan_end:
+            plan_json_str += '\n]'
+            assert curr_line_parsed
+            break
+
+    input_stream.close()
+    assert len(plan_tree_stack) == 1
+    assert len(unsolved_element_stack) == 0
+
+    return plan_json_str
+
+
+if __name__ == "__main__":
+    json_str = convert_to_json_str(sys.stdin, pg_mode=True)
+    print(json_str)
+    json.loads(json_str)  # Validate json output
