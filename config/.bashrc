@@ -182,6 +182,8 @@ hawq-clean() {
   mkdir -p $hawq_master_directory
   mkdir -p $hawq_segment_directory
   hdfs dfs -rmr /hawq_default*
+  sudo rm -rf /tmp/pgsql_tmp
+  sudo rm -f /tmp/test_magma_status.sql
   if [ $system == Linux ]; then
     rm -rf /data*/hawq/gsmaster/*
     rm -rf /data*/hawq/gssegment/*
