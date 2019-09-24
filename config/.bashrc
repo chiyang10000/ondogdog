@@ -189,9 +189,9 @@ hawq-clean() {
     rm -rf /data2/hawq/segment/*
     rm -rf /data*/hawq/tmp/master/*
     rm -rf /data*/hawq/tmp/segment/*
-    sudo -u hdfs hdfs dfs -rm -f -r /hawq_data
-    sudo -u hdfs hdfs dfs -mkdir /hawq_data
-    sudo -u hdfs hdfs dfs -chown gpadmin /hawq_data
+    sudo -iu hdfs hdfs dfs -rm -f -r /hawq_data
+    sudo -iu hdfs hdfs dfs -mkdir /hawq_data
+    sudo -iu hdfs hdfs dfs -chown gpadmin /hawq_data
   fi
 }
 magma-init() {
