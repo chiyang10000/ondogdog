@@ -170,17 +170,18 @@ hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
 hawq_master_directory=/db_data/hawq-data-directory/masterdd
 hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
 magma-clean() {
-  rm -rf $hawq_magma_locations_master
-  rm -rf $hawq_magma_locations_segment
-  mkdir -p $hawq_magma_locations_master
-  mkdir -p $hawq_magma_locations_segment
+  sudo rm -rf $hawq_magma_locations_master
+  sudo rm -rf $hawq_magma_locations_segment
+  sudo install -o $USER -d $hawq_magma_locations_master
+  sudo install -o $USER -d $hawq_magma_locations_segment
 }
 hawq-clean() {
-  rm -rf $hawq_master_directory
-  rm -rf $hawq_segment_directory
-  mkdir -p $hawq_master_directory
-  mkdir -p $hawq_segment_directory
+  sudo rm -rf $hawq_master_directory
+  sudo rm -rf $hawq_segment_directory
+  sudo install -o $USER -d $hawq_master_directory
+  sudo install -o $USER -d $hawq_segment_directory
   hdfs dfs -rmr /hawq_default* || true
+  sudo rm -rf /tmp/.*PGSQL*
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
   sudo rm -rf /tmp/test_magma_status.sql
@@ -230,8 +231,8 @@ hawq-init() {
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
-  ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs kill -9 || true
-  ps -eo pid,command | grep [m]agma_server | awk '{print $1}' | xargs kill -9 || true
+  ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep [m]agma_server | awk '{print $1}' | xargs sudo kill -9 || true
 }
 hawq-restart () {
   rm -rf /cores/*;
