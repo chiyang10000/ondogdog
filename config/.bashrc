@@ -227,8 +227,8 @@ hawq-init() {
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
-  ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs kill -9
-  ps -eo pid,command | grep [m]agma_server | awk '{print $1}' | xargs kill -9
+  ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs kill -9 || true
+  ps -eo pid,command | grep [m]agma_server | awk '{print $1}' | xargs kill -9 || true
 }
 hawq-restart () {
   rm -rf /cores/*;
