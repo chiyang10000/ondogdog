@@ -170,7 +170,6 @@ hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
 hawq_master_directory=/db_data/hawq-data-directory/masterdd
 hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
 magma-clean() {
-  killall -9 magma_server
   rm -rf $hawq_magma_locations_master
   rm -rf $hawq_magma_locations_segment
   mkdir -p $hawq_magma_locations_master
