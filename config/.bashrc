@@ -186,7 +186,7 @@ hawq-clean() {
   sudo rm -rf /tmp/checktmpdir.log
   sudo rm -rf /tmp/Test*
   sudo rm -rf /tmp/test*
-  sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range*
+  sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
   if [ $system == Linux ]; then
     rm -rf /data*/hawq/gsmaster/*
     rm -rf /data*/hawq/gssegment/*
