@@ -207,9 +207,7 @@ magma-init() {
   rm -rf /cores/*
   hawq-restart
 }
-hawq-config() {
-  hawq config --skipvalidation --change $1 --value $2
-}
+# hawq-config() { hawq config --skipvalidation --change $1 --value $2 }
 hawq-init() {
   num=${1-4}
   rm -rf /cores/*
