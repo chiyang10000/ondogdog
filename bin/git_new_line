@@ -1,0 +1,22 @@
+#!/bin/bash
+if [[ ! -d ./.git ]]; then
+  echo "Current working directory `pwd` is not a git repo"
+  exit 1
+fi
+
+start_sha=`git merge-base origin/master HEAD`
+git_sha_pattern="("
+for sha in `git rev-list ${start_sha}..HEAD^ | cut -c1-7`
+do
+  git_sha_pattern="${git_sha_pattern}${sha}|"
+done
+git_sha_pattern="${git_sha_pattern}`git rev-parse HEAD | cut -c1-7`)"
+echo "Commit diveraged from origin/master: $git_sha_pattern"
+
+file_list=`git diff ${start_sha} --name-only`
+for file in $file_list
+do
+  git blame $file |
+    grep -E "^${git_sha_pattern}" |
+    sed -E "s|[0-9a-z]+.*\([^)]* ([0-9]+)\)(.*)|$file:\1\2|"
+done

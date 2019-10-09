@@ -2,10 +2,10 @@
 # set -ex
 
 change_install_name() {
-  echo "Changing install_name ..."
   files=$1
   dir=$2
   count=0
+  echo "Changing install_name of $2 ..."
 
   for target in $files; do
     if [[ -n $(otool -L $target | sed -n '2,$p' | grep ${dir}) ]]; then
@@ -51,7 +51,7 @@ echo "Checking file list ..."
 bin_files=
 for file in $(find /usr/local/hawq/bin -type f -name '*') $(find /usr/local/hawq/lib -type f -name '*') $(find /opt/dependency-Darwin/package/bin -type f -name '*'); do
   if [[ $(file $file | grep Mach-O) ]]; then
-    echo $file
+    # echo $file
     bin_files="$file $bin_files"
   fi
 done

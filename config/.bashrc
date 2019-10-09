@@ -170,16 +170,19 @@ hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
 hawq_master_directory=/db_data/hawq-data-directory/masterdd
 hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
 magma-clean() {
-  sudo rm -rf $hawq_magma_locations_master
-  sudo rm -rf $hawq_magma_locations_segment
-  sudo install -o $USER -d $hawq_magma_locations_master
-  sudo install -o $USER -d $hawq_magma_locations_segment
+  set -x
+  sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
+  sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  set +x
 }
 hawq-clean() {
-  sudo rm -rf $hawq_master_directory
-  sudo rm -rf $hawq_segment_directory
-  sudo install -o $USER -d $hawq_master_directory
-  sudo install -o $USER -d $hawq_segment_directory
+  set -x
+  sudo rm -rf $(hawq-config hawq_master_directory)
+  sudo rm -rf $(hawq-config hawq_segment_directory)
+  sudo install -o $USER -d $(hawq-config hawq_master_directory)
+  sudo install -o $USER -d $(hawq-config hawq_segment_directory)
   hdfs dfs -rmr /hawq_default* || true
   sudo rm -rf /tmp/.*PGSQL*
   sudo rm -rf /tmp/pgsql_tmp
@@ -188,17 +191,12 @@ hawq-clean() {
   sudo rm -rf /tmp/test*
   sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
   if [ $system == Linux ]; then
-    rm -rf /data*/hawq/gsmaster/*
-    rm -rf /data*/hawq/gssegment/*
-    rm -rf /data1/hawq/master/*
-    rm -rf /data2/hawq/segment/*
-    rm -rf /data*/hawq/tmp/master/*
-    rm -rf /data*/hawq/tmp/segment/*
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_data
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_default*
     sudo -iu hdfs hdfs dfs -mkdir /hawq_data
     sudo -iu hdfs hdfs dfs -chown gpadmin /hawq_data
   fi
+  set +x
 }
 magma-init() {
   hawq sql -c "drop database hawq_feature_test_db;"
@@ -325,7 +323,13 @@ hornet-release() {
   cd ~/dev/release/hornet && make incremental && cd -
 }
 hornet-coverage() {
-  test $# -eq 1 || echo 'Error'
+  test $# -le 1 || echo 'Error number of arguments.'
+  if [[ $# -eq 0 ]]; then
+    cd ~/dev/coverage/hornet && RUN_UNITTEST=YES make incremental && cd
+    gen-coverage
+    parse_lcov_output.py ~/dev/coverage/hornet/CodeCoverage.info.cleaned
+    return 0
+  fi
   case $1 in
     dbcommon);;
     univplan);;
