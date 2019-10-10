@@ -173,16 +173,12 @@ magma-clean() {
   set -x
   sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
   sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
-  sudo install -o $USER -d $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
-  sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
   set +x
 }
 hawq-clean() {
   set -x
   sudo rm -rf $(hawq-config hawq_master_directory)
   sudo rm -rf $(hawq-config hawq_segment_directory)
-  sudo install -o $USER -d $(hawq-config hawq_master_directory)
-  sudo install -o $USER -d $(hawq-config hawq_segment_directory)
   hdfs dfs -rmr /hawq_default* || true
   sudo rm -rf /tmp/.*PGSQL*
   sudo rm -rf /tmp/pgsql_tmp
@@ -220,6 +216,15 @@ hawq-init() {
   hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
   hawq-config hawq_master_directory $hawq_master_directory
   hawq-config hawq_segment_directory $hawq_segment_directory
+
+  sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
+  sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  sudo rm -rf $(hawq-config hawq_master_directory)
+  sudo rm -rf $(hawq-config hawq_segment_directory)
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  sudo install -o $USER -d $(hawq-config hawq_master_directory)
+  sudo install -o $USER -d $(hawq-config hawq_segment_directory)
   hawq init cluster -a --locale='C' --lc-collate='C' \
         --lc-ctype='C' --lc-messages='C' \
         --lc-monetary='C' --lc-numeric='C' \
@@ -311,7 +316,7 @@ gen-coverage() {
   --output-file CodeCoverage.info.cleaned
   genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
   test -d /var/www/html/ && sudo cp -r CodeCoverageReport/* /var/www/html/
-  open CodeCoverageReport/index.html
+  [[ $system == Darwin ]] && open CodeCoverageReport/index.html
 }
 export RUN_UNITTEST=no
 hornet-debug() {
