@@ -186,7 +186,7 @@ hawq-clean() {
   sudo rm -rf /tmp/Test*
   sudo rm -rf /tmp/test*
   sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
-  if [ $system == Linux ]; then
+  if [[ $system == Linux && `getent passwd hdfs` ]]; then
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_data
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_default*
     sudo -iu hdfs hdfs dfs -mkdir /hawq_data
@@ -201,7 +201,13 @@ magma-init() {
   rm -rf /cores/*
   hawq-restart
 }
-# hawq-config() { hawq config --skipvalidation --change $1 --value $2 }
+hawq-config() {
+  if [[ $# -eq 1 ]]; then
+    hawq config --show $1
+  else
+    hawq config --skipvalidation --change $1 --value $2
+  fi
+}
 hawq-init() {
   num=${1-4}
   rm -rf /cores/*
@@ -217,14 +223,16 @@ hawq-init() {
   hawq-config hawq_master_directory $hawq_master_directory
   hawq-config hawq_segment_directory $hawq_segment_directory
 
-  sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
-  sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
-  sudo rm -rf $(hawq-config hawq_master_directory)
-  sudo rm -rf $(hawq-config hawq_segment_directory)
-  sudo install -o $USER -d $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
-  sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
-  sudo install -o $USER -d $(hawq-config hawq_master_directory)
-  sudo install -o $USER -d $(hawq-config hawq_segment_directory)
+  set -ex
+  sudo rm -rf $hawq_magma_locations_master
+  sudo rm -rf $hawq_magma_locations_segment
+  sudo rm -rf $hawq_master_directory
+  sudo rm -rf $hawq_segment_directory
+  sudo install -o $USER -d $hawq_magma_locations_master
+  sudo install -o $USER -d $hawq_magma_locations_segment
+  sudo install -o $USER -d $hawq_master_directory
+  sudo install -o $USER -d $hawq_segment_directory
+  set +ex
   hawq init cluster -a --locale='C' --lc-collate='C' \
         --lc-ctype='C' --lc-messages='C' \
         --lc-monetary='C' --lc-numeric='C' \
@@ -232,9 +240,9 @@ hawq-init() {
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
-  ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs sudo kill -9 || true
-  ps -eo pid,command | grep [m]agma_server | awk '{print $1}' | xargs sudo kill -9 || true
-  ps -eo pid,command | grep [g]pfdist | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep -E '^[0-9]+ [^ ]*postgres' | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep -E '^[0-9]+ [^ ]*magma_server' | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep -E '^[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9 || true
 }
 hawq-restart () {
   rm -rf /cores/*;
