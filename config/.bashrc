@@ -229,6 +229,7 @@ hawq-init() {
 hawq-stop() {
   ps -eo pid,command | grep [p]ostgres | awk '{print $1}' | xargs sudo kill -9 || true
   ps -eo pid,command | grep [m]agma_server | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep [g]pfdist | awk '{print $1}' | xargs sudo kill -9 || true
 }
 hawq-restart () {
   rm -rf /cores/*;
