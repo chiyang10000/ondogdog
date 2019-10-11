@@ -17,6 +17,10 @@ else
 fi
 HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
+[[ Linux == `uname -s` ]] && NPROC=`nproc`
+[[ Darwin == `uname -s` ]] && NPROC=`sysctl -n hw.ncpu`
+export MAKEFLAGS=-j$NPROC
+
 
 export PGDATABASE=postgres
 
@@ -183,9 +187,7 @@ hawq-clean() {
   sudo rm -rf /tmp/.*PGSQL*
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
-  sudo rm -rf /tmp/Test*
-  sudo rm -rf /tmp/test*
-  sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
+  sudo rm -rf /tmp/Test* /tmp/test* /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
   if [[ $system == Linux && `getent passwd hdfs` ]]; then
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_data
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_default*
@@ -202,6 +204,8 @@ magma-init() {
   hawq-restart
 }
 hawq-config() {
+  hawq-config.py "$@"
+  return
   if [[ $# -eq 1 ]]; then
     hawq config --show $1
   else
@@ -240,9 +244,9 @@ hawq-init() {
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
-  ps -eo pid,command | grep -E '^[0-9]+ [^ ]*postgres' | awk '{print $1}' | xargs sudo kill -9 || true
-  ps -eo pid,command | grep -E '^[0-9]+ [^ ]*magma_server' | awk '{print $1}' | xargs sudo kill -9 || true
-  ps -eo pid,command | grep -E '^[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*postgres' | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*magma_server' | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9 || true
 }
 hawq-restart () {
   rm -rf /cores/*;
@@ -339,9 +343,36 @@ hornet-release() {
 hornet-coverage() {
   test $# -le 1 || echo 'Error number of arguments.'
   if [[ $# -eq 0 ]]; then
-    cd ~/dev/coverage/hornet && RUN_UNITTEST=YES make incremental && cd
-    gen-coverage
-    parse_lcov_output.py ~/dev/coverage/hornet/CodeCoverage.info.cleaned
+    sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table
+    sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalog* /tmp/rg* /tmp/range*
+    cd ~/dev/coverage/hornet && ~/dev/hornet/bootstrap
+    sed -i.bak 's|PREFIX=.*|PREFIX="~/dev/coverage/hornet/dependency"|g' build-all.sh
+    sed -i.bak 's|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX="~/dev/coverage/hornet/dependency"|g' build-all.sh
+    sed -i.bak "s|make coverage|make -j$NPROC install|g" build-all.sh
+    sed -i.bak '45a \
+      set -ex;OPTION=--enable-coverage
+      ' build-all.sh
+    sed -i.bak '68d' build-all.sh
+    make incremental
+    for m in dbcommon univplan interconnect magma storage executor
+    do
+      cd ~/dev/coverage/hornet/$m/build
+      make -j$NPROC resetcoverage
+      make -j$NPROC punittest
+    done
+
+    time gcovr -j$NPROC --exclude-directories='.*/test/unit' -r ~/dev/hornet/ ~/dev/coverage/hornet/ -o ~/dev/coverage/hornet/hornet.gcovr
+    parse_gcovr_output.py ~/dev/hornet ~/dev/coverage/hornet/hornet.gcovr | tee ~/dev/coverage/hornet/hornet.report
+    return 0
+
+    cd ~/dev/coverage/hornet/
+    lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
+    lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
+    '*/build/src/storage/format/orc/*' \
+    '*/test/unit/*' '*/testutil/*' \
+    '*/protos/*' '*/proto/*' '*/thrift/*' \
+    --output-file CodeCoverage.info.cleaned
+    parse_lcov_output.py ~/dev/hornet ~/dev/coverage/hornet/CodeCoverage.info.cleaned
     return 0
   fi
   case $1 in
