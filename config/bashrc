@@ -368,6 +368,7 @@ hornet-coverage() {
     if [[ $# -eq 2 ]]; then
       hornet_src_dir=$1
       hornet_cov_dir=$2
+      mkdir -p ${hornet_cov_dir}
     fi
     sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table
     sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalog* /tmp/rg* /tmp/range*
