@@ -13,6 +13,10 @@ done
 git_sha_pattern="${git_sha_pattern}`git rev-parse HEAD | cut -c1-7`)"
 echo "Commit diveraged from origin/master: $git_sha_pattern"
 
+if [[ $start_sha == `git rev-parse HEAD` ]]; then
+  start_sha=HEAD^
+fi
+
 file_list=`git diff ${start_sha} --name-only`
 for file in $file_list
 do
