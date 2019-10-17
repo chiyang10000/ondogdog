@@ -314,7 +314,7 @@ hawq-test() {
     ftest="/usr/local/hawq/feature-test/feature-test"
   else
     cd $HAWQ_SRC;
-    make -j8 feature-test > /dev/null;
+    make feature-test > /dev/null;
     if [[ ! $? -eq 0 ]]; then
       return
     fi
@@ -422,32 +422,32 @@ hornet-coverage() {
   cd ${hornet_cov_dir}/$component/build
   ${hornet_cov_dir}$component/bootstrap --enable-coverage
   make resetcoverage
-  make -j8 unittest
+  make unittest
   gen-coverage
 }
 hornet-test() {
   if [ -n "$1" ]; then
     if [[ `pwd` =~ "magma" ]]; then
-      make -j8 unit && test/unit/magma_server/unit --gtest_filter=$1;
+      make unit && test/unit/magma_server/unit --gtest_filter=$1;
     else
-      make -j8 unit && test/unit/unit --gtest_filter=$1;
+      make unit && test/unit/unit --gtest_filter=$1;
     fi
   else
-    make -j8 unit && make punittest
+    make unit && make punittest
   fi
 }
 hornet-test-list() {
   if [[ `pwd` =~ "magma" ]]; then
-    make -j8 unit && test/unit/magma_server/unit --gtest_list_tests
+    make unit && test/unit/magma_server/unit --gtest_list_tests
   else
-    make -j8 unit && test/unit/unit --gtest_list_tests
+    make unit && test/unit/unit --gtest_list_tests
   fi
 }
 hornet-test-lldb() {
   if [[ `pwd` =~ "magma" ]]; then
-    make -j8 unit && lldb test/unit/magma_server/unit -- --gtest_filter=$1;
+    make unit && lldb test/unit/magma_server/unit -- --gtest_filter=$1;
   else
-    make -j8 unit && lldb test/unit/unit -- --gtest_filter=$1;
+    make unit && lldb test/unit/unit -- --gtest_filter=$1;
   fi
 }
 
