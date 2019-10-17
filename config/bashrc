@@ -23,6 +23,8 @@ if [ $system == Darwin ]; then
 fi
 HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
+hornet_src_dir=~/dev/hornet/
+hornet_cov_dir=~/dev/coverage/hornet/
 export MAKEFLAGS=-j$yzy_NPROC
 
 
@@ -264,9 +266,9 @@ hawq-init() {
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
 }
 hawq-stop() {
-  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*postgres' | awk '{print $1}' | xargs sudo kill -9 || true
-  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*magma_server' | awk '{print $1}' | xargs sudo kill -9 || true
-  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9 || true
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*postgres' | awk '{print $1}' | xargs sudo kill -9
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*magma_server' | awk '{print $1}' | xargs sudo kill -9
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9
 }
 hawq-restart () {
   rm -rf ${yzy_CORE_DIR}/*;
@@ -361,13 +363,17 @@ hornet-release() {
   cd ~/dev/release/hornet && make incremental && cd -
 }
 hornet-coverage() {
-  test $# -le 1 || echo 'Error number of arguments.'
-  if [[ $# -eq 0 ]]; then
+  test $# -gt 2 && echo 'Error number of arguments.'
+  if [[ $# -eq 0 || $# -eq 2 ]]; then
+    if [[ $# -eq 2 ]]; then
+      hornet_src_dir=$1
+      hornet_cov_dir=$2
+    fi
     sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table
     sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalog* /tmp/rg* /tmp/range*
-    cd ~/dev/coverage/hornet && ~/dev/hornet/bootstrap
-    sed -i.bak 's|PREFIX=.*|PREFIX="~/dev/coverage/hornet/dependency"|g' build-all.sh
-    sed -i.bak 's|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX="~/dev/coverage/hornet/dependency"|g' build-all.sh
+    cd ${hornet_cov_dir} && ${hornet_src_dir}/bootstrap
+    sed -i.bak "s|PREFIX=.*|PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
+    sed -i.bak "s|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
     sed -i.bak "s|make coverage|make -j$yzy_NPROC install|g" build-all.sh
     sed -i.bak '45a \
       set -ex;OPTION=--enable-coverage
@@ -376,23 +382,29 @@ hornet-coverage() {
     make incremental
     for m in dbcommon univplan interconnect magma storage executor
     do
-      cd ~/dev/coverage/hornet/$m/build
+      cd ${hornet_cov_dir}/$m/build
       make resetcoverage
       make punittest
     done
 
-    time gcovr -j$yzy_NPROC --exclude-directories='.*/test/unit' -r ~/dev/hornet/ ~/dev/coverage/hornet/ -o ~/dev/coverage/hornet/hornet.gcovr
-    parse_gcovr_output.py ~/dev/hornet ~/dev/coverage/hornet/hornet.gcovr | tee ~/dev/coverage/hornet/hornet.report
-    return 0
+    if [[ -n `which gcovr` ]]; then
+      time gcovr -j$yzy_NPROC \
+        --exclude-directories='.*/test/unit' \
+        --root ${hornet_src_dir} \
+        ${hornet_cov_dir}/ -o ${hornet_cov_dir}/hornet.gcovr
+      parse_gcovr_output.py ${hornet_src_dir} ${hornet_cov_dir}/hornet.gcovr |
+        tee ${hornet_cov_dir}/hornet.report
+      return 0
+    fi
 
-    cd ~/dev/coverage/hornet/
+    cd ${hornet_cov_dir}/
     lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
     lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
     '*/build/src/storage/format/orc/*' \
     '*/test/unit/*' '*/testutil/*' \
     '*/protos/*' '*/proto/*' '*/thrift/*' \
     --output-file CodeCoverage.info.cleaned
-    parse_lcov_output.py ~/dev/hornet ~/dev/coverage/hornet/CodeCoverage.info.cleaned
+    parse_lcov_output.py ${hornet_src_dir} ${hornet_cov_dir}/CodeCoverage.info.cleaned
     return 0
   fi
   case $1 in
@@ -405,10 +417,10 @@ hornet-coverage() {
   esac
   hornet-debug
   component=$1
-  cd ~/dev/coverage/hornet && ~/dev/hornet/bootstrap
-  mkdir -p ~/dev/coverage/hornet/$component/build
-  cd ~/dev/coverage/hornet/$component/build
-  ~/dev/hornet/$component/bootstrap --enable-coverage
+  cd ${hornet_cov_dir} && ${hornet_cov_dir}bootstrap
+  mkdir -p ${hornet_cov_dir}/$component/build
+  cd ${hornet_cov_dir}/$component/build
+  ${hornet_cov_dir}$component/bootstrap --enable-coverage
   make resetcoverage
   make -j8 unittest
   gen-coverage
