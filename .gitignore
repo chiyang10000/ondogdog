@@ -1,5 +1,8 @@
 bin/cpplint.py
 bin/lava
+bin/lib/__pycache__/
 config/git-completion.bash
 config/git-prompt.sh
 .idea
+.cproject
+.project

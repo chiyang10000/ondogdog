@@ -5,22 +5,25 @@ if [ $system == Linux ]; then
   alias ls='ls --color'
   alias xargs='xargs -r'
   alias toolchain='source ~/dev/hornet/thirdparty/toolchain-clang-x86_64-Linux.sh'
-else
+  yzy_CORE_DIR=$(dirname $(sysctl -n kernel.core_pattern))
+  yzy_NPROC=`nproc`
+fi
+if [ $system == Darwin ]; then
   CLICOLOR=1 #for mac and BSD
   export LSCOLORS=gxfxcxdxbxegedabagacad
   alias toolchain='source /opt/dependency-Darwin/package/env.sh'
-  if [[ -n `which gls` ]]; then
+  if [[ -z `which gls` ]]; then
     alias ls='ls -G'
   else
     alias ls='gls --color'
     alias date='gdate'
   fi
+  yzy_NPROC=`sysctl -n hw.ncpu`
+  yzy_CORE_DIR=$(dirname $(sysctl -n kern.corefile))
 fi
 HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
-[[ Linux == `uname -s` ]] && NPROC=`nproc`
-[[ Darwin == `uname -s` ]] && NPROC=`sysctl -n hw.ncpu`
-export MAKEFLAGS=-j$NPROC
+export MAKEFLAGS=-j$yzy_NPROC
 
 
 export PGDATABASE=postgres
@@ -66,12 +69,17 @@ find-latest-diff() {
 }
 lldb-latest() {
   if [ -n "$1" ]; then
-    lldb -c `ls -rt /cores/core.$1.* | tail -n 1`
+    lldb -c `ls -rt ${yzy_CORE_DIR}/core.* | tail -n 1`
   else
-    lldb -c /cores/`ls -rt /cores | tail -n 1`
+    core_file=${yzy_CORE_DIR}/`ls -1rt ${yzy_CORE_DIR}/ | tail -n 1`
+    if [[ -f $core_file ]]; then
+      ls -ltr ${yzy_CORE_DIR}/
+      echo
+      lldb -c $core_file
+    fi
   fi
 }
-alias lldb-recent='lldb -c /cores/`ls -rt /cores| tail -n 2| head -n 1`'
+alias lldb-recent='lldb -c ${yzy_CORE_DIR}/`ls -rt /cores| tail -n 2| head -n 1`'
 
 alias vi=vim
 alias grep='grep --color'
@@ -79,7 +87,7 @@ alias vi-latest='vi `ls -1t|head -1`'
 alias cutf="tr -s ' '| cut -d ' ' -f "
 
 alias log-newqe='cd ~/dev/hawq/src/test/feature/newexecutor'
-log-featuretest() {
+cd-featuretest() {
   if [ -d /usr/local/hawq/feature-test ]; then
     cd /usr/local/hawq/feature-test
   fi
@@ -87,22 +95,33 @@ log-featuretest() {
     cd ~/dev/hawq/src/test/feature
   fi
 }
-log-master() {
-  d=$(ps -eo pid,command| grep 'hawq.*-M master' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
-  log=$(ls -tr $d/pg_log | grep hawq | tail -n1)
-  tail -f $d/pg_log/$log
+yizhiyang-dir() {
+  node=$1
+  ps -eo pid,command| grep "[h]awq.*-M $node" | sed -E 's|.*-D ([^ ]+) .*|\1|'
 }
-log-segment() {
-  d=$(ps -eo pid,command| grep 'hawq.*-M segment' | grep D | sed -E 's|.*-D ([^ ]+) .*|\1|')
-  log=$(ls -tr $d/pg_log | grep hawq | tail -n1)
-  tail -f $d/pg_log/$log
+yizhiyang-log-file() {
+  hawq_component=$1
+  hawq_node=$2
+  log_dir=$(yizhiyang-dir $hawq_node)/pg_log
+  log_file=$(ls -tr $log_dir | grep $hawq_component | tail -n1)
+  echo $log_dir/$log_file
 }
-log-namenode() {
-  d=$(ps -eo pid,command|grep proc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
+alias dir-master='yizhiyang-dir master'
+alias dir-segment='yizhiyang-dir segment'
+alias tail-log-hawq-master='tail -f `yizhiyang-log-file hawq master`'
+alias tail-log-magma-master='tail -f `yizhiyang-log magma master`'
+alias tail-log-hawq-segment='tail -f `yizhiyang-log hawq segment`'
+alias tail-log-magma-segment='tail -f `yizhiyang-log magma segment`'
+alias vi-log-hawq-master='vi `yizhiyang-log-file hawq master`'
+alias vi-log-magma-master='vi `yizhiyang-log magma master`'
+alias vi-log-hawq-segment='vi `yizhiyang-log hawq segment`'
+alias vi-log-magma-segment='vi `yizhiyang-log magma segment`'
+cd-log-namenode() {
+  d=$(ps -eo pid,command|grep [p]roc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
   cd $d
 }
-log-datanode() {
-  d=$(ps -eo pid,command|grep proc_datanode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
+cd-log-datanode() {
+  d=$(ps -eo pid,command|grep [p]roc_datanode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
   cd $d
 }
 
@@ -201,7 +220,7 @@ magma-init() {
   hawq sql -c "drop database hawq_feature_test_db;"
   hawq-setup-feature-test
   magma-clean
-  rm -rf /cores/*
+  rm -rf ${yzy_CORE_DIR}/*
   hawq-restart
 }
 hawq-config() {
@@ -215,7 +234,7 @@ hawq-config() {
 }
 hawq-init() {
   num=${1-4}
-  rm -rf /cores/*
+  rm -rf ${yzy_CORE_DIR}/*
   hawq-stop
   magma-clean
   hawq-clean
@@ -250,7 +269,7 @@ hawq-stop() {
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9 || true
 }
 hawq-restart () {
-  rm -rf /cores/*;
+  rm -rf ${yzy_CORE_DIR}/*;
   if [ "$#" -eq 1 ]; then
     val=$1
     echo "set QE num to $1"
@@ -349,7 +368,7 @@ hornet-coverage() {
     cd ~/dev/coverage/hornet && ~/dev/hornet/bootstrap
     sed -i.bak 's|PREFIX=.*|PREFIX="~/dev/coverage/hornet/dependency"|g' build-all.sh
     sed -i.bak 's|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX="~/dev/coverage/hornet/dependency"|g' build-all.sh
-    sed -i.bak "s|make coverage|make -j$NPROC install|g" build-all.sh
+    sed -i.bak "s|make coverage|make -j$yzy_NPROC install|g" build-all.sh
     sed -i.bak '45a \
       set -ex;OPTION=--enable-coverage
       ' build-all.sh
@@ -358,11 +377,11 @@ hornet-coverage() {
     for m in dbcommon univplan interconnect magma storage executor
     do
       cd ~/dev/coverage/hornet/$m/build
-      make -j$NPROC resetcoverage
-      make -j$NPROC punittest
+      make resetcoverage
+      make punittest
     done
 
-    time gcovr -j$NPROC --exclude-directories='.*/test/unit' -r ~/dev/hornet/ ~/dev/coverage/hornet/ -o ~/dev/coverage/hornet/hornet.gcovr
+    time gcovr -j$yzy_NPROC --exclude-directories='.*/test/unit' -r ~/dev/hornet/ ~/dev/coverage/hornet/ -o ~/dev/coverage/hornet/hornet.gcovr
     parse_gcovr_output.py ~/dev/hornet ~/dev/coverage/hornet/hornet.gcovr | tee ~/dev/coverage/hornet/hornet.report
     return 0
 
@@ -419,7 +438,6 @@ hornet-test-lldb() {
     make -j8 unit && lldb test/unit/unit -- --gtest_filter=$1;
   fi
 }
-
 
 
 
