@@ -220,7 +220,7 @@ magma-init() {
   hawq sql -c "drop database hawq_feature_test_db;"
   hawq-setup-feature-test
   magma-clean
-  rm -rf ${yzy_CORE_DIR}/*
+  rm -rf ${yzy_CORE_DIR}/core*
   hawq-restart
 }
 hawq-config() {
@@ -234,7 +234,7 @@ hawq-config() {
 }
 hawq-init() {
   num=${1-4}
-  rm -rf ${yzy_CORE_DIR}/*
+  rm -rf ${yzy_CORE_DIR}/core*
   hawq-stop
   magma-clean
   hawq-clean
