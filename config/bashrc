@@ -18,6 +18,7 @@ if [ $system == Darwin ]; then
     alias ls='gls --color'
     alias date='gdate'
   fi
+  [[ -n 'which gecho' ]] && alias echo=gecho
   yzy_NPROC=`sysctl -n hw.ncpu`
   yzy_CORE_DIR=$(dirname $(sysctl -n kern.corefile))
 fi
@@ -55,19 +56,17 @@ mytime() {
   echo $t ms
 }
 
-instrument() {
-  instruments -l $1 -t Time\ Profiler -p `hawq-qe 2`
-}
+# instrument() { instruments -l $1 -t Time\ Profiler -p `hawq-qe 2` }
 format-code() {
   git diff HEAD --name-only| xargs clang-format -i -style=google
   git diff HEAD --name-only| xargs cpplint.py
 }
 
 find-latest() {
-  find . -iname "$1" |xargs ls -ltr
+  find . -iname "$1" | xargs ls -ltr
 }
 find-latest-diff() {
-  find . -iname '*.diff' |xargs ls -ltr
+  find . -iname '*.diff' | xargs ls -ltr
 }
 lldb-latest() {
   if [ -n "$1" ]; then
@@ -341,17 +340,6 @@ hawq-test() {
 #  Hornet 
 #
 #-------------------------------------------------------------------------------
-gen-coverage() {
-  lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
-  lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
-  '*/build/src/storage/format/orc/*' \
-  '*/test/unit/*' '*/testutil/*' \
-  '*/protos/*' '*/proto/*' '*/thrift/*' \
-  --output-file CodeCoverage.info.cleaned
-  genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
-  test -d /var/www/html/ && sudo cp -r CodeCoverageReport/* /var/www/html/
-  [[ $system == Darwin ]] && open CodeCoverageReport/index.html
-}
 export RUN_UNITTEST=no
 hornet-debug() {
   cd ~/dev/hornet && make incremental && cd -
@@ -362,50 +350,62 @@ hornet-unittest() {
 hornet-release() {
   cd ~/dev/release/hornet && make incremental && cd -
 }
+hornet-coverage-setup() {
+  sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table
+  sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalog* /tmp/rg* /tmp/range*
+
+  mkdir -p ${hornet_cov_dir}
+  cd ${hornet_cov_dir} && ${hornet_src_dir}/bootstrap
+  sed -i.bak "s|PREFIX=.*|PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
+  sed -i.bak "s|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
+  sed -i.bak "s|make coverage|make -j$yzy_NPROC install|g" build-all.sh
+  sed -i.bak '45a \
+    set -ex;OPTION=--enable-coverage
+    ' build-all.sh
+  sed -i.bak '68d' build-all.sh
+}
+hornet-coverage-report() {
+  arg=$1
+  [[ -z $@ ]] && arg=gcovr
+  [[ -z `which gcovr` ]] && arg=lcov
+  echo -e "Invoking $arg \e[5m...\e[0m\n"
+
+  if [[ $arg == gcovr ]]; then
+    time gcovr -j$yzy_NPROC \
+      --root ${hornet_src_dir} \
+      ${hornet_cov_dir}/ -o ${hornet_cov_dir}/hornet.gcovr
+    parse_gcovr_output.py ${hornet_src_dir} ${hornet_cov_dir}/hornet.gcovr |
+      tee ${hornet_cov_dir}/hornet.report
+    return 0
+    # --exclude-directories='.*/test/unit' \
+  fi
+
+  cd ${hornet_cov_dir}/
+  time lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
+  lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
+  '*/build/src/storage/format/orc/*' \
+  '*/protos/*' '*/proto/*' '*/thrift/*' \
+  --output-file CodeCoverage.info.cleaned
+  parse_lcov_output.py ${hornet_src_dir} ${hornet_cov_dir}/CodeCoverage.info.cleaned
+  # '*/test/unit/*' '*/testutil/*' \
+}
 hornet-coverage() {
   test $# -gt 2 && echo 'Error number of arguments.'
+  set -e
   if [[ $# -eq 0 || $# -eq 2 ]]; then
     if [[ $# -eq 2 ]]; then
       hornet_src_dir=$1
       hornet_cov_dir=$2
-      mkdir -p ${hornet_cov_dir}
     fi
-    sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table
-    sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalog* /tmp/rg* /tmp/range*
-    cd ${hornet_cov_dir} && ${hornet_src_dir}/bootstrap
-    sed -i.bak "s|PREFIX=.*|PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
-    sed -i.bak "s|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
-    sed -i.bak "s|make coverage|make -j$yzy_NPROC install|g" build-all.sh
-    sed -i.bak '45a \
-      set -ex;OPTION=--enable-coverage
-      ' build-all.sh
-    sed -i.bak '68d' build-all.sh
-    make incremental
+    hornet-coverage-setup
+    cd ${hornet_cov_dir} && make incremental
     for m in dbcommon univplan interconnect magma storage executor
     do
       cd ${hornet_cov_dir}/$m/build
       make resetcoverage
       make punittest
     done
-
-    if [[ -n `which gcovr` ]]; then
-      time gcovr -j$yzy_NPROC \
-        --exclude-directories='.*/test/unit' \
-        --root ${hornet_src_dir} \
-        ${hornet_cov_dir}/ -o ${hornet_cov_dir}/hornet.gcovr
-      parse_gcovr_output.py ${hornet_src_dir} ${hornet_cov_dir}/hornet.gcovr |
-        tee ${hornet_cov_dir}/hornet.report
-      return 0
-    fi
-
-    cd ${hornet_cov_dir}/
-    lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
-    lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
-    '*/build/src/storage/format/orc/*' \
-    '*/test/unit/*' '*/testutil/*' \
-    '*/protos/*' '*/proto/*' '*/thrift/*' \
-    --output-file CodeCoverage.info.cleaned
-    parse_lcov_output.py ${hornet_src_dir} ${hornet_cov_dir}/CodeCoverage.info.cleaned
+    hornet-coverage-report
     return 0
   fi
   case $1 in
@@ -416,15 +416,17 @@ hornet-coverage() {
     executor);;
     *) return;;
   esac
-  hornet-debug
+  # hornet-debug
+  hornet-coverage-setup
   component=$1
-  cd ${hornet_cov_dir} && ${hornet_cov_dir}bootstrap
+  cd ${hornet_cov_dir}
   mkdir -p ${hornet_cov_dir}/$component/build
   cd ${hornet_cov_dir}/$component/build
-  ${hornet_cov_dir}$component/bootstrap --enable-coverage
+  ${hornet_cov_dir}/$component/bootstrap --enable-coverage
   make resetcoverage
-  make unittest
+  make punittest
   gen-coverage
+  set +e
 }
 hornet-test() {
   if [ -n "$1" ]; then
@@ -450,6 +452,17 @@ hornet-test-lldb() {
   else
     make unit && lldb test/unit/unit -- --gtest_filter=$1;
   fi
+}
+gen-coverage() {
+  lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
+  lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
+  '*/build/src/storage/format/orc/*' \
+  '*/test/unit/*' '*/testutil/*' \
+  '*/protos/*' '*/proto/*' '*/thrift/*' \
+  --output-file CodeCoverage.info.cleaned
+  genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
+  test -d /var/www/html/ && sudo cp -r CodeCoverageReport/* /var/www/html/
+  [[ $system == Darwin ]] && open CodeCoverageReport/index.html
 }
 
 
@@ -517,7 +530,7 @@ then
 fi
                                                            # last command status
 export PS1='$(s=$? && test $s -ne 0 && echo \[\033[31mExit code is $s)'$PS1
-export PS1=$PS1'\n\$ '                                              # UID symbol
+export PS1=$PS1'\n\[\033[01m\]\$ \[\033[00m\]'                      # UID symbol
 
 export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5;13:do=38;5;5:bd=48;5;232;38;5;11:cd=48;5;232;38;5;3:or=48;5;232;38;5;9:mi=05;48;5;232;38;5;15:su=48;5;196;38;5;15:sg=48;5;11;38;5;16:ca=48;5;196;38;5;226:tw=48;5;10;38;5;16:ow=48;5;10;38;5;21:st=48;5;21;38;5;15:ex=38;5;34:*.tar=38;5;9:*.tgz=38;5;9:*.arc=38;5;9:*.arj=38;5;9:*.taz=38;5;9:*.lha=38;5;9:*.lz4=38;5;9:*.lzh=38;5;9:*.lzma=38;5;9:*.tlz=38;5;9:*.txz=38;5;9:*.tzo=38;5;9:*.t7z=38;5;9:*.zip=38;5;9:*.z=38;5;9:*.Z=38;5;9:*.dz=38;5;9:*.gz=38;5;9:*.lrz=38;5;9:*.lz=38;5;9:*.lzo=38;5;9:*.xz=38;5;9:*.bz2=38;5;9:*.bz=38;5;9:*.tbz=38;5;9:*.tbz2=38;5;9:*.tz=38;5;9:*.deb=38;5;9:*.rpm=38;5;9:*.jar=38;5;9:*.war=38;5;9:*.ear=38;5;9:*.sar=38;5;9:*.rar=38;5;9:*.alz=38;5;9:*.ace=38;5;9:*.zoo=38;5;9:*.cpio=38;5;9:*.7z=38;5;9:*.rz=38;5;9:*.cab=38;5;9:*.jpg=38;5;13:*.jpeg=38;5;13:*.gif=38;5;13:*.bmp=38;5;13:*.pbm=38;5;13:*.pgm=38;5;13:*.ppm=38;5;13:*.tga=38;5;13:*.xbm=38;5;13:*.xpm=38;5;13:*.tif=38;5;13:*.tiff=38;5;13:*.png=38;5;13:*.svg=38;5;13:*.svgz=38;5;13:*.mng=38;5;13:*.pcx=38;5;13:*.mov=38;5;13:*.mpg=38;5;13:*.mpeg=38;5;13:*.m2v=38;5;13:*.mkv=38;5;13:*.webm=38;5;13:*.ogm=38;5;13:*.mp4=38;5;13:*.m4v=38;5;13:*.mp4v=38;5;13:*.vob=38;5;13:*.qt=38;5;13:*.nuv=38;5;13:*.wmv=38;5;13:*.asf=38;5;13:*.rm=38;5;13:*.rmvb=38;5;13:*.flc=38;5;13:*.avi=38;5;13:*.fli=38;5;13:*.flv=38;5;13:*.gl=38;5;13:*.dl=38;5;13:*.xcf=38;5;13:*.xwd=38;5;13:*.yuv=38;5;13:*.cgm=38;5;13:*.emf=38;5;13:*.axv=38;5;13:*.anx=38;5;13:*.ogv=38;5;13:*.ogx=38;5;13:*.aac=38;5;45:*.au=38;5;45:*.flac=38;5;45:*.mid=38;5;45:*.midi=38;5;45:*.mka=38;5;45:*.mp3=38;5;45:*.mpc=38;5;45:*.ogg=38;5;45:*.ra=38;5;45:*.wav=38;5;45:*.axa=38;5;45:*.oga=38;5;45:*.spx=38;5;45:*.xspf=38;5;45:"
 
