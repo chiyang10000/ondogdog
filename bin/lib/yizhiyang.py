@@ -35,9 +35,14 @@ def get_git_new_lines(git_repo_dir):
 
 
 def print_coverage(new_line_set, covered_line_set, uncovered_line_set):
-    print()
     uncovered_line_count = sum(map(lambda x: len(x), uncovered_line_set.values()))
     covered_line_count = sum(map(lambda x: len(x), covered_line_set.values()))
+
+    print()
+    print("Unit Test Code Coverage For Added Reachable C++ Lines: {} %".format(
+        covered_line_count / (covered_line_count + uncovered_line_count) * 100))
+
+    print()
     print("Contained {} reachable C++ library lines.".format(covered_line_count + uncovered_line_count))
 
     if covered_line_count + uncovered_line_count == 0:
