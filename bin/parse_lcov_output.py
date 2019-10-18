@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-import subprocess
+#!/usr/bin/env python
 import sys
 import re
-import io
 from lib import yizhiyang
 
 if __name__ == "__main__":
@@ -20,10 +18,14 @@ if __name__ == "__main__":
     uncovered_line_set = dict()
 
     input_stream = open(coverage_info_file)
-    for line in input_stream:
-        line = input_stream.readline()
-        file_name = file_name_pattern.match(line.strip()).group(1)
-        while line.strip() != 'end_of_record':
+    while True:
+        line = input_stream.readline()  # TN:
+        line = input_stream.readline()  # SF:
+        if not line:
+            break
+        line = line.rstrip()
+        file_name = file_name_pattern.match(line).group(1)
+        while line != 'end_of_record':
             match = line_num_pattern.match(line)
             if match:
                 line_num = int(match.group(1))
@@ -39,6 +41,6 @@ if __name__ == "__main__":
                         if file_name not in uncovered_line_set:
                             uncovered_line_set[file_name] = set()
                         uncovered_line_set[file_name].add(line_num)
-            line = input_stream.readline()
+            line = input_stream.readline().rstrip()
 
     yizhiyang.print_coverage(new_line_set, covered_line_set, uncovered_line_set)

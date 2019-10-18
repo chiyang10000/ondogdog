@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-import subprocess
+#!/usr/bin/env python
 import sys
 import re
-import io
 from lib import yizhiyang
 
 
@@ -35,7 +33,10 @@ if __name__ == "__main__":
     uncovered_line_set = dict()
 
     input_stream = open(coverage_info_file)
-    for line in input_stream:
+    while True:
+        line = input_stream.readline()
+        if not line:
+            break
         line = line.rstrip()
         match1 = file_name_pattern.match(line)
         match2 = file_name_cov_info_pattern.match(line)
@@ -84,7 +85,7 @@ if __name__ == "__main__":
                     covered_line_set[file_name].add(line_num)
             continue
 
-        if file_name in new_line_set:
+        if file_name in new_line_set and line_missing:
             for line_num in new_line_set[file_name]:
                 if line_num not in line_missing:
                     if file_name not in covered_line_set:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import re
 import sys
 import json
@@ -48,7 +48,10 @@ def convert_to_json_str(input_stream, pg_mode=False):
     curr_line_parsed = False
     plan_json_str = ''
 
-    for curr_line in input_stream:
+    while True:
+        curr_line = input_stream.readline()
+        if not curr_line:
+            break
         curr_line = curr_line.replace('"', "'").replace('\\', "")  # .replace("'", "")
 
         # Detect structured plan text
