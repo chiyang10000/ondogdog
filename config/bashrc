@@ -453,6 +453,13 @@ hornet-test-lldb() {
     make unit && lldb test/unit/unit -- --gtest_filter=$1;
   fi
 }
+hornet-test-gdb() {
+  if [[ `pwd` =~ "magma" ]]; then
+    make unit && gdb --args test/unit/magma_server/unit --gtest_filter=$1;
+  else
+    make unit && gdb --args test/unit/unit --gtest_filter=$1;
+  fi
+}
 gen-coverage() {
   lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
   lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
