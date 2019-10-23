@@ -422,7 +422,7 @@ hornet-coverage() {
   cd ${hornet_cov_dir}
   mkdir -p ${hornet_cov_dir}/$component/build
   cd ${hornet_cov_dir}/$component/build
-  ${hornet_cov_dir}/$component/bootstrap --enable-coverage
+  ${hornet_src_dir}/$component/bootstrap --enable-coverage
   make resetcoverage
   make punittest
   gen-coverage
