@@ -20,10 +20,11 @@ git config --global blame.date short
 
 rm -rf ~/yizhiyang/config/git-*
 version=`git --version | cut -d' ' -f3`
-major_version=`cut -d. -f1 <(echo $version)`
-minor_version=`cut -d. -f2 <(echo $version)`
+major_version=`echo $version | cut -d. -f1`
+minor_version=`echo $version | cut -d. -f2`
+patch_version=`echo $version | cut -d. -f3`
 if [[ $major_version -ge 2 && $minor_version -gt 9 ]]; then
-  tag=v$version
+  tag=v$major_version.$minor_version.$patch_version
 else
   tag=master
 fi
