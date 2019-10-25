@@ -5,6 +5,10 @@ from lib import yizhiyang
 
 
 def get_line_num_list(input_str):
+    # exception handling code
+    input_str = input_str.replace(' [* ', ',').replace(']', '')
+    input_str = input_str.replace('[* ', '')
+
     if len(input_str) == 0:
         return []
     num_list = list()
