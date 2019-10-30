@@ -9,6 +9,7 @@ search_path="orc_hash_notpartition_lz4_dict08_notpk_numeric_${scale}g"
 
 # Check NewQE planner support
 if [[ -z $(which psql) ]]; then
+  psql
   exit 1
 fi
 query_set=`seq 1 99`
@@ -25,9 +26,9 @@ for query_idx in $query_set; do
   # option="${option}set enable_groupagg=off;set gp_enable_fallback_plan=off;"
   option="${option}set enable_groupagg=off;set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
 
-  ts_start=`date +%s%3N`
+  ts_start=`gdate +%s%3N`
   output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af $file 2>&1)
-  ts_end=`date +%s%3N`;
+  ts_end=`gdate +%s%3N`;
   planner_time=`expr $ts_end - $ts_start`;
   echo "$output" > /dev/null
 

@@ -18,7 +18,7 @@ if [ $system == Darwin ]; then
     alias ls='gls --color'
     alias date='gdate'
   fi
-  [[ -n 'which gecho' ]] && alias echo=gecho
+  [[ -n `which gecho` ]] && alias echo=gecho
   yzy_NPROC=`sysctl -n hw.ncpu`
   yzy_CORE_DIR=$(dirname $(sysctl -n kern.corefile))
 fi
@@ -115,13 +115,13 @@ yizhiyang-log-file() {
 alias dir-master='yizhiyang-dir master'
 alias dir-segment='yizhiyang-dir segment'
 alias tail-log-hawq-master='tail -f `yizhiyang-log-file hawq master`'
-alias tail-log-magma-master='tail -f `yizhiyang-log magma master`'
-alias tail-log-hawq-segment='tail -f `yizhiyang-log hawq segment`'
-alias tail-log-magma-segment='tail -f `yizhiyang-log magma segment`'
+alias tail-log-magma-master='tail -f `yizhiyang-log-file magma master`'
+alias tail-log-hawq-segment='tail -f `yizhiyang-log-file hawq segment`'
+alias tail-log-magma-segment='tail -f `yizhiyang-log-file magma segment`'
 alias vi-log-hawq-master='vi `yizhiyang-log-file hawq master`'
-alias vi-log-magma-master='vi `yizhiyang-log magma master`'
-alias vi-log-hawq-segment='vi `yizhiyang-log hawq segment`'
-alias vi-log-magma-segment='vi `yizhiyang-log magma segment`'
+alias vi-log-magma-master='vi `yizhiyang-log-file magma master`'
+alias vi-log-hawq-segment='vi `yizhiyang-log-file hawq segment`'
+alias vi-log-magma-segment='vi `yizhiyang-log-file magma segment`'
 cd-log-namenode() {
   d=$(ps -eo pid,command|grep [p]roc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
   cd $d
