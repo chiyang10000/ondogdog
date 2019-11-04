@@ -105,17 +105,23 @@ def split(file):
     """
     ret = []
     input = open(file, 'r')
+    plan_matcher = re.compile(r'QUERY PLAN')
     mark_matcher = re.compile(r'Time: [0-9.]+ ms')
 
-    output_base = '/tmp/planchecker.'
     count = 1
+    is_plan = False
+    output_base = '/tmp/planchecker.' + os.path.basename(file) + '.'
     output = open(output_base + str(count) + '.txt', 'w')
     for line in input:
         output.write(line)
+        if plan_matcher.search(line):
+            is_plan = True
         if mark_matcher.search(line):
             output.close()
-            ret.append(output_base + str(count) + '.txt')
+            if is_plan:
+                ret.append(output_base + str(count) + '.txt')
             count += 1
+            is_plan = False
             output = open(output_base + str(count) + '.txt', 'w')
     if output:
         output.close()
@@ -139,10 +145,6 @@ if __name__ == "__main__":
             search = querynum_matcher.search(queryfile)
             if search: querynum = (search.group(1))
 
-            # skip query file that contains multiple queries
-            if querynum in ['query4', 'query14']:
-                continue
-
             split_files = split(queryfile)
             for queryfile in split_files:
                 query_counter = parse_group_by_operator(querynum, queryfile)
@@ -157,16 +159,23 @@ if __name__ == "__main__":
         exit()
 
     assert (len(sys.argv) == 3)
-    old_file = parse(sys.argv[1])
-    new_file = parse(sys.argv[2])
 
-    assert (len(new_file.timings) == len(old_file.timings))
-    for node_idx in range(0, len(new_file.timings)):
-        old_t = float(old_file.timings[node_idx])
-        new_t = float(new_file.timings[node_idx])
-        if (old_t > 30 and new_t > 30 and
-                (old_t / new_t < 3)
-        ):
-            print(old_t, new_t)
-            print(old_file.plannodes[node_idx])
-            print(new_file.plannodes[node_idx])
+    old_split_files = split(sys.argv[1])
+    new_split_files = split(sys.argv[2])
+    assert (len(old_split_files) == len(new_split_files))
+
+    for i in range(len(old_split_files)):
+        # print(old_split_files[i], new_split_files[i])
+        old_file = parse(old_split_files[i])
+        new_file = parse(new_split_files[i])
+
+        assert (len(new_file.timings) == len(old_file.timings))
+        for node_idx in range(0, len(new_file.timings)):
+            old_t = float(old_file.timings[node_idx])
+            new_t = float(new_file.timings[node_idx])
+            if (old_t > 30 and new_t > 30 and
+                    (old_t / new_t < 3)
+            ):
+                print(old_t, new_t)
+                print(old_file.plannodes[node_idx])
+                print(new_file.plannodes[node_idx])

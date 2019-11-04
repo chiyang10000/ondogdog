@@ -5,7 +5,7 @@ if [ $system == Linux ]; then
   alias ls='ls --color'
   alias xargs='xargs -r'
   alias toolchain='source ~/dev/hornet/thirdparty/toolchain-clang-x86_64-Linux.sh'
-  yzy_CORE_DIR=$(dirname $(sysctl -n kernel.core_pattern))
+  yzy_CORE_DIR=$(dirname $(/sbin/sysctl -n kernel.core_pattern))
   yzy_NPROC=`nproc`
 fi
 if [ $system == Darwin ]; then
@@ -45,8 +45,7 @@ export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/depende
 export MACOSX_DEPLOYMENT_TARGET=10.12
 
 export GOPATH=~/dev/goprojects
-export PATH=$HOME/yizhiyang/bin:$HOME/yizhiyang/usr/bin:/usr/local/sbin/:/usr/local/bin/:$GOPATH:/Library/Developer/CommandLineTools/usr/bin/:/bin/:$PATH
-export PATH="$HOME/.cargo/bin:$PATH"
+export PATH=$HOME/yizhiyang/bin:/Library/Developer/CommandLineTools/usr/bin/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 
 git-writer() {
   git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame  --line-porcelain HEAD |grep  "^author-mail"|sort|uniq -c|sort -nr
@@ -63,8 +62,11 @@ mytime() {
 
 # instrument() { instruments -l $1 -t Time\ Profiler -p `hawq-qe 2` }
 format-code() {
-  git diff HEAD --name-only| xargs clang-format -i -style=google
-  git diff HEAD --name-only| xargs cpplint.py
+  start_sha=`git merge-base origin/master HEAD`
+  git diff $start_sha --name-only |
+    grep -E '\.(h|c|cc|cpp)' |
+    xargs clang-format -i -style=google
+  git diff $start_sha --name-only| xargs cpplint.py
 }
 
 find-latest() {
