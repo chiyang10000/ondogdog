@@ -28,12 +28,6 @@ if [[ $major_version -ge 2 && $minor_version -gt 9 ]]; then
 else
   tag=master
 fi
-curl -k -o ~/yizhiyang/config/git-completion.bash https://raw.githubusercontent.com/git/git/$tag/contrib/completion/git-completion.bash
-curl -k -o ~/yizhiyang/config/git-prompt.sh https://raw.githubusercontent.com/git/git/$tag/contrib/completion/git-prompt.sh
-
-rm -rf ~/yizhiyang/bin/cpplint.py
-curl -k -o ~/yizhiyang/bin/cpplint.py https://raw.githubusercontent.com/google/styleguide/gh-pages/cpplint/cpplint.py
-chmod +x ~/yizhiyang/bin/cpplint.py
 
 [[ -f ~/.lldbinit ]] || ln -s ~/yizhiyang/config/lldbinit ~/.lldbinit
 [[ -f ~/.vimrc ]] || ln -s ~/yizhiyang/config/vimrc ~/.vimrc
@@ -43,5 +37,11 @@ cp ~/yizhiyang/config/cpp.vim ~/.vim/
 echo 'source $HOME/yizhiyang/config/bashrc' >> ~/.bashrc
 
 [[ -f ~/.bash_profile ]] || ln -s ~/.bashrc ~/.bash_profile
-set +x
 source ~/.bashrc
+
+set +e
+curl --connect-timeout 5 -k -o ~/yizhiyang/config/git-completion.bash https://raw.githubusercontent.com/git/git/$tag/contrib/completion/git-completion.bash
+curl --connect-timeout 5 -k -o ~/yizhiyang/config/git-prompt.sh https://raw.githubusercontent.com/git/git/$tag/contrib/completion/git-prompt.sh
+curl --connect-timeout 5 -k -o ~/yizhiyang/bin/cpplint.py https://raw.githubusercontent.com/google/styleguide/gh-pages/cpplint/cpplint.py
+chmod +x ~/yizhiyang/bin/cpplint.py
+set +x
