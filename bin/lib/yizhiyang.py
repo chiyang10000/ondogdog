@@ -50,15 +50,15 @@ def print_coverage(new_line_set, covered_line_set, uncovered_line_set):
     uncovered_line_count = sum(map(lambda x: len(x), uncovered_line_set.values()))
     covered_line_count = sum(map(lambda x: len(x), covered_line_set.values()))
 
+    if covered_line_count + uncovered_line_count == 0:
+        exit(0)
+
     print('')
     print("Unit Test Code Coverage For Added reachable C++ lines: {} %".format(
         float(covered_line_count) / (covered_line_count + uncovered_line_count) * 100))
 
     print('')
     print("Contained {} reachable C++ library lines.".format(covered_line_count + uncovered_line_count))
-
-    if covered_line_count + uncovered_line_count == 0:
-        exit(0)
 
     print('')
     print("Covered {} C++ library lines: ".format(covered_line_count))
