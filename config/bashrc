@@ -41,7 +41,7 @@ export LANG=en_US
 export LC_ALL=en_US.utf-8
 
 export DEPENDENCY_PATH=/opt/dependency/package
-export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/dependency/package/lib/:/usr/local/lib
+export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/dependency/package/lib/:/usr/local/lib:$JAVA_LIBRARY_PATH
 export MACOSX_DEPLOYMENT_TARGET=10.12
 
 export GOPATH=~/dev/goprojects
@@ -89,7 +89,7 @@ lldb-latest() {
 }
 alias lldb-recent='lldb -c ${yzy_CORE_DIR}/`ls -rt /cores| tail -n 2| head -n 1`'
 
-alias vi=vim
+[[ `which vim` ]] && alias vi=vim
 alias grep='grep --color'
 alias vi-latest='vi `ls -1t|head -1`'
 alias cutf="tr -s ' '| cut -d ' ' -f "
@@ -182,6 +182,20 @@ hawq-config-deprecated() {
     hawq config --skipvalidation --change $1 --value $2
   fi
 }
+export hawq_config_hawq_magma_locations_master=file:///db_data/hawq-data-directory/magma_master
+export hawq_config_hawq_magma_locations_segment=file:///db_data/hawq-data-directory/magma_segment
+export hawq_config_hawq_master_directory=/db_data/hawq-data-directory/masterdd
+export hawq_config_hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
+export hawq_config_gp_vmem_idle_resource_timeout=3600000
+hawq-config-load() {
+  for hawq_config in $(env |grep hawq_config); do
+    name_value=${hawq_config#hawq_config_}
+    name=${name_value%%=*}
+    value=${name_value#*=}
+    echo "hawq-config $name $value"
+    hawq-config $name $value
+  done
+}
 hawq-qe() {
   if [ -n "$1" ]; then
     ps -eo pid,command| grep [p]ostgres.*con.*seg| awk '{print $1}' |
@@ -205,10 +219,6 @@ hawq-perf() {
     awk 'BEGIN {ORS=","} {print $1}' |
     xargs perf record $@ -p
 }
-hawq_magma_locations_master=/db_data/hawq-data-directory/magma_master
-hawq_magma_locations_segment=/db_data/hawq-data-directory/magma_segment
-hawq_master_directory=/db_data/hawq-data-directory/masterdd
-hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
 magma-clean() {
   set -x
   sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
@@ -217,9 +227,9 @@ magma-clean() {
 }
 hawq-clean() {
   set -x
+  hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
   sudo rm -rf $(hawq-config hawq_master_directory)
   sudo rm -rf $(hawq-config hawq_segment_directory)
-  hdfs dfs -rmr /hawq_default* || true
   sudo rm -rf /tmp/.*PGSQL*
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
@@ -241,28 +251,31 @@ magma-init() {
 }
 hawq-init() {(
   set -ex
-  num=${1-4}
+  num=${1}
   rm -rf ${yzy_CORE_DIR}/core*
   hawq-stop
   magma-clean
   hawq-clean
-  hawq-config default_hash_table_bucket_number $num
-  hawq-config default_magma_hash_table_nvseg_per_node $num
-  hawq-config hawq_rm_nvseg_perquery_perseg_limit $num
-  hawq-config magma_range_number $num
-  hawq-config hawq_magma_locations_master file://$hawq_magma_locations_master
-  hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
-  hawq-config hawq_master_directory $hawq_master_directory
-  hawq-config hawq_segment_directory $hawq_segment_directory
+  if [[ -n $num ]]; then
+    hawq-config default_hash_table_bucket_number $num
+    hawq-config default_magma_hash_table_nvseg_per_node $num
+    hawq-config hawq_rm_nvseg_perquery_perseg_limit $num
+    hawq-config magma_range_number $num
+  fi
 
-  sudo rm -rf $hawq_magma_locations_master
-  sudo rm -rf $hawq_magma_locations_segment
-  sudo rm -rf $hawq_master_directory
-  sudo rm -rf $hawq_segment_directory
-  sudo install -o $USER -d $hawq_magma_locations_master
-  sudo install -o $USER -d $hawq_magma_locations_segment
-  sudo install -o $USER -d $hawq_master_directory
-  sudo install -o $USER -d $hawq_segment_directory
+  hawq-config-load
+
+  sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
+  sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  sudo rm -rf $(hawq-config hawq_master_directory)
+  sudo rm -rf $(hawq-config hawq_segment_directory)
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  sudo install -o $USER -d $(hawq-config hawq_master_directory)
+  sudo install -o $USER -d $(hawq-config hawq_segment_directory)
+
+  hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
+
   hawq init cluster -a --locale='C' --lc-collate='C' \
         --lc-ctype='C' --lc-messages='C' \
         --lc-monetary='C' --lc-numeric='C' \
@@ -287,11 +300,7 @@ hawq-restart () {
     hawq-config default_hash_table_bucket_number
     hawq-config default_magma_hash_table_nvseg_per_node
   fi
-  hawq-config gp_vmem_idle_resource_timeout 3600000
-  hawq-config hawq_magma_locations_master file://$hawq_magma_locations_master
-  hawq-config hawq_magma_locations_segment file://$hawq_magma_locations_segment
-  hawq-config hawq_master_directory $hawq_master_directory
-  hawq-config hawq_segment_directory $hawq_segment_directory
+  hawq-config-load
   hawq-stop
   hawq start cluster -a -M immediate
 }

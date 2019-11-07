@@ -1,10 +1,10 @@
 CREATE LANGUAGE plpythonu;
 
 CREATE FUNCTION pytest()
-     RETURNS integer
+     RETURNS text[]
    AS $$
-     import pandas
-     return 12
+     import sys
+     return sys.executable, sys.path
    $$ LANGUAGE plpythonu;
 select pytest();
 
