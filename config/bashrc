@@ -524,6 +524,12 @@ docker-clean() {
   sudo docker ps -a|grep Exit|cut -d ' ' -f 1|xargs sudo docker rm
   sudo docker images|grep none|tr -s ' '|cut -d ' ' -f 3|xargs sudo docker rmi
 }
+docker-stats() {
+  docker stats --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
+}
+docker-ps() {
+  docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+}
 
 
 

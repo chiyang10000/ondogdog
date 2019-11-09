@@ -9,6 +9,9 @@ RUN yum install -y xz
 RUN curl https://raw.githubusercontent.com/chiyang10000/thirdparty/master/toolchain-clang-x86_64-Linux.sh | bash
 RUN curl https://raw.githubusercontent.com/chiyang10000/thirdparty/master/toolchain-gcc-x86_64-Linux.sh | bash
 RUN yum install -y gcc git xz binutils
-RUN yum install -y centos-release-scl
-RUN yum install -y rh-git29
 RUN yum install -y vim
+RUN yum install -y centos-release-scl
+RUN yum install -y rh-git29 python27-python-pip
+RUN . /opt/rh/python27/enable && pip install gcovr
+RUN yum install -y devtoolset-6-binutils-2.27
+ENV PATH=/opt/rh/devtoolset-6/root/usr/bin/:$PATH
