@@ -29,6 +29,7 @@ def pg_json_name(src_name):
             "total_cost": "Total Cost",
             "plan_rows": "Plan Rows",
             "plan_width": "Plan Width",
+            "appendplans": "Plans",
         }
     if src_name in pg_json_name.name_map:
         return pg_json_name.name_map[src_name]
