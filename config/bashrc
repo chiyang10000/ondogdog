@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export USER=`whoami`
 system=`uname -s`
 if [ $system == Linux ]; then
@@ -16,7 +18,9 @@ if [ $system == Darwin ]; then
     alias ls='ls -G'
   else
     alias ls='gls --color'
-    alias date='gdate'
+    date() {
+      gdate $*
+    }
   fi
   [[ -n `which gecho` ]] && alias echo=gecho
   yzy_NPROC=`sysctl -n hw.ncpu`
