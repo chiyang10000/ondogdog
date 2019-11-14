@@ -8,10 +8,10 @@ start_sha=`git merge-base origin/master HEAD`
 git_sha_pattern="("
 for sha in `git rev-list ${start_sha}..HEAD^ | cut -c1-7`
 do
-  git_sha_pattern="${git_sha_pattern}${sha}| "
+  git_sha_pattern="${git_sha_pattern}${sha}|"
 done
 git_sha_pattern="${git_sha_pattern}`git rev-parse HEAD | cut -c1-7`)"
-echo "Commit diveraged from origin/master: $git_sha_pattern"
+echo "Commit diveraged from origin/master: $git_sha_pattern" | sed 's/|/| /g'
 
 if [[ $start_sha == `git rev-parse HEAD` ]]; then
   start_sha=HEAD^
