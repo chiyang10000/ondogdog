@@ -1,0 +1,143 @@
+Only in /usr/local/lib/python3.7/site-packages/gcovr: __pycache__
+diff -u -r ./chiyang.patch /usr/local/lib/python3.7/site-packages/gcovr/chiyang.patch
+--- ./chiyang.patch	2019-10-14 14:43:38.000000000 +0800
++++ /usr/local/lib/python3.7/site-packages/gcovr/chiyang.patch	2019-10-14 14:35:16.000000000 +0800
+@@ -0,0 +1,70 @@
++Only in /usr/local/lib/python3.7/site-packages/gcovr: __pycache__
++Only in /usr/local/lib/python3.7/site-packages/gcovr: chiyang.patch
++diff -u -r /Users/chiyang/dev/gcovr/gcovr/coverage.py /usr/local/lib/python3.7/site-packages/gcovr/coverage.py
++--- /Users/chiyang/dev/gcovr/gcovr/coverage.py	2019-10-14 14:34:22.000000000 +0800
+++++ /usr/local/lib/python3.7/site-packages/gcovr/coverage.py	2019-10-14 09:54:12.000000000 +0800
++@@ -43,6 +43,11 @@
++             if any(count == 0 for count in self.branches[line].values()):
++                 yield line
++ 
+++    def lines_with_covered_branches(self):
+++        for line in self.branches.keys():
+++            if any(count > 0 for count in self.branches[line].values()):
+++                yield line
+++
++     def uncovered_str(self, exceptional, show_branch):
++         if show_branch:
++             # Don't do any aggregation on branch results
++@@ -67,6 +72,30 @@
++             format_range(first, last)
++             for first, last in find_consecutive_ranges(sorted(tmp)))
++ 
+++    def covered_str(self, exceptional, show_branch):
+++        if show_branch:
+++            # Don't do any aggregation on branch results
+++            tmp = list(self.lines_with_covered_branches())
+++            return ",".join(str(x) for x in sorted(tmp))
+++
+++        if exceptional:
+++            tmp = list(self.covered_exceptional)
+++        else:
+++            tmp = list(self.covered)
+++        if len(tmp) == 0:
+++            return ""
+++
+++        # Walk through the uncovered lines in sorted order.
+++        # Find blocks of consecutive uncovered lines, and return
+++        # a string with that information.
+++        #
+++        # Should we include noncode lines in the range of lines
+++        # to be covered???  This simplifies the ranges summary, but it
+++        # provides a counterintuitive listing.
+++        return ",".join(
+++            format_range(first, last)
+++            for first, last in find_consecutive_ranges(sorted(tmp)))
+++
++     def coverage(self, show_branch):
++         if show_branch:
++             total = 0
++Only in /Users/chiyang/dev/gcovr/gcovr: tests
++diff -u -r /Users/chiyang/dev/gcovr/gcovr/txt_generator.py /usr/local/lib/python3.7/site-packages/gcovr/txt_generator.py
++--- /Users/chiyang/dev/gcovr/gcovr/txt_generator.py	2019-10-14 14:34:22.000000000 +0800
+++++ /usr/local/lib/python3.7/site-packages/gcovr/txt_generator.py	2019-10-14 09:57:36.000000000 +0800
++@@ -53,6 +53,8 @@
++             tmp = tmp + "\n" + " " * 40
++ 
++         (total, cover, percent) = coverage.coverage(options.show_branch)
+++        covered_lines = coverage.covered_str(
+++            exceptional=False, show_branch=options.show_branch)
++         uncovered_lines = coverage.uncovered_str(
++             exceptional=False, show_branch=options.show_branch)
++         if not options.show_branch:
++@@ -62,7 +64,7 @@
++                 uncovered_lines += " [* " + t + "]"
++         return (total, cover,
++                 tmp + str(total).rjust(8) + str(cover).rjust(8) +
++-                percent.rjust(6) + "%   " + uncovered_lines)
+++                percent.rjust(6) + "%   " + uncovered_lines + ' | ' + covered_lines)
++ 
++     for key in keys:
++         (t, n, txt) = _summarize_file_coverage(covdata[key])
+diff -u -r ./coverage.py /usr/local/lib/python3.7/site-packages/gcovr/coverage.py
+--- ./coverage.py	2019-10-14 14:34:22.000000000 +0800
++++ /usr/local/lib/python3.7/site-packages/gcovr/coverage.py	2019-10-14 09:54:12.000000000 +0800
+@@ -43,6 +43,11 @@
+             if any(count == 0 for count in self.branches[line].values()):
+                 yield line
+ 
++    def lines_with_covered_branches(self):
++        for line in self.branches.keys():
++            if any(count > 0 for count in self.branches[line].values()):
++                yield line
++
+     def uncovered_str(self, exceptional, show_branch):
+         if show_branch:
+             # Don't do any aggregation on branch results
+@@ -67,6 +72,30 @@
+             format_range(first, last)
+             for first, last in find_consecutive_ranges(sorted(tmp)))
+ 
++    def covered_str(self, exceptional, show_branch):
++        if show_branch:
++            # Don't do any aggregation on branch results
++            tmp = list(self.lines_with_covered_branches())
++            return ",".join(str(x) for x in sorted(tmp))
++
++        if exceptional:
++            tmp = list(self.covered_exceptional)
++        else:
++            tmp = list(self.covered)
++        if len(tmp) == 0:
++            return ""
++
++        # Walk through the uncovered lines in sorted order.
++        # Find blocks of consecutive uncovered lines, and return
++        # a string with that information.
++        #
++        # Should we include noncode lines in the range of lines
++        # to be covered???  This simplifies the ranges summary, but it
++        # provides a counterintuitive listing.
++        return ",".join(
++            format_range(first, last)
++            for first, last in find_consecutive_ranges(sorted(tmp)))
++
+     def coverage(self, show_branch):
+         if show_branch:
+             total = 0
+Only in ./: tests
+diff -u -r ./txt_generator.py /usr/local/lib/python3.7/site-packages/gcovr/txt_generator.py
+--- ./txt_generator.py	2019-10-14 14:34:22.000000000 +0800
++++ /usr/local/lib/python3.7/site-packages/gcovr/txt_generator.py	2019-10-14 09:57:36.000000000 +0800
+@@ -53,6 +53,8 @@
+             tmp = tmp + "\n" + " " * 40
+ 
+         (total, cover, percent) = coverage.coverage(options.show_branch)
++        covered_lines = coverage.covered_str(
++            exceptional=False, show_branch=options.show_branch)
+         uncovered_lines = coverage.uncovered_str(
+             exceptional=False, show_branch=options.show_branch)
+         if not options.show_branch:
+@@ -62,7 +64,7 @@
+                 uncovered_lines += " [* " + t + "]"
+         return (total, cover,
+                 tmp + str(total).rjust(8) + str(cover).rjust(8) +
+-                percent.rjust(6) + "%   " + uncovered_lines)
++                percent.rjust(6) + "%   " + uncovered_lines + ' | ' + covered_lines)
+ 
+     for key in keys:
+         (t, n, txt) = _summarize_file_coverage(covdata[key])

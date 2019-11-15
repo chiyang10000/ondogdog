@@ -14,4 +14,7 @@ RUN yum install -y centos-release-scl
 RUN yum install -y rh-git29 python27-python-pip
 RUN . /opt/rh/python27/enable && pip install gcovr
 RUN yum install -y devtoolset-6-binutils-2.27
+RUN yum install -y patch
+COPY chiyang.patch /tmp/chiyang.patch
+RUN patch -p1 -i /tmp/chiyang.patch  -d /opt/rh/python27/root/usr/lib/python2.7/site-packages/gcovr
 ENV PATH=/opt/rh/devtoolset-6/root/usr/bin/:$PATH
