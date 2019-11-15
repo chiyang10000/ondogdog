@@ -544,10 +544,12 @@ docker-ps() {
 #-------------------------------------------------------------------------------
 # Green for Linux, yellow for macOS.
 PS1='\[\033[00m\][\t] '                                                   # time
-if [ $system == Linux ]; then                                    # user and host
-  PS1=$PS1'\[\033[01;32m\]\u\[\033[00m\]@\[\033[32m\]\h\[\033[00m\]'
-else
+if [ $system == Darwin ]; then                                    # user and host
   PS1=$PS1'\[\033[01;33m\]\u\[\033[00m\]@\[\033[33m\]\h\[\033[00m\]'
+elif [[ $(hostname) =~ exciting ]]; then
+  PS1=$PS1'\[\033[01;36m\]\u\[\033[00m\]@\[\033[36m\]\h\[\033[00m\]'
+else
+  PS1=$PS1'\[\033[01;32m\]\u\[\033[00m\]@\[\033[32m\]\h\[\033[00m\]'
 fi
 PS1=$PS1':\[\033[01;34m\]\w\[\033[00m\]'                     # working directory
 
