@@ -534,6 +534,14 @@ docker-stats() {
 docker-ps() {
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
+saiting-ps() {
+  docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+  echo
+  docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
+}
+saiting-login() {
+  docker exec -it $* su gpadmin
+}
 
 
 
