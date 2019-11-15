@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
         if line_missing:
             line_hit = None
-            if '|' in line_missing:
+            if '|' in line_missing:  # Extra line hit info
                 tmp = line_missing.split('|')
                 line_missing = tmp[0].strip()
                 line_hit = get_line_num_list(tmp[1].strip())
@@ -89,9 +89,10 @@ if __name__ == "__main__":
                     covered_line_set[file_name].add(line_num)
             continue
 
-        if file_name in new_line_set and line_missing:
+        # Fallback when no line_hit info
+        if file_name in new_line_set:
             for line_num in new_line_set[file_name]:
-                if line_num not in line_missing:
+                if not line_missing or line_num not in line_missing:
                     if file_name not in covered_line_set:
                         covered_line_set[file_name] = set()
                     covered_line_set[file_name].add(line_num)
