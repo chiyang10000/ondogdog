@@ -369,8 +369,9 @@ hornet-release() {
   cd ~/dev/release/hornet && make incremental && cd -
 }
 hornet-coverage-setup() {
-  sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table
-  sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalog* /tmp/rg* /tmp/range*
+  # FIXME(chiyang): conflicts with running feature-test
+  # sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table
+  # sudo rm -rf /tmp/magma* /tmp/clusterview/ /tmp/catalog* /tmp/rg* /tmp/range*
 
   mkdir -p ${hornet_cov_dir}
   cd ${hornet_cov_dir} && ${hornet_src_dir}/bootstrap
