@@ -287,6 +287,8 @@ hawq-init() {(
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
 )}
 hawq-stop() {
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gtest-parallel' | awk '{print $1}' | xargs sudo kill -9
+  ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*feature-test' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*postgres' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*magma_server' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9
