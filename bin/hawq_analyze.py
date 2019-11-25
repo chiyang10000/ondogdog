@@ -179,7 +179,7 @@ def analyze(path):
             tot_counter.update(query_counter)
 
     # Print group by tot_counter
-    # exit()
+    exit()
     print()
     print('{}\t{}'.format('Time', 'Operator'))
     for operator, time in sorted(tot_counter.items(), key=lambda x: x[1]):
