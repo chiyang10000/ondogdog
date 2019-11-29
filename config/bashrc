@@ -529,9 +529,9 @@ yizhiyang-stop() {
   sudo docker rm yizhiyang
 }
 docker-clean() {
-  sudo docker ps -a|grep Dead|cut -d ' ' -f 1|xargs sudo docker rm
-  sudo docker ps -a|grep Exit|cut -d ' ' -f 1|xargs sudo docker rm
-  sudo docker images|grep none|tr -s ' '|cut -d ' ' -f 3|xargs sudo docker rmi
+  docker ps -a|grep Dead|cut -d ' ' -f 1|xargs docker rm
+  docker ps -a|grep Exit|cut -d ' ' -f 1|xargs docker rm
+  docker images|grep none|tr -s ' '|cut -d ' ' -f 3|xargs docker rmi
 }
 docker-stats() {
   docker stats --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
