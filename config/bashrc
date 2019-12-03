@@ -30,7 +30,8 @@ trap 'echo -e "\033[31mERR $? in \033[1m${FUNCNAME-bash}: $BASH_COMMAND \033[0m"
 error() {
   echo -e "\033[31m$@\033[0m"
 }
-
+export yzy_PATH="$( cd "$( dirname "${BASH_SOURCE[0]-$0}" )" && pwd )"
+source $yzy_PATH/yizhiyangrc
 HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
 hornet_src_dir=~/dev/hornet/
@@ -85,7 +86,7 @@ lldb-latest() {
   else
     core_file=${yzy_CORE_DIR}/`ls -1rt ${yzy_CORE_DIR}/ | tail -n 1`
     if [[ -f $core_file ]]; then
-      ls -ltr ${yzy_CORE_DIR}/
+      ls -lhtr ${yzy_CORE_DIR}/
       echo
       lldb -c $core_file
     fi
@@ -186,11 +187,6 @@ hawq-config-deprecated() {
     hawq config --skipvalidation --change $1 --value $2
   fi
 }
-export hawq_config_hawq_magma_locations_master=file:///db_data/hawq-data-directory/magma_master
-export hawq_config_hawq_magma_locations_segment=file:///db_data/hawq-data-directory/magma_segment
-export hawq_config_hawq_master_directory=/db_data/hawq-data-directory/masterdd
-export hawq_config_hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
-export hawq_config_gp_vmem_idle_resource_timeout=3600000
 hawq-config-load() {
   for hawq_config in $(printenv |grep -E ^hawq_config_[^=]+=); do
     name_value=${hawq_config#hawq_config_}
@@ -225,8 +221,10 @@ hawq-perf() {
 }
 magma-clean() {
   set -x
-  sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
-  sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  sudo rm -rf $(hawq-config hawq_magma_locations_master | sed -E 's|[^:,]+://||g' |
+                                                          sed 's|,| |g')
+  sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed -E 's|[^:,]+://||g' |
+                                                           sed 's|,| |g')
   set +x
 }
 hawq-clean() {
@@ -268,13 +266,15 @@ hawq-init() {(
   fi
 
   hawq-config-load
+  hawq-stop
+  magma-clean
 
-  sudo rm -rf $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
-  sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
-  sudo rm -rf $(hawq-config hawq_master_directory)
-  sudo rm -rf $(hawq-config hawq_segment_directory)
-  sudo install -o $USER -d $(hawq-config hawq_magma_locations_master | sed 's|^.*://||')
-  sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment | sed 's|^.*://||')
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_master |
+                                         sed -E 's|[^:,]+://||g' |
+                                         sed 's|,| |g')
+  sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment |
+                                         sed -E 's|[^:,]+://||g' |
+                                         sed 's|,| |g')
   sudo install -o $USER -d $(hawq-config hawq_master_directory)
   sudo install -o $USER -d $(hawq-config hawq_segment_directory)
 
@@ -285,6 +285,7 @@ hawq-init() {(
         --lc-monetary='C' --lc-numeric='C' \
         --lc-time='C'
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
+  set +ex
 )}
 hawq-stop() {
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gtest-parallel' | awk '{print $1}' | xargs sudo kill -9
