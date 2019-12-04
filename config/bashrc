@@ -380,7 +380,7 @@ hornet-coverage-setup() {
   cd ${hornet_cov_dir} && ${hornet_src_dir}/bootstrap
   sed -i.bak "s|PREFIX=.*|PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
   sed -i.bak "s|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
-  sed -i.bak "s|make coverage|make -j$yzy_NPROC install|g" build-all.sh
+  sed -i.bak "s|make coverage|make -j$yzy_NPROC install unit|g" build-all.sh
   sed -i.bak '45a \
     set -ex;OPTION=--enable-coverage
     ' build-all.sh
@@ -455,9 +455,9 @@ hornet-coverage() {(
 hornet-test() {
   if [ -n "$1" ]; then
     if [[ `pwd` =~ "magma" ]]; then
-      make unit && test/unit/magma_server/unit --gtest_filter=$1;
+      make unit && test/unit/magma_server/unit --gtest_catch_exceptions=0 --gtest_filter=$1;
     else
-      make unit && test/unit/unit --gtest_filter=$1;
+      make unit && test/unit/unit --gtest_catch_exceptions=0 --gtest_filter=$1;
     fi
   else
     make unit && make punittest
