@@ -544,6 +544,7 @@ saiting-ps() {
   docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
 }
 saiting-login() {
+  docker exec $* touch /home/gpadmin/yikesaiting_chiyang
   docker exec -it $* su gpadmin
 }
 
