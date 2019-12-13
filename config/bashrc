@@ -567,7 +567,7 @@ fi
 PS1=$PS1':\[\033[01;34m\]\w\[\033[00m\]'                     # working directory
 
 # Disable git prompt in docker to improve response speed.
-if [ -f ~/yizhiyang/config/git-completion.bash -a -z "${I_AM_DOCKER+x}" ]
+if [ -f ~/yizhiyang/config/git-completion.bash -a -f ~/yizhiyang/config/git-prompt.sh -a -z "${I_AM_DOCKER+x}" ]
 then
   source ~/yizhiyang/config/git-completion.bash
   source ~/yizhiyang/config/git-prompt.sh
