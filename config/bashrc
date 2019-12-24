@@ -41,7 +41,6 @@ export MAKEFLAGS=-j$yzy_NPROC
 
 export PGDATABASE=postgres
 
-export TERM=xterm-color
 export LESS=eFRX
 export LANG=en_US
 export LC_ALL=en_US.utf-8
