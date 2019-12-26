@@ -1,5 +1,7 @@
 ! Put user rules line by line in this file.
 ! See https://adblockplus.org/en/filter-cheatsheet
+! Comments are preceded by exclamation mark.
+
 apache.org
 apple.com
 atlassian.com
@@ -10,9 +12,7 @@ cplusplus.com
 cppreference.com
 digitalocean.com
 disqus.com
-docker.com
 git-scm.com
-github.com
 grpc.io
 keybr.com
 llvm.org
@@ -20,7 +20,14 @@ rescuetime.com
 semanticscholar.org
 sourceforge.net
 sqlalchemy.org
-stackexchange.com
-stackoverflow.com
 suse.com
 dbaref.com
+codecov.io
+snowflake.com
+stallman.org
+ngrok.io
+ycombinator.com
+etcher.io
+tldp.org
+github.com
+raw.githubusercontent.com
