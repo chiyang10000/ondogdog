@@ -6,7 +6,12 @@ if [ $system == Linux ]; then
   shopt -s checkwinsize
   alias ls='ls --color'
   alias xargs='xargs -r'
-  alias toolchain='source ~/dev/hornet/thirdparty/toolchain-clang-x86_64-Linux.sh'
+  toolchain-clang() {
+    source ~/dev/hornet/thirdparty/toolchain-clang-$(uname -m)-Linux.sh
+  }
+  toolchain-gcc() {
+    source ~/dev/hornet/thirdparty/toolchain-gcc-$(uname -m)-Linux.sh
+  }
   yzy_CORE_DIR=$(dirname $(/sbin/sysctl -n kernel.core_pattern))
   yzy_NPROC=`nproc`
 fi
