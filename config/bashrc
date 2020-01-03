@@ -383,7 +383,7 @@ hornet-coverage-setup() {
   sed -i.bak "s|DEPENDENCY_INSTALL_PREFIX=.*|DEPENDENCY_INSTALL_PREFIX=${hornet_cov_dir}/dependency|g" build-all.sh
   sed -i.bak "s|make coverage|make -j$yzy_NPROC install unit|g" build-all.sh
   sed -i.bak '45a \
-    set -ex;OPTION=--enable-coverage
+    OPTION=--enable-coverage
     ' build-all.sh
   sed -i.bak '68d' build-all.sh
 }
