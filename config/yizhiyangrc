@@ -2,7 +2,7 @@
 export PKG_PATH="$( cd "$( dirname "${BASH_SOURCE[0]-$0}" )" && pwd )"
 
 export hawq_config_hawq_magma_locations_master=file:///db_data/hawq-data-directory/magma_master
-export hawq_config_hawq_magma_locations_segment=file:///db_data/hawq-data-directory/magma_segment,file:///db_data/hawq-data-directory/magma_segment1
+export hawq_config_hawq_magma_locations_segment=file:///db_data/hawq-data-directory/magma_segment
 export hawq_config_hawq_master_directory=/db_data/hawq-data-directory/masterdd
 export hawq_config_hawq_segment_directory=/db_data/hawq-data-directory/segmentdd
 export hawq_config_gp_vmem_idle_resource_timeout=3600000

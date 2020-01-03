@@ -268,6 +268,7 @@ hawq-init() {(
   hawq-config-load
   hawq-stop
   magma-clean
+  hawq-clean
 
   sudo install -o $USER -d $(hawq-config hawq_magma_locations_master |
                                          sed -E 's|[^:,]+://||g' |
