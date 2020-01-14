@@ -34,7 +34,7 @@ for query_idx in $query_set; do
   planner_time=$((ts_end - ts_start));
   echo "$output" > /dev/null
 
-  mode=$(echo "${output}" | grep 'New executor mode:')
+  mode=$(echo "${output}" | grep 'New executor mode:') || true
   if [[ -n "$mode" ]]; then mode=1; else mode=0; fi
   if [[ ! -f $file ]]; then mode=''; fi
 
