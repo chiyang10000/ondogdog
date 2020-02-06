@@ -307,11 +307,11 @@ hawq-restart () {
     echo "set QE num to $1"
     hawq-config hawq_rm_nvseg_perquery_perseg_limit $val
     hawq-config default_hash_table_bucket_number $val
-    hawq-config default_magma_hash_table_nvseg_per_node $val
+    hawq-config default_magma_hash_table_nvseg_per_seg $val
   else
     hawq-config hawq_rm_nvseg_perquery_perseg_limit
     hawq-config default_hash_table_bucket_number
-    hawq-config default_magma_hash_table_nvseg_per_node
+    hawq-config default_magma_hash_table_nvseg_per_seg
   fi
   hawq-config-load
   hawq-stop
@@ -545,9 +545,9 @@ docker-ps() {
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
 saiting-ps() {
-  docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
-  echo
   docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
+  echo
+  docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
 saiting-login() {
   docker exec $* touch /home/gpadmin/yikesaiting_chiyang
