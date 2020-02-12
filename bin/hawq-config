@@ -1,6 +1,0 @@
-unset PATH
-unset PERL5LIB
-unset LD_LIBRARY_PATH
-unset DYLD_LIBRARY_PATH
-unset DYLD_LIBRARY_PATH
-exec "$HOME/yizhiyang/bin/hawq-config.pl" "$@"
