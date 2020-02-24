@@ -550,7 +550,7 @@ saiting-ps() {
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
 saiting-login() {
-  docker exec $* touch /home/gpadmin/yikesaiting_chiyang
+  docker exec $* sudo -u gpadmin touch /home/gpadmin/yikesaiting_chiyang
   docker exec -it $* su gpadmin
 }
 
