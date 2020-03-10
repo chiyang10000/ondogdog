@@ -545,7 +545,7 @@ docker-ps() {
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
 saiting-ps() {
-  docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
+  # docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
   echo
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
@@ -590,3 +590,9 @@ export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5
 # Iterm
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
+
+if [[ $(hostname) == yikesaiting ]]; then
+saiting-ps
+echo
+echo "欢迎来到一颗赛艇！🛶⛵️🚤🛥 🛳 ⛴ 🚢"
+fi
