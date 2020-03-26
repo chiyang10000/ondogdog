@@ -6,6 +6,8 @@ import sys
 import os
 import re
 
+planchecker_url = os.getenv('planchecker_url', "http://cloudtest.oushu-tech.com:14122")
+
 
 class MyHTMLParser(HTMLParser):
     """
@@ -55,7 +57,7 @@ def parse(file):
     parser = MyHTMLParser()
     data = [('action', 'parse')]
     files = {'uploadfile': open(file, 'rb')}
-    plan_checker_response = requests.post(url='http://localhost:38324/plan/', files=files, data=data)
+    plan_checker_response = requests.post(url=planchecker_url + "/plan/", files=files, data=data)
     if plan_checker_response.text.find('Oops...') >= 0:
         print('Fails to parse EXPLAIN ANALYZE result!')
         raise ValueError
