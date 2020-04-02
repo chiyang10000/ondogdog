@@ -459,35 +459,39 @@ hornet-coverage() {(
   gen-coverage
 )}
 hornet-test() {
+  m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
   if [ -n "$1" ]; then
     if [[ `pwd` =~ "magma" ]]; then
-      make unit && test/unit/magma_server/unit --gtest_catch_exceptions=0 --gtest_filter=$1;
+      make $m-unit && test/unit/magma_server/unit --gtest_catch_exceptions=0 --gtest_filter=$1;
     else
-      make unit && test/unit/unit --gtest_catch_exceptions=0 --gtest_filter=$1;
+      make $m-unit && test/unit/$m-unit --gtest_catch_exceptions=0 --gtest_filter=$1;
     fi
   else
-    make unit && make punittest
+    make $m-unit && make punittest
   fi
 }
 hornet-test-list() {
+  m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
   if [[ `pwd` =~ "magma" ]]; then
     make unit && test/unit/magma_server/unit --gtest_list_tests
   else
-    make unit && test/unit/unit --gtest_list_tests
+    make $m-unit && test/unit/$m-unit --gtest_list_tests
   fi
 }
 hornet-test-lldb() {
+  m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
   if [[ `pwd` =~ "magma" ]]; then
     make unit && lldb test/unit/magma_server/unit -- --gtest_filter=$1;
   else
-    make unit && lldb test/unit/unit -- --gtest_filter=$1;
+    make $m-unit && lldb test/unit/$m-unit -- --gtest_filter=$1;
   fi
 }
 hornet-test-gdb() {
+  m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
   if [[ `pwd` =~ "magma" ]]; then
     make unit && gdb --args test/unit/magma_server/unit --gtest_filter=$1;
   else
-    make unit && gdb --args test/unit/unit --gtest_filter=$1;
+    make $m-unit && gdb --args test/unit/$m-unit --gtest_filter=$1;
   fi
 }
 gen-coverage() {
@@ -592,7 +596,7 @@ test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shel
 export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 
 if [[ $(hostname) == yikesaiting ]]; then
-saiting-ps
-echo
-echo "欢迎来到一颗赛艇！🛶⛵️🚤🛥 🛳 ⛴ 🚢"
+  saiting-ps
+  echo
+  echo "欢迎来到一颗赛艇！🛶⛵️🚤🛥 🛳 ⛴ 🚢"
 fi
