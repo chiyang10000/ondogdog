@@ -7,3 +7,4 @@ config/git-prompt.sh
 .idea
 .cproject
 .project
+cmake-build-*

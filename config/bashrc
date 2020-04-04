@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export USER=`whoami`
-system=`uname -s`
+export USER=$(whoami)
+system=$(uname -s)
 if [ $system == Linux ]; then
   shopt -s checkwinsize
   alias ls='ls --color'
@@ -13,13 +13,13 @@ if [ $system == Linux ]; then
     source ~/dev/hornet/thirdparty/toolchain-gcc-$(uname -m)-Linux.sh
   }
   yzy_CORE_DIR=$(dirname $(/sbin/sysctl -n kernel.core_pattern))
-  yzy_NPROC=`nproc`
+  yzy_NPROC=$(nproc)
 fi
 if [ $system == Darwin ]; then
   CLICOLOR=1 #for mac and BSD
   export LSCOLORS=gxfxcxdxbxegedabagacad
   alias toolchain='source /opt/dependency-Darwin/package/env.sh'
-  if [[ -z `which gls` ]]; then
+  if [[ -z $(which gls) ]]; then
     alias ls='ls -G'
   else
     alias ls='gls --color'
@@ -27,22 +27,21 @@ if [ $system == Darwin ]; then
       gdate $*
     }
   fi
-  [[ -n `which gecho` ]] && alias echo=gecho
-  yzy_NPROC=`sysctl -n hw.ncpu`
+  [[ -n $(which gecho) ]] && alias echo=gecho
+  yzy_NPROC=$(sysctl -n hw.ncpu)
   yzy_CORE_DIR=$(dirname $(sysctl -n kern.corefile))
 fi
 trap 'echo -e "\033[31mERR $? in \033[1m${FUNCNAME-bash}: $BASH_COMMAND \033[0m"' ERR
 error() {
   echo -e "\033[31m$@\033[0m"
 }
-export yzy_PATH="$( cd "$( dirname "${BASH_SOURCE[0]-$0}" )" && pwd )"
+export yzy_PATH="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
 source $yzy_PATH/yizhiyangrc
 HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
 hornet_src_dir=~/dev/hornet/
 hornet_cov_dir=~/dev/coverage/hornet/
 export MAKEFLAGS=-j$yzy_NPROC
-
 
 export PGDATABASE=postgres
 
@@ -58,25 +57,25 @@ export GOPATH=~/dev/goprojects
 export PATH=$HOME/yizhiyang/bin:/Library/Developer/CommandLineTools/usr/bin/:$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 git-writer() {
-  git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame  --line-porcelain HEAD |grep  "^author-mail"|sort|uniq -c|sort -nr
+  git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
 }
 
 mytime() {
-  ts_start=`date +%s%3N`
+  ts_start=$(date +%s%3N)
   echo $@
   eval $@
-  ts_end=`date +%s%3N`
-  t=`expr $ts_end - $ts_start`
+  ts_end=$(date +%s%3N)
+  t=$(expr $ts_end - $ts_start)
   echo $t ms
 }
 
 # instrument() { instruments -l $1 -t Time\ Profiler -p `hawq-qe 2` }
 format-code() {
-  start_sha=`git merge-base origin/master HEAD`
+  start_sha=$(git merge-base origin/master HEAD)
   git diff $start_sha --name-only |
     grep -E '\.(h|c|cc|cpp)' |
     xargs clang-format -i -style=google
-  git diff $start_sha --name-only| xargs cpplint.py
+  git diff $start_sha --name-only | xargs cpplint.py
 }
 
 find-latest() {
@@ -87,9 +86,9 @@ find-latest-diff() {
 }
 lldb-latest() {
   if [ -n "$1" ]; then
-    lldb -c `ls -rt ${yzy_CORE_DIR}/core.* | tail -n 1`
+    lldb -c $(ls -rt ${yzy_CORE_DIR}/core.* | tail -n 1)
   else
-    core_file=${yzy_CORE_DIR}/`ls -1rt ${yzy_CORE_DIR}/ | tail -n 1`
+    core_file=${yzy_CORE_DIR}/$(ls -1rt ${yzy_CORE_DIR}/ | tail -n 1)
     if [[ -f $core_file ]]; then
       ls -lhtr ${yzy_CORE_DIR}/
       echo
@@ -99,7 +98,7 @@ lldb-latest() {
 }
 alias lldb-recent='lldb -c ${yzy_CORE_DIR}/`ls -rt /cores| tail -n 2| head -n 1`'
 
-[[ `which vim` ]] && alias vi=vim
+[[ $(which vim) ]] && alias vi=vim
 alias grep='grep --color'
 alias vi-latest='vi `ls -1t|head -1`'
 alias cutf="tr -s ' '| cut -d ' ' -f "
@@ -115,7 +114,7 @@ cd-featuretest() {
 }
 yizhiyang-dir() {
   node=$1
-  ps -eo pid,command| grep "[h]awq.*-M $node" | sed -E 's|.*-D ([^ ]+) .*|\1|'
+  ps -eo pid,command | grep "[h]awq.*-M $node" | sed -E 's|.*-D ([^ ]+) .*|\1|'
 }
 yizhiyang-log-file() {
   hawq_component=$1
@@ -135,11 +134,11 @@ alias vi-log-magma-master='vi `yizhiyang-log-file magma master`'
 alias vi-log-hawq-segment='vi `yizhiyang-log-file hawq segment`'
 alias vi-log-magma-segment='vi `yizhiyang-log-file magma segment`'
 cd-log-namenode() {
-  d=$(ps -eo pid,command|grep [p]roc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
+  d=$(ps -eo pid,command | grep [p]roc_namenode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
   cd $d
 }
 cd-log-datanode() {
-  d=$(ps -eo pid,command|grep [p]roc_datanode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
+  d=$(ps -eo pid,command | grep [p]roc_datanode | grep D | sed -E 's|.*-Dhadoop.log.dir=([^ ]+) .*|\1|')
   cd $d
 }
 
@@ -152,8 +151,6 @@ alias apache-diff='git diff oushu/wcy-merge-apache'
 alias apache-checkout='git checkout oushu/wcy-merge-apache'
 alias fix='cp ~/FindSSL.cmake ./depends/libhdfs3/CMake/FindSSL.cmake && find . -name hawq_type_mapping.h| xargs rm'
 
-
-
 #-------------------------------------------------------------------------------
 #
 # lava and ci
@@ -162,26 +159,23 @@ alias fix='cp ~/FindSSL.cmake ./depends/libhdfs3/CMake/FindSSL.cmake && find . -
 ci-get() {
   if [ -n "$1" ]; then
     lava scp -r \
-    ciserver:/home/ec2-user/jenkins_home/.lava/machines/$1 \
-    ~/.lava/machines
+      ciserver:/home/ec2-user/jenkins_home/.lava/machines/$1 \
+      ~/.lava/machines
   fi
-  find ~/.lava -name *.json |xargs sed -i '' "s|/var/jenkins_home/|$HOME/|g"
-  find ~/.lava -name *.json |xargs sed -i '' "s|/Users/[^/]*/|$HOME/|g"
+  find ~/.lava -name *.json | xargs sed -i '' "s|/var/jenkins_home/|$HOME/|g"
+  find ~/.lava -name *.json | xargs sed -i '' "s|/Users/[^/]*/|$HOME/|g"
 }
 lava-clean() {
-  nodes=`lava ls| grep Error| tr -s ' '| cut -d ' ' -f 1`
-  for node in $nodes
-  do
+  nodes=$(lava ls | grep Error | tr -s ' ' | cut -d ' ' -f 1)
+  for node in $nodes; do
     echo $node
-    find ~/.lava -name $node| xargs rm -rf
+    find ~/.lava -name $node | xargs rm -rf
   done
 }
 
-
-
 #-------------------------------------------------------------------------------
 #
-#   Hawq 
+#   Hawq
 #
 #-------------------------------------------------------------------------------
 alias hawq-config='hawq-config.py'
@@ -193,7 +187,7 @@ hawq-config-deprecated() {
   fi
 }
 hawq-config-load() {
-  for hawq_config in $(printenv |grep -E ^hawq_config_[^=]+=); do
+  for hawq_config in $(printenv | grep -E ^hawq_config_[^=]+=); do
     name_value=${hawq_config#hawq_config_}
     name=${name_value%%=*}
     value=${name_value#*=}
@@ -203,22 +197,22 @@ hawq-config-load() {
 }
 hawq-qe() {
   if [ -n "$1" ]; then
-    ps -eo pid,command| grep [p]ostgres.*con.*seg| awk '{print $1}' |
-    sort|head -n $1|tail -n 1
+    ps -eo pid,command | grep [p]ostgres.*con.*seg | awk '{print $1}' |
+      sort | head -n $1 | tail -n 1
   else
-    ps -eo pid,command| grep [p]ostgres.*con.*seg| awk '{print $1}' |
-    sort
+    ps -eo pid,command | grep [p]ostgres.*con.*seg | awk '{print $1}' |
+      sort
   fi
 }
 hawq-qd() {
-  ps -eo pid,command| grep [p]ostgres.*con.*cmd | awk '{print $1}'
+  ps -eo pid,command | grep [p]ostgres.*con.*cmd | awk '{print $1}'
 }
 hawq-perf() {
   t=100
   tt=0
-  while [[ -z `hawq-qe` || $t -ne $tt ]]; do
+  while [[ -z $(hawq-qe) || $t -ne $tt ]]; do
     t=$tt
-    tt=`hawq-qe|wc -l`
+    tt=$(hawq-qe | wc -l)
   done
   hawq-qe |
     awk 'BEGIN {ORS=","} {print $1}' |
@@ -227,9 +221,9 @@ hawq-perf() {
 magma-clean() {
   set -x
   sudo rm -rf $(hawq-config hawq_magma_locations_master | sed -E 's|[^:,]+://||g' |
-                                                          sed 's|,| |g')
+    sed 's|,| |g')
   sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed -E 's|[^:,]+://||g' |
-                                                           sed 's|,| |g')
+    sed 's|,| |g')
   set +x
 }
 hawq-clean() {
@@ -241,7 +235,7 @@ hawq-clean() {
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
   sudo rm -rf /tmp/Test* /tmp/test* /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
-  if [[ $system == Linux && `getent passwd hdfs` ]]; then
+  if [[ $system == Linux && $(getent passwd hdfs) ]]; then
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_data
     sudo -iu hdfs hdfs dfs -rm -f -r /hawq_default*
     sudo -iu hdfs hdfs dfs -mkdir /hawq_data
@@ -256,7 +250,7 @@ magma-init() {
   rm -rf ${yzy_CORE_DIR}/core*
   hawq-restart
 }
-hawq-init() {(
+hawq-init() { (
   set -ex
   num=${1}
   rm -rf ${yzy_CORE_DIR}/core*
@@ -276,23 +270,23 @@ hawq-init() {(
   hawq-clean
 
   sudo install -o $USER -d $(hawq-config hawq_magma_locations_master |
-                                         sed -E 's|[^:,]+://||g' |
-                                         sed 's|,| |g')
+    sed -E 's|[^:,]+://||g' |
+    sed 's|,| |g')
   sudo install -o $USER -d $(hawq-config hawq_magma_locations_segment |
-                                         sed -E 's|[^:,]+://||g' |
-                                         sed 's|,| |g')
+    sed -E 's|[^:,]+://||g' |
+    sed 's|,| |g')
   sudo install -o $USER -d $(hawq-config hawq_master_directory)
   sudo install -o $USER -d $(hawq-config hawq_segment_directory)
 
   hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
 
   hawq init cluster -a --locale='C' --lc-collate='C' \
-        --lc-ctype='C' --lc-messages='C' \
-        --lc-monetary='C' --lc-numeric='C' \
-        --lc-time='C'
+    --lc-ctype='C' --lc-messages='C' \
+    --lc-monetary='C' --lc-numeric='C' \
+    --lc-time='C'
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
   set +ex
-)}
+); }
 hawq-stop() {
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gtest-parallel' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*feature-test' | awk '{print $1}' | xargs sudo kill -9
@@ -300,8 +294,8 @@ hawq-stop() {
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*magma_server' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9
 }
-hawq-restart () {
-  rm -rf ${yzy_CORE_DIR}/*;
+hawq-restart() {
+  rm -rf ${yzy_CORE_DIR}/*
   if [ "$#" -eq 1 ]; then
     val=$1
     echo "set QE num to $1"
@@ -318,8 +312,8 @@ hawq-restart () {
   hawq start cluster -a -M immediate
 }
 hawq-setup-feature-test() {
-  TEST_DB_NAME="hawq_feature_test_db";
-  hawq sql -d postgres << EOF
+  TEST_DB_NAME="hawq_feature_test_db"
+  hawq sql -d postgres <<EOF
   drop database if exists $TEST_DB_NAME;
   create database $TEST_DB_NAME;
   alter database $TEST_DB_NAME set lc_messages to 'C';
@@ -339,32 +333,30 @@ hawq-test() {
   if [[ -f /usr/local/hawq/feature-test/feature-test ]]; then
     ftest="/usr/local/hawq/feature-test/feature-test"
   else
-    cd $HAWQ_SRC;
-    make feature-test > /dev/null;
+    cd $HAWQ_SRC
+    make feature-test >/dev/null
     if [[ ! $? -eq 0 ]]; then
       return
     fi
   fi
-  TEST_DB_NAME="hawq_feature_test_db";
-  export PGDATABASE=$TEST_DB_NAME;
+  TEST_DB_NAME="hawq_feature_test_db"
+  export PGDATABASE=$TEST_DB_NAME
   if [ -n "$1" ]; then
     bash -c "
     source /usr/local/hawq/greenplum_path.sh
-    $ftest --gtest_filter=$1";
+    $ftest --gtest_filter=$1"
   else
     bash -c "
     source /usr/local/hawq/greenplum_path.sh
-    $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*";
+    $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*"
   fi
   cd -
-  export PGDATABASE=postgres;
+  export PGDATABASE=postgres
 }
-
-
 
 #-------------------------------------------------------------------------------
 #
-#  Hornet 
+#  Hornet
 #
 #-------------------------------------------------------------------------------
 export RUN_UNITTEST=no
@@ -395,7 +387,7 @@ hornet-coverage-setup() {
 hornet-coverage-report() {
   arg=$1
   [[ -z $@ ]] && arg=gcovr
-  [[ -z `which gcovr` ]] && arg=lcov
+  [[ -z $(which gcovr) ]] && arg=lcov
   echo -e "Invoking $arg \e[5m...\e[0m\n"
 
   if [[ $arg == gcovr ]]; then
@@ -411,13 +403,13 @@ hornet-coverage-report() {
   cd ${hornet_cov_dir}/
   time lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
   lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
-  '*/build/src/storage/format/orc/*' \
-  '*/protos/*' '*/proto/*' '*/thrift/*' \
-  --output-file CodeCoverage.info.cleaned
+    '*/build/src/storage/format/orc/*' \
+    '*/protos/*' '*/proto/*' '*/thrift/*' \
+    --output-file CodeCoverage.info.cleaned
   parse_lcov_output.py ${hornet_src_dir} ${hornet_cov_dir}/CodeCoverage.info.cleaned
   # '*/test/unit/*' '*/testutil/*' \
 }
-hornet-coverage() {(
+hornet-coverage() { (
   set -e
   test $# -gt 2 && error 'Invalid number of arguments.' && return 1
   if [[ $# -eq 0 || $# -eq 2 ]]; then
@@ -427,8 +419,7 @@ hornet-coverage() {(
     fi
     hornet-coverage-setup
     cd ${hornet_cov_dir} && make incremental
-    for m in dbcommon univplan interconnect magma storage executor
-    do
+    for m in dbcommon univplan interconnect magma storage executor; do
       cd ${hornet_cov_dir}/$m/build
       make resetcoverage
       make punittest
@@ -437,14 +428,14 @@ hornet-coverage() {(
     return 0
   fi
   case $1 in
-    dbcommon);;
-    univplan);;
-    interconnect);;
-    storage);;
-    executor);;
-    *)
-      error Invalid component $1 
-      return 1
+  dbcommon) ;;
+  univplan) ;;
+  interconnect) ;;
+  storage) ;;
+  executor) ;;
+  *)
+    error Invalid component $1
+    return 1
     ;;
   esac
   # hornet-debug
@@ -457,14 +448,14 @@ hornet-coverage() {(
   make resetcoverage
   make punittest
   gen-coverage
-)}
+); }
 hornet-test() {
   m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
   if [ -n "$1" ]; then
-    if [[ `pwd` =~ "magma" ]]; then
-      make $m-unit && test/unit/magma_server/unit --gtest_catch_exceptions=0 --gtest_filter=$1;
+    if [[ $(pwd) =~ "magma" ]]; then
+      make $m-unit && test/unit/magma_server/unit --gtest_catch_exceptions=0 --gtest_filter=$1
     else
-      make $m-unit && test/unit/$m-unit --gtest_catch_exceptions=0 --gtest_filter=$1;
+      make $m-unit && test/unit/$m-unit --gtest_catch_exceptions=0 --gtest_filter=$1
     fi
   else
     make $m-unit && make punittest
@@ -472,7 +463,7 @@ hornet-test() {
 }
 hornet-test-list() {
   m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
-  if [[ `pwd` =~ "magma" ]]; then
+  if [[ $(pwd) =~ "magma" ]]; then
     make unit && test/unit/magma_server/unit --gtest_list_tests
   else
     make $m-unit && test/unit/$m-unit --gtest_list_tests
@@ -480,55 +471,52 @@ hornet-test-list() {
 }
 hornet-test-lldb() {
   m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
-  if [[ `pwd` =~ "magma" ]]; then
-    make unit && lldb test/unit/magma_server/unit -- --gtest_filter=$1;
+  if [[ $(pwd) =~ "magma" ]]; then
+    make unit && lldb test/unit/magma_server/unit -- --gtest_filter=$1
   else
-    make $m-unit && lldb test/unit/$m-unit -- --gtest_filter=$1;
+    make $m-unit && lldb test/unit/$m-unit -- --gtest_filter=$1
   fi
 }
 hornet-test-gdb() {
   m=$(pwd | sed -E 's|.*/([^/]+)/build|\1|')
-  if [[ `pwd` =~ "magma" ]]; then
-    make unit && gdb --args test/unit/magma_server/unit --gtest_filter=$1;
+  if [[ $(pwd) =~ "magma" ]]; then
+    make unit && gdb --args test/unit/magma_server/unit --gtest_filter=$1
   else
-    make $m-unit && gdb --args test/unit/$m-unit --gtest_filter=$1;
+    make $m-unit && gdb --args test/unit/$m-unit --gtest_filter=$1
   fi
 }
 gen-coverage() {
   lcov --base-directory . --directory . --capture --output-file CodeCoverage.info --ignore-errors graph
   lcov --remove CodeCoverage.info '/opt/*' '/usr/*' '/Library/*' '/Applications/*' \
-  '*/build/src/storage/format/orc/*' \
-  '*/test/unit/*' '*/testutil/*' \
-  '*/protos/*' '*/proto/*' '*/thrift/*' \
-  --output-file CodeCoverage.info.cleaned
+    '*/build/src/storage/format/orc/*' \
+    '*/test/unit/*' '*/testutil/*' \
+    '*/protos/*' '*/proto/*' '*/thrift/*' \
+    --output-file CodeCoverage.info.cleaned
   genhtml CodeCoverage.info.cleaned -o CodeCoverageReport
   test -d /var/www/html/ && sudo cp -r CodeCoverageReport/* /var/www/html/
   [[ $system == Darwin ]] && open CodeCoverageReport/index.html
 }
-
-
 
 #-------------------------------------------------------------------------------
 #
 #   Docker on Hawq
 #
 #-------------------------------------------------------------------------------
-yizhiyang-start()
-{
-  sudo docker run -d -t --entrypoint bash                        \
-  -v /var/run/docker.sock:/var/run/docker.sock                   \
-  -v $HOME/dev-linux/dependency:/root/dependency                 \
-  -v $HOME/.m2:/root/.m2                                         \
-  -v $HOME/dev-linux/:/root/hawq                                 \
-  -v $HOME/dev/:/root/dev                                        \
-  -e BUILD_OPTION=debug                                          \
-  -e BUILD_NUMBER=38324                                          \
-  -e DB_VERSION=14122                                            \
-  -e MAKE_COMPONET=hawq                                          \
-  -e OVERWRITE_OPTION=YES                                        \
-  -e PS1='[\u@\h \w]\$ '                                         \
-  --name yizhiyang                                               \
-  --privileged=true hub.oushu-tech.com/hawq_compile:v4.0.0.0
+yizhiyang-start() {
+  sudo docker run -d -t --entrypoint bash \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $HOME/dev-linux/dependency:/root/dependency \
+    -v $HOME/.m2:/root/.m2 \
+    -v $HOME/dev-linux/:/root/hawq \
+    -v $HOME/dev/:/root/dev \
+    -e BUILD_OPTION=debug \
+    -e BUILD_NUMBER=38324 \
+    -e DB_VERSION=14122 \
+    -e MAKE_COMPONET=hawq \
+    -e OVERWRITE_OPTION=YES \
+    -e PS1='[\u@\h \w]\$ ' \
+    --name yizhiyang \
+    --privileged=true hub.oushu-tech.com/hawq_compile:v4.0.0.0
 }
 yizhiyang-login() {
   sudo docker exec -it yizhiyang /bin/bash
@@ -538,9 +526,9 @@ yizhiyang-stop() {
   sudo docker rm yizhiyang
 }
 docker-clean() {
-  docker ps -a|grep Dead|cut -d ' ' -f 1|xargs docker rm
-  docker ps -a|grep Exit|cut -d ' ' -f 1|xargs docker rm
-  docker images|grep none|tr -s ' '|cut -d ' ' -f 3|xargs docker rmi
+  docker ps -a | grep Dead | cut -d ' ' -f 1 | xargs docker rm
+  docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs docker rm
+  docker images | grep none | tr -s ' ' | cut -d ' ' -f 3 | xargs docker rmi
 }
 docker-stats() {
   docker stats --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
@@ -552,13 +540,13 @@ saiting-ps() {
   # docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
   echo
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
+  echo
+  echo "欢迎来到一颗赛艇！🛶⛵️🚤🛥 🛳 ⛴ 🚢"
 }
 saiting-login() {
   docker exec $* sudo -u gpadmin touch /home/gpadmin/yikesaiting_chiyang
   docker exec -it $* su gpadmin
 }
-
-
 
 #-------------------------------------------------------------------------------
 #
@@ -566,28 +554,27 @@ saiting-login() {
 #
 #-------------------------------------------------------------------------------
 # Green for Linux, yellow for macOS.
-PS1='\[\033[00m\][\t] '                                                   # time
-if [ $system == Darwin ]; then                                    # user and host
+PS1='\[\033[00m\][\t] ' # time
+if [[ $system == Darwin ]]; then # user and host
   PS1=$PS1'\[\033[01;33m\]\u\[\033[00m\]@\[\033[33m\]\h\[\033[00m\]'
 elif [[ $(hostname) =~ exciting ]]; then
   PS1=$PS1'\[\033[01;36m\]\u\[\033[00m\]@\[\033[36m\]\h\[\033[00m\]'
 else
   PS1=$PS1'\[\033[01;32m\]\u\[\033[00m\]@\[\033[32m\]\h\[\033[00m\]'
 fi
-PS1=$PS1':\[\033[01;34m\]\w\[\033[00m\]'                     # working directory
+PS1=$PS1':\[\033[01;34m\]\w\[\033[00m\]' # working directory
 
 # Disable git prompt in docker to improve response speed.
-if [ -f ~/yizhiyang/config/git-completion.bash -a -f ~/yizhiyang/config/git-prompt.sh -a -z "${I_AM_DOCKER+x}" ]
-then
+if [[ -f ~/yizhiyang/config/git-completion.bash && -f ~/yizhiyang/config/git-prompt.sh && -z "${I_AM_DOCKER+x}" ]]; then
   source ~/yizhiyang/config/git-completion.bash
   source ~/yizhiyang/config/git-prompt.sh
-  GIT_PS1_SHOWDIRTYSTATE=true
-  GIT_PS1_SHOWUNTRACKEDFILES=true
-  GIT_PS1_SHOWUPSTREAM="verbose name"
+  export GIT_PS1_SHOWDIRTYSTATE=true
+  export GIT_PS1_SHOWUNTRACKEDFILES=true
+  export GIT_PS1_SHOWUPSTREAM="verbose name"
   PS1=$PS1'`__git_ps1 " (%s)"`'
 fi
-                                                           # last command status
-export PS1=$PS1'\n\[\033[01m\]\$ \[\033[00m\]'                      # UID symbol
+# last command status
+export PS1=$PS1'\n\[\033[01m\]\$ \[\033[00m\]' # UID symbol
 
 export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5;13:do=38;5;5:bd=48;5;232;38;5;11:cd=48;5;232;38;5;3:or=48;5;232;38;5;9:mi=05;48;5;232;38;5;15:su=48;5;196;38;5;15:sg=48;5;11;38;5;16:ca=48;5;196;38;5;226:tw=48;5;10;38;5;16:ow=48;5;10;38;5;21:st=48;5;21;38;5;15:ex=38;5;34:*.tar=38;5;9:*.tgz=38;5;9:*.arc=38;5;9:*.arj=38;5;9:*.taz=38;5;9:*.lha=38;5;9:*.lz4=38;5;9:*.lzh=38;5;9:*.lzma=38;5;9:*.tlz=38;5;9:*.txz=38;5;9:*.tzo=38;5;9:*.t7z=38;5;9:*.zip=38;5;9:*.z=38;5;9:*.Z=38;5;9:*.dz=38;5;9:*.gz=38;5;9:*.lrz=38;5;9:*.lz=38;5;9:*.lzo=38;5;9:*.xz=38;5;9:*.bz2=38;5;9:*.bz=38;5;9:*.tbz=38;5;9:*.tbz2=38;5;9:*.tz=38;5;9:*.deb=38;5;9:*.rpm=38;5;9:*.jar=38;5;9:*.war=38;5;9:*.ear=38;5;9:*.sar=38;5;9:*.rar=38;5;9:*.alz=38;5;9:*.ace=38;5;9:*.zoo=38;5;9:*.cpio=38;5;9:*.7z=38;5;9:*.rz=38;5;9:*.cab=38;5;9:*.jpg=38;5;13:*.jpeg=38;5;13:*.gif=38;5;13:*.bmp=38;5;13:*.pbm=38;5;13:*.pgm=38;5;13:*.ppm=38;5;13:*.tga=38;5;13:*.xbm=38;5;13:*.xpm=38;5;13:*.tif=38;5;13:*.tiff=38;5;13:*.png=38;5;13:*.svg=38;5;13:*.svgz=38;5;13:*.mng=38;5;13:*.pcx=38;5;13:*.mov=38;5;13:*.mpg=38;5;13:*.mpeg=38;5;13:*.m2v=38;5;13:*.mkv=38;5;13:*.webm=38;5;13:*.ogm=38;5;13:*.mp4=38;5;13:*.m4v=38;5;13:*.mp4v=38;5;13:*.vob=38;5;13:*.qt=38;5;13:*.nuv=38;5;13:*.wmv=38;5;13:*.asf=38;5;13:*.rm=38;5;13:*.rmvb=38;5;13:*.flc=38;5;13:*.avi=38;5;13:*.fli=38;5;13:*.flv=38;5;13:*.gl=38;5;13:*.dl=38;5;13:*.xcf=38;5;13:*.xwd=38;5;13:*.yuv=38;5;13:*.cgm=38;5;13:*.emf=38;5;13:*.axv=38;5;13:*.anx=38;5;13:*.ogv=38;5;13:*.ogx=38;5;13:*.aac=38;5;45:*.au=38;5;45:*.flac=38;5;45:*.mid=38;5;45:*.midi=38;5;45:*.mka=38;5;45:*.mp3=38;5;45:*.mpc=38;5;45:*.ogg=38;5;45:*.ra=38;5;45:*.wav=38;5;45:*.axa=38;5;45:*.oga=38;5;45:*.spx=38;5;45:*.xspf=38;5;45:"
 
@@ -597,6 +584,4 @@ export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 
 if [[ $(hostname) == yikesaiting ]]; then
   saiting-ps
-  echo
-  echo "欢迎来到一颗赛艇！🛶⛵️🚤🛥 🛳 ⛴ 🚢"
 fi

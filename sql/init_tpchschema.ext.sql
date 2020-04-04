@@ -7,17 +7,6 @@ DROP EXTERNAL WEB TABLE IF EXISTS e_partsupp;
 DROP EXTERNAL WEB TABLE IF EXISTS e_orders;
 DROP EXTERNAL WEB TABLE IF EXISTS e_lineitem;
 DROP EXTERNAL TABLE IF EXISTS lineitem_ext;
-drop table if exists nation cascade;
-drop table if exists region cascade;
-drop table if exists part cascade;
-drop table if exists supplier cascade;
-drop table if exists partsupp cascade;
-drop table if exists customer cascade;
-drop table if exists orders cascade;
-drop table if exists lineitem cascade;
-drop table if exists lineitem_null cascade;
-drop table if exists lineitem_dictlz4 cascade;
-drop table if exists lineitem_mix cascade;
 
 CREATE EXTERNAL WEB TABLE e_nation (N_NATIONKEY  INTEGER ,
                             N_NAME       VARCHAR(25) ,
