@@ -6,12 +6,15 @@ export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
 
 scale=1
 search_path="orc_hash_notpartition_lz4_dict08_notpk_numeric_${scale}g"
+file_base=$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/
 #search_path="magmaap_hash_notpartition_none_none_notpk_numeric_${scale}g"
 
-if [[ -z $(which psql) ]]; then
-  psql
+if psql -d tpcds -c 'select gp_opt_version();'; then
+  echo 'tpcds-analyze starts~'
+else
   exit 1
 fi
+
 query_set=$(seq 1 99)
 if [[ -n "$*" ]]; then
   query_set=$@
@@ -20,7 +23,8 @@ fi
 
 # Check NewQE planner support
 for query_idx in $query_set; do
-  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${query_idx}_rept1.sql"
+  file="$file_base/query${query_idx}_rept1.sql"
+  [[ ! -f $file ]] && echo "$file not exists!"
   option=''
   option="${option}set search_path=${search_path};"
   option="${option}set client_min_messages=debug1;set new_executor=auto;"
@@ -29,7 +33,7 @@ for query_idx in $query_set; do
   option="${option}set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
 
   ts_start=$(date +%s%3N)
-  output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af $file 2>&1)
+  output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af "$file" 2>&1) || echo "$output"
   ts_end=$(date +%s%3N);
   planner_time=$((ts_end - ts_start));
   echo "$output" > /dev/null
@@ -58,7 +62,7 @@ done
 
 # Compare ORC/Parquet old QE
 for query_idx in $query_set; do
-  file="$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/query${query_idx}_rept1.sql"
+  file="$file_base/query${query_idx}_rept1.sql"
   echo "Running $query_idx ..."
   echo "$file"
   check_error=0
@@ -74,9 +78,9 @@ for query_idx in $query_set; do
   [[ "$query_idx" =~ ^(10|35|64|95)$ ]] && option="${option}set optimizer=on;"
 
   output_orc_new=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=on;EXPLAIN ANALYZE" -f $file)
-  check_error=$(($check_error+$?))
+  ((check_error+=$?))
   output_orc_old=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=off;EXPLAIN ANALYZE" -f $file)
-  check_error=$(($check_error+$?))
+  ((check_error+=$?))
   # output_parquet=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set search_path=parquet_hash_notpartition_snappy_none_notpk_numeric_${scale}g;EXPLAIN ANALYZE" -f $file)
 
   if [[ $check_error -gt 0 ]]; then echo; continue; fi

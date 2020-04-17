@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import sys
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 config_file = '/usr/local/hawq/etc/hawq-site.xml'
-tree = ET.parse(config_file)
+tree = et.parse(config_file)
 root = tree.getroot()
 
 if __name__ == '__main__':
@@ -20,9 +20,9 @@ if __name__ == '__main__':
         value = sys.argv[2]
         value_node = root.find(".//property[name='{}']/./value".format(name))
         if value_node is None:
-            property_node = ET.SubElement(root, 'property')
-            name_node = ET.SubElement(property_node, 'name')
-            value_node = ET.SubElement(property_node, 'value')
+            property_node = et.SubElement(root, 'property')
+            name_node = et.SubElement(property_node, 'name')
+            value_node = et.SubElement(property_node, 'value')
             name_node.text = name
             value_node.text = value
         else:

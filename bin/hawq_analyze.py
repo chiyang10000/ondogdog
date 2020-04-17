@@ -15,6 +15,9 @@ class MyHTMLParser(HTMLParser):
     Summary, Query Plan, Offset, First, End, Node, Prct
     """
 
+    def error(self, message):
+        pass
+
     def __init__(self):
         super().__init__()
         self.tr = 0  # parsed rows index count from 1
