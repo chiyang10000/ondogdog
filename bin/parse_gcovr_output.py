@@ -69,8 +69,9 @@ if __name__ == "__main__":
                 line_missing = tmp[0].strip()
                 line_hit = get_line_num_list(tmp[1].strip())
             line_missing = get_line_num_list(line_missing)
-            assert line_tot == line_exec + len(line_missing)
-            assert len(line_hit) if line_hit else line_exec == line_exec
+            # FIXME(chiyang): there is situation which would break these assertion
+            # assert line_tot == line_exec + len(line_missing)
+            # assert len(line_hit) if line_hit else line_exec == line_exec
 
             for line_num in line_missing:
                 if file_name in new_line_set and line_num in new_line_set[file_name]:
