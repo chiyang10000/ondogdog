@@ -587,6 +587,6 @@ export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 
-if [[ $(hostname) == yikesaiting ]]; then
+if [[ -t 0 && $(hostname) == yikesaiting ]]; then
   saiting-ps
 fi
