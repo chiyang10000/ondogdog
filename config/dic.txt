@@ -39,3 +39,6 @@ workfile
 backdoor
 apache
 greenplum
+hornet
+hawq
+univplan

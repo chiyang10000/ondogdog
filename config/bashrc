@@ -8,6 +8,7 @@ if [ $system == Linux ]; then
   alias xargs='xargs -r'
   toolchain-clang() {
     source ~/dev/hornet/thirdparty/toolchain-clang-$(uname -m)-Linux.sh
+    export LDFLAGS="-Wl,-rpath,$DEPENDENCY_PATH/lib $LDFLAGS"
   }
   toolchain-gcc() {
     source ~/dev/hornet/thirdparty/toolchain-gcc-$(uname -m)-Linux.sh
@@ -232,7 +233,6 @@ magma-clean() {
 }
 hawq-clean() {
   set -x
-  hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
   sudo rm -rf $(hawq-config hawq_master_directory)
   sudo rm -rf $(hawq-config hawq_segment_directory)
   sudo rm -rf /tmp/.*PGSQL*
@@ -240,10 +240,9 @@ hawq-clean() {
   sudo rm -rf /tmp/checktmpdir.log
   sudo rm -rf /tmp/Test* /tmp/test* /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
   if [[ $system == Linux && $(getent passwd hdfs) ]]; then
-    sudo -iu hdfs hdfs dfs -rm -f -r /hawq_data
-    sudo -iu hdfs hdfs dfs -rm -f -r /hawq_default*
-    sudo -iu hdfs hdfs dfs -mkdir /hawq_data
-    sudo -iu hdfs hdfs dfs -chown gpadmin /hawq_data
+    sudo -iu hdfs hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
+  else
+    hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
   fi
   set +x
 }
