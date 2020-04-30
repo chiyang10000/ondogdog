@@ -293,7 +293,7 @@ hawq-init() { (
   set +ex
 ); }
 hawq-stop() {
-  sudo pkill 'postgres|magma_server|gpfdist|feature-test|-unit' || true
+  sudo pkill -9 'pg_ctl|postgres|magma_server|gpfdist|feature-test|-unit' || true
   return
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gtest-parallel' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*feature-test' | awk '{print $1}' | xargs sudo kill -9
