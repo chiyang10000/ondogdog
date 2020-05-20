@@ -1,0 +1,99 @@
+#!/bin/bash
+[[ $(uname -s) == Darwin ]] || exit 1
+
+non_rpath_libraries=''
+
+change_install_name() {
+  files=$1
+  dir=$2
+  count=0
+  echo "Changing install_name of $dir to @rpath/ ..."
+
+  for target in $files; do
+    if otool -L "$target" | sed -n '2,$p' | tr -s / | grep "$dir" >/dev/null; then
+      count=$((count + 1))
+      echo '**********************************************************************'
+      otool -L "$target"
+
+      keys=$(otool -L "$target" | sed -n '2,$p' | awk '{print $1}' | grep '//')
+      for key in ${keys}; do
+        val=$(tr -s / <<<"$key")
+        echo "Removing duplicate slash in $key"
+        install_name_tool -change "${key}" "${val}" "$target"
+      done
+
+      chmod +w "$target"
+      pairs=$(otool -L "$target" | sed -n '2,$p' | grep "$dir" | awk '{print $1}' | sed -E "s|($dir/(.*))|\1 @rpath/\2|")
+      IFS=$'\n'
+      for kv in ${pairs}; do
+        old=$(cut -d' ' -f1 <<<"$kv")
+        new=$(cut -d' ' -f2 <<<"$kv")
+        echo "Changing $old to $new"
+        install_name_tool -change "${old}" "${new}" "$target"
+      done
+      install_name_tool -id "@rpath/$(basename "${target}")" "$target"
+      unset IFS
+
+      echo '============================================='
+      otool -L "$target"
+      echo; echo; echo;
+    fi
+    non_rpath_libraries+="\n$(otool -L "$target" | sed -n '2,$p' | awk '{print $1}')"
+  done
+
+  echo -e "    Update $count files for $dir\n"
+}
+
+add_rpath() {
+  files=$1
+  rpath=$2
+  echo "Adding RPATH of $rpath ..."
+
+  for target in $files; do
+      chmod +w "$target"
+      old_rpath_list=$(otool -l "$target" | grep LC_RPATH -A2 | sed -E -n 's/.*path ([^ ]+) .*/\1/p')
+      grep "$rpath" <<<"$old_rpath_list" >/dev/null || install_name_tool -add_rpath "$rpath" "$target"
+  done
+  echo
+}
+
+check_neither_sys_nor_rpath_libraries() {
+  files=$1
+  candidate_libraries=$2
+  checked_weirds=''
+  echo "Checking neither system nor rpath library ..."
+
+  for weird in $candidate_libraries; do
+    if [[ $weird =~ /usr/lib/ || $weird =~ /System/Library/Frameworks/ ]]; then
+      continue
+    fi
+    for file in $files; do
+      if otool -L "$file" | sed -n '2,$p' | grep "^[[:space:]]*$weird" > /dev/null; then
+        echo
+        otool -L "$file"
+        checked_weirds+="$weird\n"
+      fi
+    done
+  done
+  echo -e "\nChecked neither system nor rpath library:"
+  echo -e "$checked_weirds" | uniq
+}
+
+
+
+echo -e "Checking file list ...\n"
+bin_files=
+for file in $(find /usr/local/hawq/bin /usr/local/hawq/lib /opt/dependency-Darwin/package/bin -type f -name '*'); do
+  if file "$file" | grep Mach-O > /dev/null; then
+    bin_files+=" $file"
+  fi
+done
+lib_files=$(find /opt/dependency*/package/lib -type f -name '*.dylib' -o -name '*.so')
+
+add_rpath "$bin_files $lib_files" /usr/local/opt/oushudb/lib
+
+change_install_name "$bin_files $lib_files" /usr/local/hawq/lib
+change_install_name "$bin_files $lib_files" /opt/dependency-Darwin/package/lib
+
+non_rpath_libraries=$(echo -e "$non_rpath_libraries" | sort | uniq | grep -v '^@rpath/')
+check_neither_sys_nor_rpath_libraries "$bin_files $lib_files" "$non_rpath_libraries"
