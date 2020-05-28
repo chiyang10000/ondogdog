@@ -1,0 +1,5 @@
+#!/bin/bash
+TIMEFORMAT=%R
+target=$(echo $* | sed -E 's|.*-o +([^ ]+).*|\1|')
+timing=$((time $*) 2>&1)
+echo -e "$timing $target" | tee -a "$yzy_ROOT/log/yzy_time.log"

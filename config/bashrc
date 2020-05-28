@@ -36,6 +36,7 @@ trap 'echo -e "\033[31mERR $? in \033[1m${FUNCNAME-bash}: $BASH_COMMAND \033[0m"
 error() {
   echo -e "\033[31m$@\033[0m"
 }
+export yzy_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")/.." && pwd)"
 export yzy_PATH="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
 source $yzy_PATH/yizhiyangrc
 HAWQ_SRC=~/dev/hawq
@@ -75,7 +76,7 @@ format-code() {
   start_sha=$(git merge-base origin/master HEAD)
   git diff $start_sha --name-only |
     grep -E '\.(h|c|cc|cpp)' |
-    xargs clang-format -i -style=google
+    xargs clang-format -i
   git diff $start_sha --name-only | xargs cpplint.py
 }
 

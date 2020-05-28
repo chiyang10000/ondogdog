@@ -1,5 +1,6 @@
  set new_scheduler=off;
  set new_executor=on;
+ set gp_enable_agg_distinct = off;
  set enforce_virtual_segment_number = 2;
  \timing
 

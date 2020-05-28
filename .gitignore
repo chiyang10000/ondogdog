@@ -4,6 +4,7 @@ bin/lib/__pycache__/
 bin/lib/*.pyc
 config/git-completion.bash
 config/git-prompt.sh
+log/
 .idea
 .cproject
 .project
