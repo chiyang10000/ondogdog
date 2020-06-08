@@ -224,7 +224,7 @@ hawq-perf() {
   done
   hawq-qe |
     awk 'BEGIN {ORS=","} {print $1}' |
-    xargs perf record $@ -p
+    xargs perf record --call-graph dwarf $@ -p
 }
 magma-clean() {
   set -x

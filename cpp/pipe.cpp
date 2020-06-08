@@ -63,7 +63,7 @@ int main() {
     while (read(sortPipeOutputFd[0], &buf, 1) > 0) {
       std::cout << buf;
     }
-    wait(NULL); /* Wait for child */
+    wait(); /* Wait for child */
     std::cout << "hello" << std::endl;
     exit(EXIT_SUCCESS);
   }
