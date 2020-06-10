@@ -1,5 +1,5 @@
-set new_executor=off;
-\timing
+--set new_executor=off;
+--\timing
 select count(*) from nation;
 select count(*) from region;
 select count(*) from part;
