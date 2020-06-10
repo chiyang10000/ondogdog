@@ -44,3 +44,4 @@ univplan
 unset
 varchar
 workfile
+clickhouse
