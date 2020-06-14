@@ -370,13 +370,15 @@ hawq-test() {
 #-------------------------------------------------------------------------------
 export RUN_UNITTEST=no
 hornet-debug() {
-  cd ~/dev/hornet && make incremental && cd -
+  # cd ~/dev/hornet && make incremental && cd -
+  make install -C ~/dev/oushudb/cmake-build-debug/hornet/
 }
 hornet-unittest() {
   cd ~/dev/hornet && RUN_UNITTEST=YES make incremental && cd -
 }
 hornet-release() {
-  cd ~/dev/release/hornet && make incremental && cd -
+  # cd ~/dev/release/hornet && make incremental && cd -
+  make install -C ~/dev/oushudb/cmake-build-release/hornet/
 }
 hornet-coverage-setup() {
   # FIXME(chiyang): conflicts with running feature-test
