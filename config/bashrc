@@ -553,6 +553,18 @@ saiting-ps() {
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
   echo
   echo "欢迎来到一颗赛艇！🛶⛵️🚤🛥 🛳 ⛴ 🚢"
+  echo -e '
+\033[32m
+赛艇管理员提醒您，直接执行以下命令配置您的本地机器的SSH客户端，
+将有助于长时间保持SSH连接，大大减少正常操作过程中Connection closed by的情况。
+
+\033[33m
+cat >>~/.ssh/config <<EOF
+Host *
+ServerAliveInterval 60
+ServerAliveCountMax 600
+EOF
+\033[0m'
 }
 saiting-login() {
   docker exec $* sudo -u gpadmin touch /home/gpadmin/yikesaiting_chiyang
