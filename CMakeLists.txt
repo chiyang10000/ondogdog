@@ -16,6 +16,9 @@ endif ()
 #add_compile_options(-fsanitize=address)
 #add_link_options(-fsanitize=address)
 
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/CMakeLists.txt AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet/thirdparty)
+    add_subdirectory(hornet-opensource)
+endif ()
 add_subdirectory(hornet)
 add_subdirectory(hawq)
 

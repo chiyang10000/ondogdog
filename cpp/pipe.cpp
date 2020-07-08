@@ -4,8 +4,8 @@
 #include <iostream>
 
 int main() {
-  int sortPipeInputFd[2];   // write to sort utility
-  int sortPipeOutputFd[2];  // read from sort utility
+  int sortPipeInputFd[2];  // write to sort utility
+  int sortPipeOutputFd[2]; // read from sort utility
   pid_t cpid;
   char buf;
 
@@ -30,7 +30,8 @@ int main() {
     dup2(sortPipeInputFd[0], STDIN_FILENO);
     dup2(sortPipeOutputFd[1], STDOUT_FILENO);
     char *args[] = {"--buffer-size=1G", NULL};
-    if (execv("/usr/bin/sort", args) == -1) perror("echo");
+    if (execv("/usr/bin/sort", args) == -1)
+      perror("echo");
 
     // while (read(sortPipeInputFd[0], &buf, 1) > 0) write(STDOUT_FILENO, &buf,
     // 1);
@@ -63,9 +64,12 @@ int main() {
     while (read(sortPipeOutputFd[0], &buf, 1) > 0) {
       std::cout << buf;
     }
+#ifdef __APPLE__
+    wait(nullptr); /* Wait for child */
+#else
     wait(); /* Wait for child */
+#endif
     std::cout << "hello" << std::endl;
     exit(EXIT_SUCCESS);
   }
-
 }
