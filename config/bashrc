@@ -7,11 +7,11 @@ if [ $system == Linux ]; then
   alias ls='ls --color'
   alias xargs='xargs -r'
   toolchain-clang() {
-    source ~/dev/hornet/thirdparty/toolchain-clang-$(uname -m)-Linux.sh
+    source ~/dev/hornet-opensource/thirdparty/toolchain-clang-$(uname -m)-Linux.sh
     export LDFLAGS="-Wl,-rpath,$DEPENDENCY_PATH/lib $LDFLAGS"
   }
   toolchain-gcc() {
-    source ~/dev/hornet/thirdparty/toolchain-gcc-$(uname -m)-Linux.sh
+    source ~/dev/hornet-opensource/thirdparty/toolchain-gcc-$(uname -m)-Linux.sh
   }
   yzy_CORE_DIR=$(dirname $(/sbin/sysctl -n kernel.core_pattern))
   yzy_NPROC=$(nproc)
