@@ -341,9 +341,8 @@ hawq-test() {
   if [[ -f /usr/local/hawq/feature-test/feature-test ]]; then
     ftest="/usr/local/hawq/feature-test/feature-test"
   else
-    cd $HAWQ_SRC
     echo -e "Building feature-test \e[5m...\e[0m\n"
-    make feature-test >/dev/null
+    make -C ~/dev/oushudb/cmake-build-debug feature-test
     if [[ ! $? -eq 0 ]]; then
       return
     fi
@@ -369,17 +368,32 @@ hawq-test() {
 #
 #-------------------------------------------------------------------------------
 export RUN_UNITTEST=no
+hornet-build() {
+  cmake_dir=~/dev/oushudb/cmake-build-${1-debug}
+  if [[ -n $HORNET_EXECUTOR_ONLY ]]; then
+    make executor-shared -C $cmake_dir/
+    make install -C $cmake_dir/hornet-opensource/
+    make install -C $cmake_dir/hornet/interconnect
+    make install -C $cmake_dir/hornet/executor
+    install -d /opt/dependency/include/magma/
+    touch /opt/dependency/package/include/magma/cwrapper/magma-client-c.h
+    touch /opt/dependency/package/include/storage/cwrapper/magma-format-c.h
+    return 0
+  fi
+  make install -C ~/dev/oushudb/cmake-build-$cmake_dir/hornet/
+}
 hornet-debug() {
   # cd ~/dev/hornet && make incremental && cd -
-  make install -C ~/dev/oushudb/cmake-build-debug/hornet/
+  hornet-build debug
+}
+hornet-release() {
+  # cd ~/dev/release/hornet && make incremental && cd -
+  hornet-build release
 }
 hornet-unittest() {
   cd ~/dev/hornet && RUN_UNITTEST=YES make incremental && cd -
 }
-hornet-release() {
-  # cd ~/dev/release/hornet && make incremental && cd -
-  make install -C ~/dev/oushudb/cmake-build-release/hornet/
-}
+
 hornet-coverage-setup() {
   # FIXME(chiyang): conflicts with running feature-test
   # sudo rm -rf /tmp/Test* /tmp/test* /tmp/err_table

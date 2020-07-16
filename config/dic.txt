@@ -45,3 +45,5 @@ unset
 varchar
 workfile
 clickhouse
+hdfs
+opensource

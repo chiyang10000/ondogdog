@@ -18,8 +18,23 @@ endif ()
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/CMakeLists.txt AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet/thirdparty)
     add_subdirectory(hornet-opensource)
+
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/dbcommon/src)
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/dbcommon/src)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/univplan/src)
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/univplan/src)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/storage/src)
+
+    link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/dbcommon/src/)
+    link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/univplan/src/)
+    link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/storage/src/)
 endif ()
 add_subdirectory(hornet)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/interconnect/src/)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/executor/src/)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-client/src/magma/client)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-server/src/magma)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/scheduler/src/)
 add_subdirectory(hawq)
 
 add_subdirectory(yizhiyang/cpp)
