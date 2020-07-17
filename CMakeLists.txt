@@ -24,6 +24,7 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/CMakeLists.txt AND NOT 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/univplan/src)
     include_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/univplan/src)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/storage/src)
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/storage/src)
 
     link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/dbcommon/src/)
     link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/univplan/src/)
