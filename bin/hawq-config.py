@@ -2,6 +2,7 @@
 
 import sys
 import xml.etree.ElementTree as et
+import os.path
 
 config_files = ['/usr/local/hawq/etc/hawq-site.xml', '/usr/local/hawq/etc/magma-site.xml']
 
@@ -9,6 +10,8 @@ if __name__ == '__main__':
     assert (len(sys.argv) <= 3)
 
     for config_file in config_files:
+        if not os.path.isfile(config_file):
+            continue
         tree = et.parse(config_file)
         root = tree.getroot()
         if len(sys.argv) == 2:

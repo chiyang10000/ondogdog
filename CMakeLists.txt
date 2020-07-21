@@ -40,3 +40,8 @@ add_subdirectory(hawq)
 
 add_subdirectory(yizhiyang/cpp)
 set(CMAKE_INSTALL_PREFIX /opt/dependency/package)
+
+add_custom_target(hawq-build
+        COMMAND bash -ic 'hawq-config-load'
+        COMMAND make install -C ${CMAKE_CURRENT_SOURCE_DIR}/hawq && hawq restart cluster -a -M immediate
+        )

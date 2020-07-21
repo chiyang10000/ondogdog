@@ -7,7 +7,7 @@ ADD_EXECUTABLE(
         sort
         stdxxl.cpp
 )
-TARGET_LINK_LIBRARIES(sort stxxl)
+TARGET_LINK_LIBRARIES(sort stxxl pthread)
 ADD_LIBRARY(
         mymalloc
         SHARED
