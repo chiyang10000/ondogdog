@@ -255,13 +255,11 @@ magma-init() {
   hawq sql -c "drop database hawq_feature_test_db;"
   hawq-setup-feature-test
   magma-clean
-  rm -rf ${yzy_CORE_DIR}/core*
   hawq-restart
 }
 hawq-init() { (
   set -ex
   num=${1}
-  rm -rf ${yzy_CORE_DIR}/core*
   hawq-stop
   magma-clean
   hawq-clean
@@ -305,7 +303,6 @@ hawq-stop() {
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9
 }
 hawq-restart() {
-  rm -rf ${yzy_CORE_DIR}/*
   if [ "$#" -eq 1 ]; then
     val=$1
     echo "set QE num to $1"
