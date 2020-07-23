@@ -242,10 +242,12 @@ hawq-clean() {
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
   sudo rm -rf /tmp/Test* /tmp/test* /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
-  if [[ $system == Linux && $(getent passwd hdfs) ]]; then
-    sudo -iu hdfs hdfs dfs -rm -r -f hdfs://$(hawq-config hawq_dfs_url)/*
-  else
-    hdfs dfs -rm -r -f hdfs://$(hawq-config hawq_dfs_url)/*
+  if [[ $(hawq-config hawq_init_with_hdfs | uniq) == true ]]; then
+    if [[ $system == Linux && $(getent passwd hdfs) ]]; then
+      sudo -iu hdfs hdfs dfs -rm -r -f hdfs://$(hawq-config hawq_dfs_url)/*
+    else
+      hdfs dfs -rm -r -f hdfs://$(hawq-config hawq_dfs_url)/*
+    fi
   fi
   set +x
 }
