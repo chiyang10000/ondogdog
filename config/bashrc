@@ -286,9 +286,10 @@ hawq-init() { (
 
   hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
 
-  if [[ $(hawq-config hawq_init_with_magma) == true ]]; then
-    with_magma=''
+  if [[ $(hawq-config hawq_init_with_magma | uniq) == true ]]; then
     with_magma='--with_magma'
+  else
+    with_magma=''
   fi
   hawq init cluster -a --locale='C' --lc-collate='C' \
     --lc-ctype='C' --lc-messages='C' \
