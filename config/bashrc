@@ -286,10 +286,14 @@ hawq-init() { (
 
   hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
 
+  if [[ $(hawq-config hawq_init_with_magma) == true ]]; then
+    with_magma=''
+    with_magma='--with_magma'
+  fi
   hawq init cluster -a --locale='C' --lc-collate='C' \
     --lc-ctype='C' --lc-messages='C' \
     --lc-monetary='C' --lc-numeric='C' \
-    --lc-time='C'
+    --lc-time='C' ${with_magma}
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
   set +ex
 ); }
