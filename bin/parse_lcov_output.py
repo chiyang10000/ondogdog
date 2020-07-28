@@ -8,7 +8,7 @@ if __name__ == "__main__":
     git_repo_dir = sys.argv[1]
     coverage_info_file = sys.argv[2]
 
-    file_name_pattern = re.compile(r'SF:.*hornet/(.*)')
+    file_name_pattern = re.compile(r'SF:.*hornet[^/]*/(.*)')
     line_hint_pattern = re.compile(r'LH:(.*)')
     line_file_pattern = re.compile(r'LF:(.*)')
     line_num_pattern = re.compile(r'DA:([0-9]+),([0-9]+)')
@@ -24,6 +24,8 @@ if __name__ == "__main__":
         if not line:
             break
         line = line.rstrip()
+        if not file_name_pattern.match(line):
+            continue
         file_name = file_name_pattern.match(line).group(1)
         while line != 'end_of_record':
             match = line_num_pattern.match(line)
