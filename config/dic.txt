@@ -1,9 +1,6 @@
 accessor
 apache
 backdoor
-bigint
-bool
-bytea
 callable
 chiyang
 dbcommon
@@ -12,14 +9,11 @@ endian
 errcode
 expr
 gpfdist
-greenplum
-hawq
 hdfs
 hornet
 idx
 isnull
 lineitem
-magma
 namespace
 nullable
 nullptr
@@ -40,10 +34,42 @@ timestamp
 todo
 unhandled
 unittest
+orc
+
+# Library name
+magma
 univplan
-unset
+jsoncpp
+zstd
+
+# Postgres
+segno
+fcinfo
+tupdesc
+
+# SQL Data type
 varchar
-workfile
+bpchar
+bigint
+bool
+bytea
+
+# Database product
 clickhouse
+greenplum
+hawq
+
+# Data set
+tpch
+
+
+unset
+workfile
 hdfs
 opensource
+vals
+
+
+compresstype
+bloomfilter
+dicthreshold
