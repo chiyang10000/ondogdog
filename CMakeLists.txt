@@ -3,6 +3,7 @@ PROJECT(OushuDB)
 
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "yzy_time")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fdiagnostics-color=always)
@@ -17,8 +18,6 @@ endif ()
 #add_link_options(-fsanitize=address)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/CMakeLists.txt AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet/thirdparty)
-    add_subdirectory(hornet-opensource)
-
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/dbcommon/src)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/univplan/src)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/storage/src)
@@ -26,12 +25,13 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet-opensource/CMakeLists.txt AND NOT 
     link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/dbcommon/src/)
     link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/univplan/src/)
     link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-opensource/storage/src/)
+
+    add_subdirectory(hornet-opensource)
 endif ()
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/interconnect/src/)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/executor/src/)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-client/src/magma/client)
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-server/src/magma)
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/scheduler/src/)
 add_subdirectory(hornet)
 add_subdirectory(hawq)
 
