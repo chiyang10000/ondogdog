@@ -73,3 +73,6 @@ vals
 compresstype
 bloomfilter
 dicthreshold
+pushdown
+
+cwrapper

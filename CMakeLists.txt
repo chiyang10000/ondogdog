@@ -35,7 +35,9 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-server/src/magma)
 add_subdirectory(hornet)
 add_subdirectory(hawq)
 
-add_subdirectory(yizhiyang/cpp)
+if (EXISTS yizhiyang)
+    add_subdirectory(yizhiyang/cpp)
+endif ()
 set(CMAKE_INSTALL_PREFIX /opt/dependency/package)
 
 add_custom_target(hawq-build

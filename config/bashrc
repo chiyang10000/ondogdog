@@ -59,7 +59,9 @@ export GOPATH=~/dev/goprojects
 export PATH=$HOME/yizhiyang/bin:/Library/Developer/CommandLineTools/usr/bin/:$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 git-writer() {
-  git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
+  # git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
+  git grep -Il '' |
+  xargs  -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
 }
 
 mytime() {
