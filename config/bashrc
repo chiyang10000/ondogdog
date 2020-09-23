@@ -56,7 +56,7 @@ export JAVA_LIBRARY_PATH=/usr/hdp/current/hadoop-client/lib/native/:/opt/depende
 export MACOSX_DEPLOYMENT_TARGET=10.12
 
 export GOPATH=~/dev/goprojects
-export PATH=$HOME/yizhiyang/bin:/Library/Developer/CommandLineTools/usr/bin/:$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH=$HOME/yizhiyang/bin:$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 git-writer() {
   # git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
