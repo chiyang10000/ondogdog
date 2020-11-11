@@ -82,6 +82,12 @@ format-code() {
   git diff $start_sha --name-only | xargs cpplint.py
 }
 
+format-diff() {
+  file1=$1
+  file2=$2
+  diff -u <(clang-format --style=google $file1) <(clang-format --style=google $file2)
+}
+
 find-latest() {
   find . -iname "$1" | xargs ls -ltr
 }

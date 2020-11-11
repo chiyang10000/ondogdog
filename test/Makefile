@@ -1,0 +1,2 @@
+yizhiyang_test:
+	./test

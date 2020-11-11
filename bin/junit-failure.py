@@ -15,3 +15,5 @@ if __name__ == '__main__':
         for testcase in testsuite.findall("./testcase[failure]"):
             print("{}.{}".format(testsuite.attrib["name"],
                                  testcase.attrib["name"]))
+            print('')
+            print(testcase.find('failure').text)

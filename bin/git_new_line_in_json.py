@@ -18,19 +18,19 @@ if __name__ == "__main__":
             if line_num == end + 1:
                 end += 1
             else:
-                if start > 0:
+                if start > 0 and start != 9223372036854775807:  # FIXME: skip this odd value
                     line_ranges.append([start, end])
                     # print(file_name, start, end)
                 start = line_num
                 end = start
         # last group
-        if start > 0:
+        if start > 0 and start != 9223372036854775807:
             line_ranges.append([start, end])
             # print(file_name, start, end)
 
         reorg_line_set.append({'name': os.path.basename(file_name), 'lines': line_ranges})
 
-    #print(json.dumps(reorg_line_set, indent=4, sort_keys=True))
+    # print(json.dumps(reorg_line_set, indent=4, sort_keys=True))
     json_str = str(json.JSONEncoder().encode(reorg_line_set))
-    json.loads(json_str) # validate
+    json.loads(json_str)  # validate
     print(json_str)

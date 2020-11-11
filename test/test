@@ -1,0 +1,6 @@
+#!/bin/bash
+
+ans=$(junit-failure.py data/gtestresults.xml)
+
+echo -e "$ans"
+[[ $ans == TestTemp.BasicTest ]] || exit 1
