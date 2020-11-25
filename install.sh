@@ -19,6 +19,9 @@ git config --global pull.ff only
 git config --global push.default current
 git config --global credential.helper store
 git config --global blame.date short
+git config --global grep.lineNumber true
+
+
 
 rm -rf "$YZYPATH/yizhiyang/config/git-*"
 version=$(git --version | cut -d' ' -f3)
