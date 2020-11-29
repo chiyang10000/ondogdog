@@ -36,6 +36,9 @@ trap 'echo -e "\033[31mERR $? in \033[1m${FUNCNAME-bash}: $BASH_COMMAND \033[0m"
 error() {
   echo -e "\033[31m$@\033[0m"
 }
+warning() {
+  echo -e "\033[33m$@\033[0m"
+}
 export yzy_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")/.." && pwd)"
 export yzy_PATH="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
 source $yzy_PATH/yizhiyangrc
@@ -61,7 +64,13 @@ export PATH=$HOME/yizhiyang/bin:$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/
 git-writer() {
   # git ls-tree -r -z --name-only HEAD -- $1 | xargs -0 -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
   git grep -Il '' |
-  xargs  -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
+    xargs -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
+}
+
+exclude_in_exciting() {
+  if [[ $(hostname) =~ exciting ]]; then
+    error "Do not do"
+  fi
 }
 
 mytime() {
@@ -202,6 +211,10 @@ hawq-config-deprecated() {
 }
 hawq-config-load() {
   echo 'hawq-config-load'
+  if [[ $(hostname) =~ ^exciting ]]; then
+    warning 'skip hawq-config-load in exciting.'
+    exit 0
+  fi
   for hawq_config in $(printenv | grep -E ^hawq_config_[^=]+=); do
     name_value=${hawq_config#hawq_config_}
     name=${name_value%%=*}
