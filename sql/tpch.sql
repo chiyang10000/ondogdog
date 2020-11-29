@@ -1,9 +1,9 @@
- set new_executor=off;
+ set new_executor=on;
  set gp_enable_agg_distinct = off;
  set enforce_virtual_segment_number = 1;
  set new_executor_enable_partitioned_hashjoin=off;
  \pset pager off
- \timing
+ \timing on
 
  /*Q01*/select l_returnflag, l_linestatus, sum(l_quantity)::bigint as sum_qty, sum(l_extendedprice)::bigint as sum_base_price, sum(l_extendedprice * (1 - l_discount))::bigint as sum_disc_price, sum(l_extendedprice * (1 - l_discount) * (1 + l_tax))::bigint as sum_charge, avg(l_quantity)::bigint as avg_qty, avg(l_extendedprice)::bigint as avg_price, avg(l_discount)::bigint as avg_disc, count(*) as count_order from lineitem where l_shipdate <= date '1998-09-02' group by l_returnflag, l_linestatus order by l_returnflag, l_linestatus;
  select s_acctbal::bigint, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment from part, supplier, partsupp, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and p_size = 15 and p_type like '%BRASS' and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' and ps_supplycost = ( select min(ps_supplycost) from partsupp, supplier, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' ) order by s_acctbal desc, n_name, s_name, p_partkey limit 100;

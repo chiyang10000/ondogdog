@@ -1,4 +1,4 @@
-\timing
+\timing on
 ANALYZE nation;
 ANALYZE region;
 ANALYZE part;

@@ -1,4 +1,4 @@
-\timing
+\timing on
 copy nation from '/opt/db_data/tpch1g/nation/nation.tbl' delimiter '|';
 copy region  from '/opt/db_data/tpch1g/region/region.tbl' delimiter '|';
 copy part from '/opt/db_data/tpch1g/part/part.tbl' delimiter '|';

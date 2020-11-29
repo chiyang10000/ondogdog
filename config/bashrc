@@ -214,10 +214,11 @@ hawq-config-deprecated() {
 hawq-config-load() {
   echo 'hawq-config-load'
   if [[ $(hostname) =~ ^exciting ]]; then
-    warning 'skip hawq-config-load in exciting.'
-    return 0
+    warning 'skip hawq-config-load yizhiyangrc in exciting'
+  else
+    check "source $yzy_PATH/yizhiyangrc"
+    source $yzy_PATH/yizhiyangrc
   fi
-  source $yzy_PATH/yizhiyangrc
   for hawq_config in $(printenv | grep -E ^hawq_config_[^=]+=); do
     name_value=${hawq_config#hawq_config_}
     name=${name_value%%=*}
