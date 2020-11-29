@@ -1,11 +1,14 @@
 #!/bin/bash
 export PKG_PATH="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
 
+# Deprecated in new version
 export hawq_config_hawq_magma_locations_master=file:///opt/db_data/hawq-data-directory/magma_master
 export hawq_config_hawq_magma_locations_segment=file:///opt/db_data/hawq-data-directory/magma_segment
+
 export hawq_config_hawq_master_directory=/opt/db_data/hawq-data-directory/masterdd
 export hawq_config_hawq_segment_directory=/opt/db_data/hawq-data-directory/segmentdd
 export hawq_config_gp_vmem_idle_resource_timeout=3600000
 
+export hawq_config_hawq_init_with_magma=true
 export hawq_config_node_log_directory=${hawq_config_hawq_segment_directory}/pg_log
 export hawq_config_node_data_directory=${hawq_config_hawq_magma_locations_segment}

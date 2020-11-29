@@ -33,6 +33,9 @@ if [ $system == Darwin ]; then
   yzy_CORE_DIR=$(dirname $(sysctl -n kern.corefile))
 fi
 trap 'echo -e "\033[31mERR $? in \033[1m${FUNCNAME-bash}: $BASH_COMMAND \033[0m"' ERR
+check() {
+  echo -e "\033[32m$@\033[0m"
+}
 error() {
   echo -e "\033[31m$@\033[0m"
 }
@@ -41,7 +44,6 @@ warning() {
 }
 export yzy_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")/.." && pwd)"
 export yzy_PATH="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
-source $yzy_PATH/yizhiyangrc
 HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
 hornet_src_dir=~/dev/hornet/
@@ -67,9 +69,9 @@ git-writer() {
     xargs -n1 git blame --line-porcelain HEAD | grep "^author-mail" | sort | uniq -c | sort -nr
 }
 
-exclude_in_exciting() {
+error_in_exciting() {
   if [[ $(hostname) =~ exciting ]]; then
-    error "Do not do"
+    error "Do not do this in "
   fi
 }
 
@@ -213,8 +215,9 @@ hawq-config-load() {
   echo 'hawq-config-load'
   if [[ $(hostname) =~ ^exciting ]]; then
     warning 'skip hawq-config-load in exciting.'
-    exit 0
+    return 0
   fi
+  source $yzy_PATH/yizhiyangrc
   for hawq_config in $(printenv | grep -E ^hawq_config_[^=]+=); do
     name_value=${hawq_config#hawq_config_}
     name=${name_value%%=*}
@@ -263,7 +266,7 @@ hawq-clean() {
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
   sudo rm -rf /tmp/Test* /tmp/test* /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
-  if [[ $(hawq-config hawq_init_with_hdfs | uniq) == true ]]; then
+  if [[ $(hawq-config hawq_init_with_hdfs) =~ true ]]; then
     if [[ $system == Linux && $(getent passwd hdfs) ]]; then
       sudo -iu hdfs hdfs dfs -rm -r -f hdfs://$(hawq-config hawq_dfs_url)/*
     else
@@ -284,15 +287,16 @@ hawq-init() { (
   hawq-stop
   magma-clean
   hawq-clean
+
   if [[ -n $num ]]; then
     hawq-config default_hash_table_bucket_number $num
     hawq-config default_magma_hash_table_nvseg_per_node $num
     hawq-config hawq_rm_nvseg_perquery_perseg_limit $num
-    hawq-config magma_range_number $num
+    # hawq-config magma_range_number $num
   fi
 
+  # the following clean job remove the content inside the new config
   hawq-config-load
-  hawq-stop
   magma-clean
   hawq-clean
 
@@ -304,8 +308,6 @@ hawq-init() { (
     sed 's|,| |g')
   sudo install -o $USER -d $(hawq-config hawq_master_directory)
   sudo install -o $USER -d $(hawq-config hawq_segment_directory)
-
-  hdfs dfs -rmr hdfs://$(hawq-config hawq_dfs_url)/* || true
 
   if [[ $(hawq-config hawq_init_with_magma | uniq) == true ]]; then
     with_magma='--with_magma'
@@ -358,10 +360,7 @@ hawq-setup-feature-test() {
   alter database $TEST_DB_NAME set datestyle to 'postgres,MDY';
 EOF
 }
-hawq-test-list() {
-  $HAWQ_SRC/src/test/feature/feature-test --gtest_list_tests
-}
-hawq-test() {
+checkout-hawq-test() {
   ftest="$HAWQ_SRC/src/test/feature/feature-test"
   if [[ -f /usr/local/hawq/feature-test/feature-test ]]; then
     ftest="/usr/local/hawq/feature-test/feature-test"
@@ -372,6 +371,17 @@ hawq-test() {
       return
     fi
   fi
+  check $ftest
+}
+hawq-test-list() {
+  checkout-hawq-test
+  $ftest --gtest_list_tests | awk '$1 ~ /\./ {kk=$1; print kk}; $1 !~ /\./  {print "  " kk $1}'
+
+  echo
+  check $ftest
+}
+hawq-test() {
+  checkout-hawq-test
   TEST_DB_NAME="hawq_feature_test_db"
   export PGDATABASE=$TEST_DB_NAME
   if [ -n "$1" ]; then
@@ -383,8 +393,8 @@ hawq-test() {
     source /usr/local/hawq/greenplum_path.sh
     $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*"
   fi
-  cd -
-  export PGDATABASE=postgres
+
+  # export PGDATABASE=postgres
 }
 
 #-------------------------------------------------------------------------------

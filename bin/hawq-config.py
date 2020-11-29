@@ -17,7 +17,7 @@ if __name__ == '__main__':
         if len(sys.argv) == 2:
             name = sys.argv[1]
             value_node = root.find(".//property[name='{}']/./value".format(name))
-            print('' if value_node is None else value_node.text)
+            print('undefined' if value_node is None else value_node.text)
             exit
 
         if len(sys.argv) == 3:
