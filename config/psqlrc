@@ -1,9 +1,11 @@
 \echo '\033[33mLoading startup settings from ~/.psqlrc.\033[0m'
 
-\set COMP_KEYWORD_CASE upper
 \timing on
 \pset pager off
-
 \pset null 'NULL'
 
+\set COMP_KEYWORD_CASE upper
+\set sql_prefix explain
+
 \echo '\033[33mSkip above startup settings via psql -X.\033[0m'
+
