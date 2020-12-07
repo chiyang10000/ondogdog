@@ -86,11 +86,13 @@ mytime() {
 
 # instrument() { instruments -l $1 -t Time\ Profiler -p `hawq-qe 2` }
 format-code() {
-  start_sha=$(git merge-base origin/master HEAD)
-  git diff $start_sha --name-only |
+  start_sha=$(git merge-base $(git symbolic-ref refs/remotes/origin/HEAD) HEAD)
+  git diff $start_sha --name-only --diff-filter=AM |
     grep -E '\.(h|c|cc|cpp)' |
     xargs clang-format -i
-  git diff $start_sha --name-only | xargs cpplint.py
+  git diff $start_sha --name-only --diff-filter=AM |
+    grep -E '\.(h|c|cc|cpp)' |
+    xargs cpplint.py
 }
 
 format-diff() {

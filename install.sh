@@ -20,6 +20,8 @@ git config --global push.default current
 git config --global credential.helper store
 git config --global blame.date short
 git config --global grep.lineNumber true
+git config --global alias.hs "log --pretty='%C(yellow)%h %C(cyan)%ad %Cblue%an%C(auto)%d %Creset%s' --date=relative --date-order --graph"
+
 
 
 
