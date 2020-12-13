@@ -33,6 +33,7 @@ if [ $system == Darwin ]; then
   yzy_CORE_DIR=$(dirname $(sysctl -n kern.corefile))
 fi
 trap 'echo -e "\033[31mERR $? in \033[1m${FUNCNAME-bash}: $BASH_COMMAND \033[0m"' ERR
+trap 'ts_start=$(date +%s%3N)' DEBUG
 check() {
   echo -e "\033[32m$@\033[0m"
 }
@@ -150,7 +151,7 @@ alias dir-master='yizhiyang-dir master'
 alias dir-segment='yizhiyang-dir segment'
 alias tail-log-hawq-master='tail -f `yizhiyang-log-file hawq master`'
 alias tail-log-magma-master='tail -f `yizhiyang-log-file magma master`'
-alias tail-log-hawq-segment='tail -f `yizhiyang-log-file hawq segment` | grep -v network_utils.c'
+alias tail-log-hawq-segment='tail -f `yizhiyang-log-file hawq segment` | grep --line-buffered --colour=never -v network_utils.c'
 alias tail-log-magma-segment='tail -f `yizhiyang-log-file magma segment`'
 alias vi-log-hawq-master='vi `yizhiyang-log-file hawq master`'
 alias vi-log-magma-master='vi `yizhiyang-log-file magma master`'
@@ -347,7 +348,13 @@ hawq-restart() {
   fi
   hawq-config-load
   hawq-stop
-  hawq start cluster -a -M immediate
+
+  if [[ $(hawq-config hawq_init_with_magma | uniq) == true ]]; then
+    with_magma='--with_magma'
+  else
+    with_magma=''
+  fi
+  hawq start cluster -a -M immediate $with_magma
 }
 hawq-setup-feature-test() {
   TEST_DB_NAME="hawq_feature_test_db"
@@ -370,21 +377,21 @@ checkout-hawq-test() {
   else
     echo -e "Building feature-test \e[5m...\e[0m\n"
     make -C ~/dev/oushudb/cmake-build-debug feature-test
-    if [[ ! $? -eq 0 ]]; then
-      return
+    if [[ $? -ne 0 ]]; then
+      return 1
     fi
   fi
   check $ftest
 }
 hawq-test-list() {
-  checkout-hawq-test
+  checkout-hawq-test || return 1
   $ftest --gtest_list_tests | awk '$1 ~ /\./ {kk=$1; print kk}; $1 !~ /\./  {print "  " kk $1}'
 
   echo
   check $ftest
 }
 hawq-test() {
-  checkout-hawq-test
+  checkout-hawq-test || return 1
   TEST_DB_NAME="hawq_feature_test_db"
   export PGDATABASE=$TEST_DB_NAME
   if [ -n "$1" ]; then
@@ -634,6 +641,7 @@ if [[ $system == Darwin ]]; then # user and host
   PS1=$PS1'\[\033[01;33m\]\u\[\033[00m\]@\[\033[33m\]\h\[\033[00m\]'
 elif [[ $(hostname) =~ exciting ]]; then
   PS1=$PS1'\[\033[01;36m\]\u\[\033[00m\]@\[\033[36m\]\h\[\033[00m\]'
+  complete -W "$(saiting-ps | awk '/^exci/{print $1}')" saiting-login
 else
   PS1=$PS1'\[\033[01;32m\]\u\[\033[00m\]@\[\033[32m\]\h\[\033[00m\]'
 fi
@@ -661,3 +669,15 @@ export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 if [[ -t 0 && $(hostname) == yikesaiting ]]; then
   saiting-ps
 fi
+
+#-------------------------------------------------------------------------------
+#
+#   Completion
+#
+#-------------------------------------------------------------------------------
+_make_completions()
+{
+  targets=$(make help | awk '/... /{print $2}')
+  [ "${#COMP_WORDS[@]}" == 2 ] && COMPREPLY=($(compgen -W "$targets" "${COMP_WORDS[1]}"))
+}
+complete -F _make_completions make

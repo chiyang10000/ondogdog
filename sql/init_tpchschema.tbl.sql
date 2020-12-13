@@ -6,14 +6,6 @@ DROP EXTERNAL WEB TABLE IF EXISTS e_supplier;
 DROP EXTERNAL WEB TABLE IF EXISTS e_partsupp;
 DROP EXTERNAL WEB TABLE IF EXISTS e_orders;
 DROP EXTERNAL WEB TABLE IF EXISTS e_lineitem;
-drop table if exists nation cascade;
-drop table if exists region cascade;
-drop table if exists part cascade;
-drop table if exists supplier cascade;
-drop table if exists partsupp cascade;
-drop table if exists customer cascade;
-drop table if exists orders cascade;
-drop table if exists lineitem cascade;
 
 CREATE EXTERNAL TABLE e_nation (N_NATIONKEY  INTEGER ,
                             N_NAME       VARCHAR(25) ,
@@ -25,6 +17,7 @@ CREATE external TABLE e_REGION  ( R_REGIONKEY  INTEGER ,
                             R_NAME       VARCHAR(25) ,
                             R_COMMENT    VARCHAR(152))
                   location ('hdfs://localhost:8020/tpch1g/region') FORMAT 'text' (delimiter '|');
+
 
 CREATE external TABLE e_PART  ( P_PARTKEY     INTEGER ,
                           P_NAME        VARCHAR(55) ,

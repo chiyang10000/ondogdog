@@ -1,19 +1,30 @@
-CREATE TABLE NATION
+\set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8, stripesize=64)
+
+DROP TABLE IF EXISTS nation CASCADE;
+DROP TABLE IF EXISTS customer CASCADE;
+DROP TABLE IF EXISTS region CASCADE;
+DROP TABLE IF EXISTS part CASCADE;
+DROP TABLE IF EXISTS supplier CASCADE;
+DROP TABLE IF EXISTS partsupp CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS lineitem CASCADE;
+
+CREATE TABLE nation
 (
     N_NATIONKEY INTEGER,
     N_NAME      CHAR(25),
     N_REGIONKEY INTEGER,
     N_COMMENT   VARCHAR(152)
-) with (appendonly = true, orientation = orc);
+) :storage_spec;
 
-CREATE TABLE REGION
+CREATE TABLE region
 (
     R_REGIONKEY INTEGER,
     R_NAME      CHAR(25),
     R_COMMENT   VARCHAR(152)
-) with (appendonly = true, orientation = orc);
+) :storage_spec;
 
-CREATE TABLE PART
+CREATE TABLE part
 (
     P_PARTKEY     INTEGER,
     P_NAME        VARCHAR(55),
@@ -24,9 +35,9 @@ CREATE TABLE PART
     P_CONTAINER   CHAR(10),
     P_RETAILPRICE FLOAT,
     P_COMMENT     VARCHAR(23)
-) with (appendonly = true, orientation = orc);
+) :storage_spec;
 
-CREATE TABLE SUPPLIER
+CREATE TABLE supplier
 (
     S_SUPPKEY   INTEGER,
     S_NAME      CHAR(25),
@@ -35,18 +46,18 @@ CREATE TABLE SUPPLIER
     S_PHONE     CHAR(15),
     S_ACCTBAL   FLOAT,
     S_COMMENT   VARCHAR(101)
-) with (appendonly = true, orientation = orc);
+) :storage_spec;
 
-CREATE TABLE PARTSUPP
+CREATE TABLE partsupp
 (
     PS_PARTKEY    INTEGER,
     PS_SUPPKEY    INTEGER,
     PS_AVAILQTY   INTEGER,
     PS_SUPPLYCOST FLOAT,
     PS_COMMENT    VARCHAR(199)
-) with (appendonly = true, orientation = orc);
+) :storage_spec;
 
-CREATE TABLE CUSTOMER
+CREATE TABLE customer
 (
     C_CUSTKEY    INTEGER,
     C_NAME       VARCHAR(25),
@@ -56,21 +67,20 @@ CREATE TABLE CUSTOMER
     C_ACCTBAL    FLOAT,
     C_MKTSEGMENT CHAR(10),
     C_COMMENT    VARCHAR(117)
-) with (appendonly = true, orientation = orc);
+) :storage_spec;
 
 CREATE TABLE orders
 (
-    o_orderkey      bigint,
-    o_custkey       INTEGER,
-    o_orderstatus   CHAR,
-    o_totalprice    FLOAT,
-    o_orderdate     DATE,
-    o_orderpriority CHAR(15),
-    o_clerk         CHAR(15),
-    o_shippriority  integer,
-    o_comment       VARCHAR(79)
-) with (appendonly = true, orientation = orc)
-;
+    O_ORDERKEY      bigint,
+    O_CUSTKEY       INTEGER,
+    O_ORDERSTATUS   CHAR,
+    O_TOTALPRICE    FLOAT,
+    O_ORDERDATE     DATE,
+    O_ORDERPRIORITy CHAR(15),
+    O_CLERK         CHAR(15),
+    O_SHIPPRIORITY  integer,
+    O_COMMENT       VARCHAR(79)
+) :storage_spec;
 
 CREATE TABLE lineitem
 (
@@ -90,4 +100,4 @@ CREATE TABLE lineitem
     L_SHIPINSTRUCT  CHAR(25),
     L_SHIPMODE      CHAR(10),
     L_COMMENT       VARCHAR(44)
-) with (appendonly = true, orientation = orc);
+) :storage_spec;

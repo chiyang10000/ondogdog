@@ -41,6 +41,7 @@ magma
 univplan
 jsoncpp
 zstd
+newexecutor
 
 # Postgres
 segno

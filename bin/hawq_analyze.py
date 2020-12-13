@@ -14,7 +14,7 @@ def op_name(operator):
     """
         return a striped name
     """
-    operator_pattern = re.compile(r'([A-Z][a-z]+ )+')
+    operator_pattern = re.compile(r'([A-Za-z]+ )+')
     lines = operator.splitlines()
 
     if 'Slice' in lines[0]:
@@ -113,6 +113,10 @@ def parse_group_by_operator(query_num, query_file):
             continue
 
         node = res.ops[node_idx]
+        if args.pattern:
+            filter_pattern = re.compile(args.pattern)
+            if filter_pattern.match(res.ops[node_idx]):
+                print(res.operators[node_idx])
 
         if node not in query_counter:
             query_counter[node] = 0
@@ -240,6 +244,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="print summary output of each operator",
                         action="store_true")
+    parser.add_argument('-p', '--pattern' , type=str,
+                        help='regex pattern to filter out operator')
     parser.add_argument("-t", "--time", type=float, default=20.0,
                         help="minimum timing counter in ms for single operator when checking old vs new (default: 20)")
     parser.add_argument("-s", "--speedup", type=float, default=3.0,
