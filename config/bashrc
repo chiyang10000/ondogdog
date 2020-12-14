@@ -85,7 +85,6 @@ mytime() {
   echo $t ms
 }
 
-# instrument() { instruments -l $1 -t Time\ Profiler -p `hawq-qe 2` }
 format-code() {
   start_sha=$(git merge-base $(git symbolic-ref refs/remotes/origin/HEAD) HEAD)
   git diff $start_sha --name-only --diff-filter=AM |
@@ -254,6 +253,10 @@ hawq-perf() {
     awk 'BEGIN {ORS=","} {print $1}' |
     xargs perf record --call-graph dwarf $@ -p
 }
+hawq-instrument() { # timing in milisecond
+  instruments -l $1 -t 'Time Profiler' -p `hawq-qe 2`
+}
+
 magma-clean() {
   set -x
   sudo rm -rf $(hawq-config hawq_magma_locations_master | sed -E 's|[^:,]+://||g' |
@@ -641,7 +644,6 @@ if [[ $system == Darwin ]]; then # user and host
   PS1=$PS1'\[\033[01;33m\]\u\[\033[00m\]@\[\033[33m\]\h\[\033[00m\]'
 elif [[ $(hostname) =~ exciting ]]; then
   PS1=$PS1'\[\033[01;36m\]\u\[\033[00m\]@\[\033[36m\]\h\[\033[00m\]'
-  complete -W "$(saiting-ps | awk '/^exci/{print $1}')" saiting-login
 else
   PS1=$PS1'\[\033[01;32m\]\u\[\033[00m\]@\[\033[32m\]\h\[\033[00m\]'
 fi
@@ -668,6 +670,7 @@ export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 
 if [[ -t 0 && $(hostname) == yikesaiting ]]; then
   saiting-ps
+  complete -W "$(saiting-ps | awk '/^exci/{print $1}')" saiting-login
 fi
 
 #-------------------------------------------------------------------------------
