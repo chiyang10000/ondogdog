@@ -34,6 +34,7 @@ class MyHTMLParser(HTMLParser):
     table format of the reponsed HTML
     Summary, Query Plan, Offset, First, End, Node, Prct
     """
+    total_runtime_pattern = re.compile(r'([0-9.]+) ms')
 
     def error(self, message):
         pass
@@ -51,6 +52,7 @@ class MyHTMLParser(HTMLParser):
 
         self.new_executor = False
         self.file_path = ''
+        self.total_runtime = -0.0
 
     def handle_starttag(self, tag, attrs):
         if tag == 'tr':  # new row
@@ -78,7 +80,12 @@ class MyHTMLParser(HTMLParser):
         if self.td == 2:
             self.curr_operator += data
         if self.td == 6:
-            self.curr_timing = data
+            self.curr_timing = float(data)
+
+        if data == 'Total runtime:':
+            self.total_runtime = 0.0
+        if self.total_runtime == 0.0 and MyHTMLParser.total_runtime_pattern.search(data):
+            self.total_runtime = float(MyHTMLParser.total_runtime_pattern.search(data).group(1))
 
 
 def parse(file):
@@ -167,11 +174,16 @@ def compare(old_file, new_file):
     assert (len(old_split_files) == len(new_split_files))
 
     mismatched_plans = []
+    old_parsed_results = []
+    new_parsed_results = []
 
     for spilt_file_idx in range(len(old_split_files)):
         # print(old_split_files[i], new_split_files[i])
         old_file = parse(old_split_files[spilt_file_idx])
         new_file = parse(new_split_files[spilt_file_idx])
+
+        old_parsed_results.append(old_file)
+        new_parsed_results.append(new_file)
 
         if len(new_file.timings) != len(old_file.timings):
             # debug
@@ -193,7 +205,27 @@ def compare(old_file, new_file):
                 print(old_file.operators[operator_idx])
                 print(new_file.operators[operator_idx])
 
-    print(mismatched_plans)
+    print("Mismatched Query Plans:\n", mismatched_plans)
+
+    old_op_counter = Counter()
+    new_op_counter = Counter()
+    summary = "\nQueryNo\tSpeedup\tOld\tNew\n"
+    for res_idx in range(len(old_parsed_results)):
+        old = old_parsed_results[res_idx]
+        new = new_parsed_results[res_idx]
+        summary += ('{}\t{:.2f}\t{:<10}\t{}\n'.format(res_idx + 1, old.total_runtime / new.total_runtime,
+                                                  old.total_runtime, new.total_runtime))
+        for op_idx in range(len(old.ops)):
+            old_op_counter.update({old.ops[op_idx]: old.timings[op_idx]})
+            new_op_counter.update({new.ops[op_idx]: new.timings[op_idx]})
+        # map(lambda op_idx: old_op_counter.update({old.ops[op_idx]: old.timings[op_idx]}), range(len(old.ops)))
+        # map(lambda op_idx: new_op_counter.update({new.ops[op_idx]: new.timings[op_idx]}), range(len(new.ops)))
+    print(summary)
+
+    print("Speedup\tOperator\tOld\tNew")
+    for operator, time in sorted(old_op_counter.items(), key=lambda x: x[1], reverse=True):
+        print('{:.2f}\t{:<20}\t{:<10}\t{}'.format(time / (new_op_counter[operator] if new_op_counter[operator] > 0 else 1),
+                                          operator, time, new_op_counter[operator]))
 
 
 def analyze(path):
@@ -244,7 +276,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="print summary output of each operator",
                         action="store_true")
-    parser.add_argument('-p', '--pattern' , type=str,
+    parser.add_argument('-p', '--pattern', type=str,
                         help='regex pattern to filter out operator')
     parser.add_argument("-t", "--time", type=float, default=20.0,
                         help="minimum timing counter in ms for single operator when checking old vs new (default: 20)")

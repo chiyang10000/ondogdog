@@ -1,4 +1,6 @@
 \set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8, stripesize=64)
+\set storage_spec with (appendonly=true, orientation=parquet)
+\set decimal_type DECIMAL(12,2)
 
 DROP TABLE IF EXISTS nation CASCADE;
 DROP TABLE IF EXISTS customer CASCADE;
@@ -33,7 +35,7 @@ CREATE TABLE part
     P_TYPE        VARCHAR(25),
     P_SIZE        INTEGER,
     P_CONTAINER   CHAR(10),
-    P_RETAILPRICE FLOAT,
+    P_RETAILPRICE :decimal_type,
     P_COMMENT     VARCHAR(23)
 ) :storage_spec;
 
@@ -44,7 +46,7 @@ CREATE TABLE supplier
     S_ADDRESS   VARCHAR(40),
     S_NATIONKEY INTEGER,
     S_PHONE     CHAR(15),
-    S_ACCTBAL   FLOAT,
+    S_ACCTBAL   :decimal_type,
     S_COMMENT   VARCHAR(101)
 ) :storage_spec;
 
@@ -53,7 +55,7 @@ CREATE TABLE partsupp
     PS_PARTKEY    INTEGER,
     PS_SUPPKEY    INTEGER,
     PS_AVAILQTY   INTEGER,
-    PS_SUPPLYCOST FLOAT,
+    PS_SUPPLYCOST :decimal_type,
     PS_COMMENT    VARCHAR(199)
 ) :storage_spec;
 
@@ -64,7 +66,7 @@ CREATE TABLE customer
     C_ADDRESS    VARCHAR(40),
     C_NATIONKEY  INTEGER,
     C_PHONE      CHAR(15),
-    C_ACCTBAL    FLOAT,
+    C_ACCTBAL    :decimal_type,
     C_MKTSEGMENT CHAR(10),
     C_COMMENT    VARCHAR(117)
 ) :storage_spec;
@@ -74,7 +76,7 @@ CREATE TABLE orders
     O_ORDERKEY      bigint,
     O_CUSTKEY       INTEGER,
     O_ORDERSTATUS   CHAR,
-    O_TOTALPRICE    FLOAT,
+    O_TOTALPRICE    :decimal_type,
     O_ORDERDATE     DATE,
     O_ORDERPRIORITy CHAR(15),
     O_CLERK         CHAR(15),
@@ -88,10 +90,10 @@ CREATE TABLE lineitem
     L_PARTKEY       INTEGER,
     L_SUPPKEY       INTEGER,
     L_LINENUMBER    INTEGER,
-    L_QUANTITY      FLOAT,
-    L_EXTENDEDPRICE FLOAT,
-    L_DISCOUNT      FLOAT,
-    L_TAX           FLOAT,
+    L_QUANTITY      :decimal_type,
+    L_EXTENDEDPRICE :decimal_type,
+    L_DISCOUNT      :decimal_type,
+    L_TAX           :decimal_type,
     L_RETURNFLAG    CHAR,
     L_LINESTATUS    CHAR,
     L_SHIPDATE      DATE,
