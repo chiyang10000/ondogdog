@@ -1,5 +1,4 @@
 \set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8, stripesize=64)
-\set storage_spec with (appendonly=true, orientation=parquet)
 \set decimal_type DECIMAL(12,2)
 
 DROP TABLE IF EXISTS nation CASCADE;
