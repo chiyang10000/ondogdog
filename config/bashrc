@@ -146,11 +146,14 @@ yizhiyang-log-file() {
   log_file=$(ls -tr $log_dir | grep $hawq_component | tail -n1)
   echo $log_dir/$log_file
 }
-alias dir-master='yizhiyang-dir master'
-alias dir-segment='yizhiyang-dir segment'
+alias dir-master='hawq-dir master'
+alias dir-segment='hawq-dir segment'
 alias tail-log-hawq-master='tail -f `yizhiyang-log-file hawq master`'
 alias tail-log-magma-master='tail -f `yizhiyang-log-file magma master`'
 alias tail-log-hawq-segment='tail -f `yizhiyang-log-file hawq segment` | grep --line-buffered --colour=never -v network_utils.c'
+tail-log-hawq-cache() {
+  tail -f $(yizhiyang-log-file hawq_cache segment)
+}
 alias tail-log-magma-segment='tail -f `yizhiyang-log-file magma segment`'
 alias vi-log-hawq-master='vi `yizhiyang-log-file hawq master`'
 alias vi-log-magma-master='vi `yizhiyang-log-file magma master`'
@@ -254,7 +257,7 @@ hawq-perf() {
     xargs perf record --call-graph dwarf $@ -p
 }
 hawq-instrument() { # timing in milisecond
-  instruments -l $1 -t 'Time Profiler' -p `hawq-qe 2`
+  instruments -l $1 -t 'Time Profiler' -p $(hawq-qe 2)
 }
 
 magma-clean() {
@@ -678,8 +681,7 @@ fi
 #   Completion
 #
 #-------------------------------------------------------------------------------
-_make_completions()
-{
+_make_completions() {
   targets=$(make help | awk '/... /{print $2}')
   [ "${#COMP_WORDS[@]}" == 2 ] && COMPREPLY=($(compgen -W "$targets" "${COMP_WORDS[1]}"))
 }
