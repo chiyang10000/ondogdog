@@ -1,3 +1,4 @@
+ \timing off
  set enforce_virtual_segment_number = 1;
  set gp_enable_agg_distinct = off;
 --set optimizer=on;
@@ -9,10 +10,10 @@ set orc_enable_filter_pushdown=off;
  set new_executor_external_sort_memory_limit=1024;
  \set sql_prefix 'explain analyze'
  \pset pager off
- \timing on
 
  create temp table ts as select now();
  \echo '\033[33mTime in TPC-H Power Test\033[0m'
+ \timing on
 
 :sql_prefix /*Q01*/ select l_returnflag, l_linestatus, sum(l_quantity)::bigint as sum_qty, sum(l_extendedprice)::bigint as sum_base_price, sum(l_extendedprice * (1 - l_discount))::bigint as sum_disc_price, sum(l_extendedprice * (1 - l_discount) * (1 + l_tax))::bigint as sum_charge, avg(l_quantity)::bigint as avg_qty, avg(l_extendedprice)::bigint as avg_price, avg(l_discount)::bigint as avg_disc, count(*) as count_order from lineitem where l_shipdate <= date '1998-09-02' group by l_returnflag, l_linestatus order by l_returnflag, l_linestatus;
 :sql_prefix /*Q02*/ select s_acctbal::bigint, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment from part, supplier, partsupp, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and p_size = 15 and p_type like '%BRASS' and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' and ps_supplycost = ( select min(ps_supplycost) from partsupp, supplier, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' ) order by s_acctbal desc, n_name, s_name, p_partkey limit 100;
@@ -37,6 +38,7 @@ set orc_enable_filter_pushdown=off;
 :sql_prefix /*Q21*/ select s_name, count(*) as numwait from supplier, lineitem l1, orders, nation where s_suppkey = l1.l_suppkey and o_orderkey = l1.l_orderkey and o_orderstatus = 'F' and l1.l_receiptdate > l1.l_commitdate and exists ( select * from lineitem l2 where l2.l_orderkey = l1.l_orderkey and l2.l_suppkey <> l1.l_suppkey ) and not exists ( select * from lineitem l3 where l3.l_orderkey = l1.l_orderkey and l3.l_suppkey <> l1.l_suppkey and l3.l_receiptdate > l3.l_commitdate ) and s_nationkey = n_nationkey and n_name = 'SAUDI ARABIA' group by s_name order by numwait desc, s_name limit 100;
 :sql_prefix /*Q22*/ select cntrycode, count(*) as numcust, sum(c_acctbal)::bigint as totacctbal from ( select substring(c_phone from 1 for 2) as cntrycode, c_acctbal from customer where substring(c_phone from 1 for 2) in ('13', '31', '23', '29', '30', '18', '17') and c_acctbal > ( select avg(c_acctbal) from customer where c_acctbal > 0.00 and substring(c_phone from 1 for 2) in ('13', '31', '23', '29', '30', '18', '17') ) and not exists ( select * from orders where o_custkey = c_custkey ) ) as custsale group by cntrycode order by cntrycode;
 
+ \timing off
  select 'Time of TPC-H Power Test', now() - now from ts;
 
 \q

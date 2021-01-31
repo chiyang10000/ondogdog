@@ -1,0 +1,92 @@
+name: OushuDB CI
+
+on: [push]
+
+jobs:
+  install:
+
+    runs-on: macOS-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: brew repo
+      run: |
+        brew tap chiyang10000/tap
+        brew search chiyang10000/tap
+
+    - name: install
+      run: |
+        export export HOMEBREW_NO_INSTALL_CLEANUP=1
+        npm config delete prefix
+        pip3 install requests
+        brew reinstall oushudb
+        # ugly libhadoop installation
+        wget http://yum.oushu-tech.com/oushurepo/yumrepo/internal/linux/toolchain/libhadoop.dylib -P /usr/local/opt/hadoop/libexec/lib/native/
+
+    - name: check executable
+      timeout-minutes: 1
+      run: |
+        sysctl machdep.cpu.brand_string hw.physicalcpu hw.logicalcpu hw.memsize
+        df -h
+        ls -lt /usr/local/opt/oushudb*
+        ls -lt /usr/local/Cellar/oushudb*
+        ls -lt /usr/local/Cellar/oushudb/
+        # have no idea why brew add unwanted .reinstall suffix
+        find /usr/local/Cellar/oushudb/ -name '*.reinstall' -type d -maxdepth 1 | sed -E 's|(.*)\.reinstall|\1.reinstall \1|' | xargs ln -snf
+        ls -lt /usr/local/opt/oushudb/
+        sh -c 'source /usr/local/opt/oushudb/greenplum_path.sh && postgres -V'
+
+    - name: initilize macOS
+      run: .github/workflows/scripts/init_macos.sh
+
+    - name: initilize HDFS
+      run: .github/workflows/scripts/init_hdfs.sh
+
+    - name: initilize OushuDB
+      run: .github/workflows/scripts/init_oushudb.sh
+
+    - name: test
+      run: .github/workflows/scripts/test_oushudb.sh
+
+    - name: tpc-h load
+      run: |
+        source /usr/local/opt/oushudb/greenplum_path.sh
+        hawq start cluster -a
+        psql -d postgres -c 'create database parquet;create database orc;'
+
+    - name: tpc-h query baseline
+      run: |
+        source /usr/local/opt/oushudb/greenplum_path.sh
+        export PGDATABASE=parquet
+        psql -af <(sed -e 's/set scale_factor .*/set scale_factor 1/' sql/init_tpchschema.ext.sql)
+        psql -af <(sed -e 's/set decimal_type .*/set decimal_type float/' \
+                       -e 's/set storage_spec .*/set storage_spec with (appendonly=true, orientation=parquet, compresstype=snappy)/' \
+                       sql/tpc-h-schema.sql)
+        psql -af sql/init_tpchschema.load.sql
+        psql -af sql/init_tpchschema.analyze.sql
+        psql -f <(sed -e 's/new_executor=.*/new_executor=off;/' sql/tpc-h.sql) 2>&1 | tee /tmp/old-parquet.txt | grep Time
+        psql -f <(sed -e 's/set sql_prefix .*/set sql_prefix /' sql/tpc-h.sql) 2>&1 | tee /tmp/old-parquet-t.txt | grep Time
+
+    - name: tpc-h query improvement
+      run: |
+        source /usr/local/opt/oushudb/greenplum_path.sh
+        export PGDATABASE=orc
+        psql -af <(sed -e 's/set scale_factor .*/set scale_factor 1/' sql/init_tpchschema.ext.sql)
+        psql -af <(sed -e 's/set decimal_type .*/set decimal_type float/' \
+                       -e 's/set storage_spec .*/set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8, stripesize=64, compresstype=lz4)/' \
+                       sql/tpc-h-schema.sql)
+        psql -af sql/init_tpchschema.load.sql
+        psql -af sql/init_tpchschema.analyze.sql
+
+        psql -f <(sed -e 's/new_executor=.*/new_executor=on ;/' sql/tpc-h.sql) 2>&1 | tee /tmp/new-orc.txt | grep Time
+        psql -f <(sed -e 's/set sql_prefix .*/set sql_prefix /' sql/tpc-h.sql) 2>&1 | tee /tmp/new-orc-t.txt | grep Time
+
+
+    - name: tpc-h result analyze in operator
+      run: |
+        bin/hawq_analyze.py -s 1 /tmp/old-parquet.txt /tmp/new-orc.txt
+
+    - name: tpc-h result analyze in query
+      run: |
+        paste -d " " <(grep Time: /tmp/old-parquet.txt | cut -d ' ' -f2) <(grep Time: /tmp/new-orc.txt | cut -d ' ' -f2) | awk '{print NR, $1, $2, $1/$2}'
