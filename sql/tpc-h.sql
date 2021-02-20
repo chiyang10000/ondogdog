@@ -5,13 +5,14 @@
 set new_executor=on;
 set enable_groupagg=off; -- skip inferior SORT IMPL
 set orc_enable_filter_pushdown=off;
- set new_executor_enable_partitioned_hashjoin=off;
- set new_executor_enable_partitioned_hashagg=off;
+-- set new_executor_enable_partitioned_hashjoin=off;
+-- set new_executor_enable_partitioned_hashagg=off;
  set new_executor_external_sort_memory_limit=1024;
+
  \set sql_prefix 'explain analyze'
  \pset pager off
 
- create temp table ts as select now();
+ create temp table ts as select now()::timestamp;
  \echo '\033[33mTime in TPC-H Power Test\033[0m'
  \timing on
 

@@ -694,4 +694,4 @@ _make_completions() {
   targets=$(make help | awk '/... /{print $2}')
   [ "${#COMP_WORDS[@]}" == 2 ] && COMPREPLY=($(compgen -W "$targets" "${COMP_WORDS[1]}"))
 }
-complete -F _make_completions make
+# complete -F _make_completions make

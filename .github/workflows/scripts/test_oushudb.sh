@@ -21,7 +21,3 @@ select count(*) from t_ao;
 select count(*) from t_orc;
 select count(*) from t_parquet;
 EOF
-
-# Stop
-source /usr/local/opt/oushudb/greenplum_path.sh
-hawq stop cluster -a
