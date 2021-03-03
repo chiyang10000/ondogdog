@@ -29,6 +29,22 @@ def op_name(operator):
     return op
 
 
+def io_info(operator):
+    if not args.verbose_io:
+        return None
+    io_info_pattern = re.compile(r'.*InputStream Info: ([0-9]+) byte.*in ([0-9.]+) ms with ([0-9]+) read call.*')
+    # io_info_pattern = re.compile(r'.*InputStream Info:')
+    search = io_info_pattern.search(operator)
+    if search:
+        assert 'TABLE' in operator
+        byte = int(search.group(1))
+        time = float(search.group(2))
+        call = int(search.group(3))
+        return {'byte': byte, 'time': time, 'call': call}
+
+    return None
+
+
 class MyHTMLParser(HTMLParser):
     """
     table format of the reponsed HTML
@@ -65,6 +81,21 @@ class MyHTMLParser(HTMLParser):
         if tag == 'tr':  # end new row
             self.td = 0
             if self.curr_operator != '':  # skip invalid parsed row
+                info = io_info(self.curr_operator)
+                if info:
+                    op = op_name(self.curr_operator)
+
+                    # IO
+                    self.operators.append(self.curr_operator)
+                    self.ops.append('IO-' + op)
+                    self.timings.append(info['time'])
+
+                    # DECODE
+                    self.operators.append(self.curr_operator)
+                    self.ops.append('SCAN-' + op)
+                    self.timings.append(self.curr_timing - info['time'])
+                    return
+
                 self.operators.append(self.curr_operator)
                 self.ops.append(op_name(self.curr_operator))
                 self.timings.append(self.curr_timing)
@@ -130,7 +161,7 @@ def parse_group_by_operator(query_num, query_file):
         query_counter[node] += time
 
     for operator, time in sorted(query_counter.items(), key=lambda x: x[1]):
-        print('{}\t{}\t{}\t{}'.format(query_num, time, operator, 'NewQE' if res.new_executor else 'OldQE'))
+        print('{}\t{:.2f}\t{}\t{}'.format(query_num, time, operator, 'NewQE' if res.new_executor else 'OldQE'))
 
     return query_counter
 
@@ -206,15 +237,17 @@ def compare(old_file, new_file):
                 print(new_file.operators[operator_idx])
 
     print("Mismatched Query Plans:\n", mismatched_plans)
+    print("\n")
 
     old_op_counter = Counter()
     new_op_counter = Counter()
-    summary = "\nQueryNo\tSpeedup\tOld\tNew\n"
+    summary = '{:>8} {:>8} {:>10} {:>10}\n'.format('QueryNo', 'Speedup', 'Old', 'New')
     for res_idx in range(len(old_parsed_results)):
         old = old_parsed_results[res_idx]
         new = new_parsed_results[res_idx]
-        summary += ('{}\t{:.2f}\t{:<10}\t{}\n'.format(res_idx + 1, old.total_runtime / new.total_runtime,
-                                                  old.total_runtime, new.total_runtime))
+        summary += (
+            '{:>8} {:>8.2f} {:>10.0f} {:>10.0f}\n'.format(res_idx + 1, old.total_runtime / new.total_runtime,
+                                                          old.total_runtime, new.total_runtime))
         for op_idx in range(len(old.ops)):
             old_op_counter.update({old.ops[op_idx]: old.timings[op_idx]})
             new_op_counter.update({new.ops[op_idx]: new.timings[op_idx]})
@@ -222,10 +255,11 @@ def compare(old_file, new_file):
         # map(lambda op_idx: new_op_counter.update({new.ops[op_idx]: new.timings[op_idx]}), range(len(new.ops)))
     print(summary)
 
-    print("Speedup\tOperator\tOld\tNew")
+    print('{:>8} {:>20} {:>10} {:>10}'.format('Speedup', 'Operator', 'Old', 'New'))
     for operator, time in sorted(old_op_counter.items(), key=lambda x: x[1], reverse=True):
-        print('{:.2f}\t{:<20}\t{:<10}\t{}'.format(time / (new_op_counter[operator] if new_op_counter[operator] > 0 else 1),
-                                          operator, time, new_op_counter[operator]))
+        print('{:>8.2f} {:>20} {:>10.0f} {:>10.0f}'.format(
+            time / (new_op_counter[operator] if new_op_counter[operator] > 0 else 1),
+            operator, time, new_op_counter[operator]))
 
 
 def analyze(path):
@@ -266,9 +300,9 @@ def analyze(path):
     tot_time = sum(map(lambda x: x[1], tot_counter.items()))
     print('Total {}'.format(tot_time))
 
-    print('{}\t{}\t{}'.format('Time', 'Operator', 'Ratio'))
+    print(' {:>6} {:>20} {:>10}'.format('Ratio', 'Operator', 'Time'))
     for operator, time in sorted(tot_counter.items(), key=lambda x: x[1]):
-        print('{}\t{}\t{}%'.format(time, operator, round(100.0 * time / tot_time, 2)))
+        print('{:>6.2f}% {:>20} {:>10.2f}'.format(100.0 * time / tot_time, operator, time))
     exit()
 
 
@@ -276,11 +310,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="print summary output of each operator",
                         action="store_true")
+    parser.add_argument("--verbose-io", help="print summary output of each operator",
+                        action="store_true")
     parser.add_argument('-p', '--pattern', type=str,
                         help='regex pattern to filter out operator')
     parser.add_argument("-t", "--time", type=float, default=20.0,
                         help="minimum timing counter in ms for single operator when checking old vs new (default: 20)")
-    parser.add_argument("-s", "--speedup", type=float, default=3.0,
+    parser.add_argument("-s", "--speedup", type=float, default=1.0,
                         help="speedup requirement when checking old vs new (default: 3)")
     parser.add_argument('input_args', metavar='path', type=str, nargs='+',
                         help='old file vs new file, otherwise file/dir to be parsed')
