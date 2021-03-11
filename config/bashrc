@@ -354,10 +354,12 @@ hawq-restart() {
     hawq-config hawq_rm_nvseg_perquery_perseg_limit $val
     hawq-config default_hash_table_bucket_number $val
     hawq-config default_magma_hash_table_nvseg_per_seg $val
+    hawq-config hawq_rm_nvseg_for_analyze_part_perquery_perseg_limit $val
   else
     hawq-config hawq_rm_nvseg_perquery_perseg_limit
     hawq-config default_hash_table_bucket_number
     hawq-config default_magma_hash_table_nvseg_per_seg
+    hawq-config hawq_rm_nvseg_for_analyze_part_perquery_perseg_limit $val
   fi
   hawq-config-load
   hawq-stop
