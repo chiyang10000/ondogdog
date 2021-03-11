@@ -37,8 +37,10 @@ else
 fi
 
 set +e
-curl --connect-timeout 5 -k -o "$YZYPATH/config/git-completion.bash" https://raw.githubusercontent.com/git/git/$tag/contrib/completion/git-completion.bash
-curl --connect-timeout 5 -k -o "$YZYPATH/config/git-prompt.sh" https://raw.githubusercontent.com/git/git/$tag/contrib/completion/git-prompt.sh
+GIT_URL_PREFIX=https://raw.githubusercontent.com/git/git/$tag
+GIT_URL_PREFIX=https://gitee.com/mirrors/git/raw/$tag/
+curl --connect-timeout 5 -k -o "$YZYPATH/config/git-completion.bash" $GIT_URL_PREFIX/contrib/completion/git-completion.bash
+curl --connect-timeout 5 -k -o "$YZYPATH/config/git-prompt.sh" $GIT_URL_PREFIX/contrib/completion/git-prompt.sh
 curl --connect-timeout 5 -k -o "$YZYPATH/bin/cpplint.py" https://raw.githubusercontent.com/google/styleguide/gh-pages/cpplint/cpplint.py
 chmod +x "$YZYPATH/bin/cpplint.py"
 set -e
