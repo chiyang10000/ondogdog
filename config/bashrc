@@ -33,7 +33,7 @@ if [ $system == Darwin ]; then
   yzy_CORE_DIR=$(dirname $(sysctl -n kern.corefile))
 fi
 trap 'echo -e "\033[31mERR $? in \033[1m${FUNCNAME-bash}: $BASH_COMMAND \033[0m"' ERR
-trap 'ts_start=$(date +%s%3N)' DEBUG
+# trap 'ts_start=$(date +%s%3N)' DEBUG
 check() {
   echo -e "\033[32m$@\033[0m"
 }
@@ -655,6 +655,11 @@ PS1='\[\033[00m\][\t] ' # time
 if [[ $system == Darwin ]]; then # user and host
   PS1=$PS1'\[\033[01;33m\]\u\[\033[00m\]@\[\033[33m\]\h\[\033[00m\]'
 elif [[ $(hostname) =~ exciting ]]; then
+  if [ -t 0 ]; then
+    check "赛艇管理员提醒您"
+    warning "toolchain-clang 使用Clang工具链"
+    warning "toolchain-gcc   使用GCC工具链"
+  fi
   PS1=$PS1'\[\033[01;36m\]\u\[\033[00m\]@\[\033[36m\]\h\[\033[00m\]'
 else
   PS1=$PS1'\[\033[01;32m\]\u\[\033[00m\]@\[\033[32m\]\h\[\033[00m\]'
