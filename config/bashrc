@@ -491,7 +491,8 @@ hornet-coverage-report() {
     '*/build/src/storage/format/orc/*' \
     '*/protos/*' '*/proto/*' '*/thrift/*' \
     --output-file CodeCoverage.info.cleaned
-  parse_lcov_output.py ${hornet_src_dir} ${hornet_cov_dir}/CodeCoverage.info.cleaned
+  parse_lcov_output.py ${hornet_src_dir} ${hornet_cov_dir}/CodeCoverage.info.cleaned |
+    tee ${hornet_cov_dir}/hornet.report
   # '*/test/unit/*' '*/testutil/*' \
 }
 hornet-coverage() { (
