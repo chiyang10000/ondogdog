@@ -224,7 +224,7 @@ hawq-config-deprecated() {
 }
 hawq-config-load() {
   echo 'hawq-config-load'
-  if [[ $(hostname) =~ ^exciting ]]; then
+  if [[ -n $project_prefix || $(hostname) =~ ^exciting ]]; then
     warning 'skip hawq-config-load yizhiyangrc in exciting'
   else
     check "source $yzy_PATH/yizhiyangrc"
@@ -282,7 +282,7 @@ hawq-clean() {
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
   sudo rm -rf /tmp/Test* /tmp/test* /tmp/magma* /tmp/clusterview/ /tmp/catalogut /tmp/catalogrpc /tmp/rg* /tmp/range* /tmp/err_table
-  if [[ $(hawq-config hawq_init_with_hdfs) =~ true ]]; then
+  if [[ -n $(hawq-config hawq_dfs_url) && none != $(hawq-config hawq_dfs_url) ]]; then
     if [[ $system == Linux && $(getent passwd hdfs) ]]; then
       sudo -iu hdfs hdfs dfs -rm -r -f hdfs://$(hawq-config hawq_dfs_url)/*
     else
@@ -349,7 +349,7 @@ hawq-stop() {
 }
 hawq-restart() {
   if [ "$#" -eq 1 ]; then
-    val=$1
+    local val=$1
     echo "set QE num to $1"
     hawq-config hawq_rm_nvseg_perquery_perseg_limit $val
     hawq-config default_hash_table_bucket_number $val
@@ -363,6 +363,8 @@ hawq-restart() {
   fi
   hawq-config-load
   hawq-stop
+  mkdir -p $(hawq-config hawq_master_temp_directory)
+  mkdir -p $(hawq-config hawq_segment_temp_directory)
 
   if [[ $(hawq-config hawq_init_with_magma | uniq) == true ]]; then
     with_magma='--with_magma'
@@ -370,10 +372,16 @@ hawq-restart() {
     with_magma=''
   fi
   hawq restart cluster -a -M immediate $with_magma
+  if [[ -n $val ]]; then
+    psql -ac "ALTER VCLUSTER vc_default with (hash_table_bucket_number=$val);"
+    psql -ac "ALTER VCLUSTER vc_default with (max_nvseg_perquery_perseg=$val);"
+    psql -ac "ALTER VCLUSTER vc_default with (magma_hash_table_nvseg_perseg=$val);"
+  fi
 }
 hawq-setup-feature-test() {
   TEST_DB_NAME="hawq_feature_test_db"
-  hawq sql -d postgres <<EOF
+  source /usr/local/hawq/greenplum_path.sh
+  psql -d postgres <<EOF
   drop database if exists $TEST_DB_NAME;
   create database $TEST_DB_NAME;
   alter database $TEST_DB_NAME set lc_messages to 'C';
@@ -389,9 +397,15 @@ checkout-hawq-test() {
   ftest="$HAWQ_SRC/src/test/feature/feature-test"
   if [[ -f /usr/local/hawq/feature-test/feature-test ]]; then
     ftest="/usr/local/hawq/feature-test/feature-test"
-  else
-    echo -e "Building feature-test \e[5m...\e[0m\n"
+  elif [[ -d ~/dev/oushudb/cmake-build-debug ]]; then
+    echo -e "Building cmake/feature-test \e[5m...\e[0m\n"
     make -C ~/dev/oushudb/cmake-build-debug feature-test
+    if [[ $? -ne 0 ]]; then
+      return 1
+    fi
+  else
+    echo -e "Building $HAWQ_SRC/feature-test \e[5m...\e[0m\n"
+    make -C $HAWQ_SRC feature-test
     if [[ $? -ne 0 ]]; then
       return 1
     fi
@@ -416,7 +430,7 @@ hawq-test() {
   else
     bash -c "
     source /usr/local/hawq/greenplum_path.sh
-    $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*"
+    $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*"
   fi
 
   # export PGDATABASE=postgres
