@@ -338,8 +338,8 @@ hawq-init() { (
   set +ex
 ); }
 hawq-stop() {
-  sudo pkill -9 'pg_ctl|postgres|magma_server|gpfdist|feature-test|-unit' || true
-  sudo pkill -9 hawq_ctl || true
+  sudo pkill -9 -u $USER 'pg_ctl|postgres|magma_server|gpfdist|feature-test|-unit' || true
+  sudo pkill -9 -u $USER hawq_ctl || true
   return
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gtest-parallel' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*feature-test' | awk '{print $1}' | xargs sudo kill -9
@@ -629,6 +629,7 @@ docker-clean() {
   docker ps -a | grep Dead | cut -d ' ' -f 1 | xargs docker rm
   docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs docker rm
   docker images | grep none | tr -s ' ' | cut -d ' ' -f 3 | xargs docker rmi
+  comm -23 <(ls --color=never /data1/ | sort) <(docker ps --format "table {{.Names}}" | awk 'NR > 1' | sort) | xargs -r -I {} sudo rm -rf /data0/{} /data1/{} /data2/{} /data3/{}
 }
 docker-stats() {
   docker stats --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}\t{{.PIDs}}"
@@ -700,7 +701,7 @@ export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 
-if [[ -t 0 && $(hostname) == yikesaiting ]]; then
+if [[ -t 0 ]]; then
   saiting-ps
   complete -W "$(saiting-ps | awk '/^exci/{print $1}')" saiting-login
 fi
