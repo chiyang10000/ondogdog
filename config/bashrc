@@ -214,7 +214,10 @@ lava-clean() {
 #   Hawq
 #
 #-------------------------------------------------------------------------------
-alias hawq-config='hawq-config.py'
+# alias hawq-config='hawq-config.py'
+hawq-config() {
+  hawq-config.py $@ | uniq
+}
 hawq-config-deprecated() {
   if [[ $# -eq 1 ]]; then
     hawq config --show $1
@@ -340,6 +343,10 @@ hawq-init() { (
 hawq-stop() {
   sudo pkill -9 -u $USER 'pg_ctl|postgres|magma_server|gpfdist|feature-test|-unit' || true
   sudo pkill -9 -u $USER hawq_ctl || true
+  sudo pkill -9 -u $USER cacheserver || true
+  rm -f "$(hawq-config hawq_master_directory)/postmaster.pid"
+  rm -f "$(hawq-config hawq_segment_directory)/postmaster.pid"
+  rm -f /tmp/.s.PGSQL.*.lock
   return
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gtest-parallel' | awk '{print $1}' | xargs sudo kill -9
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*feature-test' | awk '{print $1}' | xargs sudo kill -9
@@ -371,7 +378,7 @@ hawq-restart() {
   else
     with_magma=''
   fi
-  hawq restart cluster -a -M immediate $with_magma
+  hawq start cluster -a -M immediate $with_magma
   if [[ -n $val ]]; then
     psql -ac "ALTER VCLUSTER vc_default with (hash_table_bucket_number=$val);"
     psql -ac "ALTER VCLUSTER vc_default with (max_nvseg_perquery_perseg=$val);"
@@ -639,6 +646,7 @@ docker-ps() {
 }
 saiting-ps() {
   # docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
+  command -v docker || return 0
   echo
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
   echo
