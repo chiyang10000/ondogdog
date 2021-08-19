@@ -208,6 +208,12 @@ lava-clean() {
     find ~/.lava -name $node | xargs rm -rf
   done
 }
+hdfs-start() {
+  hdfs --daemon start namenode
+  hdfs --daemon start datanode
+  hdfs dfsadmin -safemode leave
+  hdfs dfsadmin -report
+}
 
 #-------------------------------------------------------------------------------
 #
