@@ -5,12 +5,12 @@ source $(dirname "${BASH_SOURCE[0]-$0}")/../config/bashrc
 export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
 
 scale=1
-search_path="orc_hash_notpartition_lz4_dict08_notpk_numeric_${scale}g"
+search_path="orc_hash_notpartition_lz4_dict08_notpk_numeric_${scale}g_gpfdist"
 file_base=$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/stream0/
 #search_path="magmaap_hash_notpartition_none_none_notpk_numeric_${scale}g"
 
 if psql -d tpcds -c 'select gp_opt_version();'; then
-  echo 'tpcds-analyze starts~'
+  log_warning 'TPC-DS analyze start...'
 else
   exit 1
 fi
@@ -21,75 +21,87 @@ if [[ -n "$*" ]]; then
   echo "Query Set: $query_set"
 fi
 
+off_counter=0
+option_base="set search_path=${search_path};"
+option_base+="set new_executor=auto;"
+# option_base+="set optimizer=on;" # disable orca
+# option="${option}set enable_groupagg=off;set gp_enable_fallback_plan=off;"
+# option="${option}set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
+
 # Check NewQE planner support
+echo -e '\033[1mNO\tTime/ms\tStatus\tOperator TBD\tExpression TBD\033[0m'
 for query_idx in $query_set; do
   file="$file_base/query${query_idx}_rept1.sql"
   [[ ! -f $file ]] && echo "$file not exists!"
-  option=''
-  option="${option}set search_path=${search_path};"
-  option="${option}set client_min_messages=debug1;set new_executor=auto;"
-  option="${option}set optimizer=off;" # disable orca
-  # option="${option}set enable_groupagg=off;set gp_enable_fallback_plan=off;"
-  option="${option}set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
+  option=${option_base}
+  option+="set client_min_messages=debug1;"
 
+  printf "\033[32m${query_idx}\033[0m\t"
   ts_start=$(date +%s%3N)
   output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af "$file" 2>&1) || echo "$output"
-  ts_end=$(date +%s%3N);
-  planner_time=$((ts_end - ts_start));
-  echo "$output" > /dev/null
+  ts_end=$(date +%s%3N)
+  planner_time=$((ts_end - ts_start))
+  # echo $ts_start $ts_end $planner_time
+  echo "$output" >/dev/null
 
   mode=$(echo "${output}" | grep 'New executor mode:') || true
-  if [[ -n "$mode" ]]; then mode=1; else mode=0; fi
+  if [[ -n "$mode" ]]; then mode=ON; else mode=OFF; fi
   if [[ ! -f $file ]]; then mode=''; fi
 
-  plannode=$(echo "${output}" |
-            grep 'not support plan ' |
-            sed 's|.* not support plan node of {\([^ ]\+\).*}|\1|' |
-            cut -c 1-40 | tr '\n' ' ' | xargs echo)
+  operator=
+  expression=
+  if [[ $mode == OFF ]]; then
+    ((off_counter+=1))
+    mode="\033[31mOFF\033[0m"
+    operator=$(echo "${output}" |
+      grep 'not support plan ' |
+      sed 's|.* not support plan node of {\([^ ]\+\).*}|\1|' |
+      cut -c 1-40 | tr '\n' ' ' | xargs echo)
 
-  expression=$(echo "${output}" |
-              grep 'not support expression ' |
-              sed 's|.* not support expression of {\([^ ]\+\).*}|\1|' |
-              cut -c 1-40 | tr '\n' ' ' | xargs echo)
-  echo -e "${planner_time}\t${mode}\t${plannode}\t${expression}" # > /dev/null
+    expression=$(echo "${output}" |
+      grep 'not support expression ' |
+      sed 's|.* not support expression of {\([^ ]\+\).*}|\1|' |
+      cut -c 1-40 | tr '\n' ' ' | xargs echo)
+  fi
+
+  echo -e "${planner_time}\t${mode}\t${operator}\t${expression}" # > /dev/null
   if [[ "$query_idx" =~ ^(14|23|24|39)$ ]]; then # these sql files run two queries
-    echo -e "${planner_time}\t${mode}\t${plannode}\t${expression}" # > /dev/null
+    echo -e "  \t${planner_time}\t${mode}\t${operator}\t${expression}" # > /dev/null
   fi
   if [[ -n "$*" && $mode == 0 ]]; then
     echo -e "$output"
   fi
 done
+log_success "Unsupported $off_counter"
 
 # Compare ORC/Parquet old QE
 for query_idx in $query_set; do
   file="$file_base/query${query_idx}_rept1.sql"
-  echo "Running $query_idx ..."
+  log_warning "Running $query_idx ..."
   echo "$file"
   check_error=0
-  option=''
-  option="${option}set search_path=${search_path};"
-  option="${option}set new_executor=off;"
-  option="${option}set optimizer=off;" # disable orca
-  option="${option}set enable_groupagg=off;set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
-  option="${option}set orc_enable_filter_pushdown=off;"
-  # option="${option}set enforce_virtual_segment_number = 1;"
+  option="${option_base}"
+  option+="set client_min_messages=error;"
 
   # enable ORCA for problematic query
   [[ "$query_idx" =~ ^(10|35|64|95)$ ]] && option="${option}set optimizer=on;"
 
   output_orc_new=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=on;EXPLAIN ANALYZE" -f $file)
-  ((check_error+=$?))
+  ((check_error += $?))
   output_orc_old=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set new_executor=off;EXPLAIN ANALYZE" -f $file)
-  ((check_error+=$?))
+  ((check_error += $?))
   # output_parquet=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option};set search_path=parquet_hash_notpartition_snappy_none_notpk_numeric_${scale}g;EXPLAIN ANALYZE" -f $file)
 
-  if [[ $check_error -gt 0 ]]; then echo; continue; fi
+  if [[ $check_error -gt 0 ]]; then
+    echo
+    continue
+  fi
 
-  echo "Checking $query_idx ..."
-  echo "$output_parquet"     > /tmp/parquet.txt
-  echo "$output_orc_old"     > /tmp/orc_old.txt
-  echo "$output_orc_new"     > /tmp/orc_new.txt
+  warning "Checking $query_idx ..."
+  echo "$output_parquet" >/tmp/parquet.txt
+  echo "$output_orc_old" >/tmp/orc_old.txt
+  echo "$output_orc_new" >/tmp/orc_new.txt
   # hawq_analyze.py /tmp/parquet.txt /tmp/orc_old.txt
-  hawq_analyze.py /tmp/orc_old.txt /tmp/orc_new.txt 
+  hawq_analyze.py /tmp/orc_old.txt /tmp/orc_new.txt
   echo
 done
