@@ -7,7 +7,7 @@ import sys
 import os
 import re
 
-planchecker_url = os.getenv('planchecker_url', "http://cloudtest.oushu-tech.com:14122")
+planchecker_url = os.getenv('planchecker_url', "http://localhost:38324")
 
 
 def op_name(operator):
@@ -35,8 +35,7 @@ def io_info(operator):
     io_info_pattern = re.compile(r'.*InputStream Info: ([0-9]+) byte.*in ([0-9.]+) ms with ([0-9]+) read call.*')
     # io_info_pattern = re.compile(r'.*InputStream Info:')
     search = io_info_pattern.search(operator)
-    if search:
-        assert 'TABLE' in operator
+    if search and 'TABLE' in operator:
         byte = int(search.group(1))
         time = float(search.group(2))
         call = int(search.group(3))
@@ -166,7 +165,7 @@ def parse_group_by_operator(query_num, query_file):
     return query_counter
 
 
-def split(file):
+def split(file, suffix=''):
     """
       return split file list
     """
@@ -177,21 +176,28 @@ def split(file):
 
     count = 1
     is_plan = False
-    output_name_base = '/tmp/planchecker.' + os.path.basename(file) + '.'
-    output_stream = open(output_name_base + str(count) + '.txt', 'w')
+    if len(suffix) > 0:
+        suffix += '.'
+    output_name_base = '/tmp/planchecker.' + suffix + os.path.basename(file) + '.'
+    output_stream = None
     for line in input_stream:
+        if not output_stream:
+            output_stream = open(output_name_base + str(count) + '.txt', 'w')
         output_stream.write(line)
         if plan_matcher.search(line):
             is_plan = True
         if mark_matcher.search(line):
-            output_stream.close()
             if is_plan:
-                ret.append(output_name_base + str(count) + '.txt')
+                ret.append(output_stream.name)
                 count += 1
+            output_stream.close()
+            output_stream = None
             is_plan = False
-            output_stream = open(output_name_base + str(count) + '.txt', 'w')
     if output_stream:
-        output_stream.close()
+        if is_plan:
+            output_stream.close()
+        else:
+            os.remove(output_stream.name)
 
     return ret
 
@@ -200,8 +206,8 @@ def compare(old_file, new_file):
     assert (os.path.isfile(old_file))
     assert (os.path.isfile(new_file))
 
-    old_split_files = split(old_file)
-    new_split_files = split(new_file)
+    old_split_files = split(old_file, 'old')
+    new_split_files = split(new_file, 'new')
     assert (len(old_split_files) == len(new_split_files))
 
     mismatched_plans = []
@@ -266,7 +272,7 @@ def analyze(path):
     assert (os.path.isdir(path) or os.path.isfile(path))
 
     query_num_matcher = re.compile(r'query([0-9]+)')
-    tpch_query_num_matcher = re.compile(r'tpch_([0-9]+)')
+    tpch_query_num_matcher = re.compile(r'tpch_?([0-9]+)')
 
     tot_counter = Counter()
 
