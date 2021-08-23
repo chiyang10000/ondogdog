@@ -43,6 +43,15 @@ error() {
 warning() {
   echo -e "\033[33m$@\033[0m"
 }
+log_warning() {
+  echo -e "\033[33m$@\033[0m"
+}
+log_success() {
+  echo -e "\033[32m$@\033[0m"
+}
+log_error() {
+  echo -e "\033[31m$@\033[0m"
+}
 export yzy_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")/.." && pwd)"
 export yzy_PATH="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
 HAWQ_SRC=~/dev/hawq
@@ -143,7 +152,7 @@ yizhiyang-log-file() {
   hawq_component=$1
   hawq_node=$2
   log_dir=$(hawq-dir $hawq_node)/pg_log
-  log_file=$(ls -tr $log_dir | grep $hawq_component | tail -n1)
+  log_file=$(ls -tr $log_dir | grep $hawq_component- | tail -n1)
   echo $log_dir/$log_file
 }
 alias dir-master='hawq-dir master'
