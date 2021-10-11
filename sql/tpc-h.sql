@@ -1,5 +1,4 @@
  \timing off
- set enforce_virtual_segment_number = 1;
  set gp_enable_agg_distinct = off;
 --set optimizer=on;
 set new_executor=on;
@@ -8,6 +7,34 @@ set orc_enable_filter_pushdown=off;
 -- set new_executor_enable_partitioned_hashjoin=off;
 -- set new_executor_enable_partitioned_hashagg=off;
  set new_executor_external_sort_memory_limit=1024;
+
+create or replace function check_oushudb_config(enforce_vseg_num int) returns text as
+$$
+declare
+    version_str                  text;
+    oushudb_version_number       text;
+    oushudb_version_number_major text;
+    oushudb_version_number_minor text;
+begin
+    select version() into version_str;
+    raise notice '%', version_str;
+    if not version_str ~ 'OushuDB' then
+        return 'Non-OushuDB';
+    end if;
+    select regexp_replace(version(), '.*OushuDB (.*)Enter.*', E'\\1') into oushudb_version_number;
+    select split_part(oushudb_version_number, '.', 1) into oushudb_version_number_major;
+    select split_part(oushudb_version_number, '.', 2) into oushudb_version_number_minor;
+   if oushudb_version_number_major >= 4 and oushudb_version_number_minor >= 4 then
+        raise notice 'checked VIRTUAL CLUSTER %', oushudb_version_number;
+        execute 'alter vcluster vc_default with (enforce_nvseg=' || enforce_vseg_num || ') in session;';
+    else
+        execute 'set enforce_virtual_segment_number = ' || enforce_vseg_num;
+    end if;
+    raise notice 'CHANGE enforce_nvseg to %', enforce_vseg_num;
+   return oushudb_version_number;
+end
+$$ language plpgsql;
+select check_oushudb_config(1);
 
  \set sql_prefix 'explain analyze'
  \pset pager off
