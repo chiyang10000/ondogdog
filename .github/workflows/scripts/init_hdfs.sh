@@ -3,11 +3,7 @@ set -e
 
 
 
-# Install
-brew install hadoop
-
 # Configure
-export HADOOP_HOME=/usr/local/opt/hadoop/libexec
 tee $HADOOP_HOME/etc/hadoop/core-site.xml << EOF
 <configuration>
     <property>
@@ -65,3 +61,4 @@ $HADOOP_HOME/sbin/start-dfs.sh
 # Connect
 hdfs dfsadmin -report
 hdfs dfs -ls /
+hdfs dfs -touch /touch
