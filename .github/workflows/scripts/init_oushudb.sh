@@ -82,3 +82,13 @@ install -d /tmp/db_data/hawq-data-directory/magma_master
 install -d /tmp/db_data/hawq-data-directory/magma_segment
 source /usr/local/opt/oushudb/greenplum_path.sh
 hawq init cluster -a
+
+export PGDATABASE=postgres
+version=$(hawq version | sed -E 's/.*version (.*)/\1/')
+major_version=$(cut -d. -f1 <<<$version)
+minor_version=$(cut -d. -f2 <<<$version)
+if [[ $major_version -ge 4 && $minor_version -ge 4 ]]; then
+  psql -c "ALTER RESOURCE QUEUE vc_default.pg_default with (VSEG_RESOURCE_QUOTA='mem:8GB');"
+else
+  psql -c "ALTER RESOURCE QUEUE pg_default with (VSEG_RESOURCE_QUOTA='mem:8GB');"
+fi
