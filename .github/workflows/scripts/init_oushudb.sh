@@ -4,12 +4,10 @@ set -e
 
 
 # Install
-brew tap chiyang10000/tap
-brew search chiyang10000/tap
-brew install oushudb
+test -n "$GPHOME"
 
 # Configure
-tee /usr/local/opt/oushudb/etc/hawq-site.xml << EOF
+tee $GPHOME/etc/hawq-site.xml << EOF
 <configuration>
     <property>
         <name>hawq_dfs_url</name>
@@ -80,7 +78,6 @@ install -d /tmp/db_data/hawq-data-directory/masterdd
 install -d /tmp/db_data/hawq-data-directory/segmentdd
 install -d /tmp/db_data/hawq-data-directory/magma_master
 install -d /tmp/db_data/hawq-data-directory/magma_segment
-source /usr/local/opt/oushudb/greenplum_path.sh
 hawq init cluster -a
 
 export PGDATABASE=postgres

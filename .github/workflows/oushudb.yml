@@ -52,7 +52,9 @@ jobs:
         .github/workflows/scripts/init_hdfs.sh
 
     - name: initilize OushuDB
-      run: .github/workflows/scripts/init_oushudb.sh
+      run: |
+        source /usr/local/opt/oushudb/greenplum_path.sh
+        .github/workflows/scripts/init_oushudb.sh
 
     - name: test
       run: |

@@ -1,0 +1,69 @@
+name: OushuDB RPM
+
+on: [push, pull_request]
+
+jobs:
+  Build-and-Test:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-18.04]
+        version:
+          - 3.3.0.0
+          - 3.4.1.0
+          - 4.0.5.0
+          - 4.3.0.0
+          - 4.4.0.0
+          - 4.5.2.0
+          - 4.6.1.0
+          - 4.7.0.0
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: initilize OS
+      run: |
+        case $(uname -s) in
+          Darwin) .github/workflows/scripts/init_macos.sh ;;
+          Linux)  .github/workflows/scripts/init_linux.sh ;;
+        esac
+
+    - name: install HDFS
+      run: |
+        wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
+        sudo install -o $USER -d /usr/local/hadoop-3.3.0
+        sudo ln -snf hadoop-3.3.0 /usr/local/hadoop
+        sudo tee /usr/local/bin/hdfs <<<'exec /usr/local/hadoop/bin/hdfs $@'
+        sudo chmod a+x /usr/local/bin/hdfs
+        tar xf hadoop-3.3.0.tar.gz -C /usr/local/
+
+    - name: initilize HDFS
+      run: |
+        export HADOOP_HOME=/usr/local/hadoop/
+        .github/workflows/scripts/init_hdfs.sh
+        sudo -u $USER hdfs dfs -ls /
+
+    - name: install HAWQ
+      run: |
+        export RPM_VER=${{ matrix.version }}
+        export RPM_REPO=http://52.80.110.255:8080/oushurepo/yumrepo/release/oushu-database/centos6/$RPM_VER/release/
+        export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="(hawq-[^"]*)".*/\1/p')
+        sudo rpm -ivh --nodeps $RPM_REPO/$RPM_NAME
+        sudo chown -R $USER:$USER /usr/local/hawq/
+        source /usr/local/hawq/greenplum_path.sh
+        postgres -V
+
+    - name: initilize HAWQ
+      run: |
+        source /usr/local/hawq/greenplum_path.sh
+        .github/workflows/scripts/init_oushudb.sh
+        psql -d postgres -c 'create database hawq_feature_test_db;'
+
+    - name: test HAWQ
+      run: |
+        source /usr/local/hawq/greenplum_path.sh
+        psql -d postgres -f sql/tpc-h-schema.sql 
