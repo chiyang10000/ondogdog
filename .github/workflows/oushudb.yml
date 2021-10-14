@@ -11,6 +11,9 @@ jobs:
 
     runs-on: macOS-latest
 
+    env:
+      SUFFIX: sf${{ matrix.scale_factor }}.txt
+
     steps:
     - uses: actions/checkout@v2
 
@@ -90,21 +93,31 @@ jobs:
       run: |
         source /usr/local/opt/oushudb/greenplum_path.sh
         export PGDATABASE=parquet
-        psql -f <(sed -e 's/new_executor=.*/new_executor=off;/' sql/tpc-h.sql) 2>&1 | tee /tmp/old-parquet.txt | grep Time
-        psql -f <(sed -e 's/set sql_prefix .*/set sql_prefix /' sql/tpc-h.sql) 2>&1 | tee /tmp/old-parquet-t.txt | grep Time
+        psql -f <(sed -e 's/new_executor=.*/new_executor=off;/' sql/tpc-h.sql) 2>&1 | tee ~/old-parquet.$SUFFIX | grep Time
+        psql -f <(sed -e 's/set sql_prefix .*/set sql_prefix /' sql/tpc-h.sql) 2>&1 | tee ~/old-parquet-t.$SUFFIX | grep Time
 
     - name: tpc-h query improvement
       run: |
         source /usr/local/opt/oushudb/greenplum_path.sh
         export PGDATABASE=orc
-        psql -f <(sed -e 's/new_executor=.*/new_executor=on ;/' sql/tpc-h.sql) 2>&1 | tee /tmp/new-orc.txt | grep Time
-        psql -f <(sed -e 's/set sql_prefix .*/set sql_prefix /' sql/tpc-h.sql) 2>&1 | tee /tmp/new-orc-t.txt | grep Time
+        psql -f <(sed -e 's/new_executor=.*/new_executor=on ;/' sql/tpc-h.sql) 2>&1 | tee ~/new-orc.$SUFFIX | grep Time
+        psql -f <(sed -e 's/set sql_prefix .*/set sql_prefix /' sql/tpc-h.sql) 2>&1 | tee ~/new-orc-t.$SUFFIX | grep Time
 
     - name: tpc-h result analyze in query
       run: |
-        paste -d " " <(grep Time: /tmp/old-parquet.txt | cut -d ' ' -f2) <(grep Time: /tmp/new-orc.txt | cut -d ' ' -f2) | awk '{print NR, $1, $2, $1/$2}'
+        paste -d " " <(grep Time: ~/old-parquet-t.$SUFFIX | cut -d ' ' -f2) <(grep Time: ~/new-orc-t.$SUFFIX | cut -d ' ' -f2) | awk '{print NR, $1, $2, $1/$2}'
 
     - name: tpc-h result analyze in operator
       run: |
-        bin/hawq_analyze.py -s 1 /tmp/old-parquet.txt /tmp/new-orc.txt
+        bin/hawq_analyze.py -s 1 ~/old-parquet.$SUFFIX ~/new-orc.$SUFFIX
+
+    - name: archive results
+      uses: actions/upload-artifact@v2
+      with:
+        name: result
+        path: |
+          ~/old-parquet-t.${{ env.SUFFIX }}
+          ~/old-parquet.${{ env.SUFFIX }}
+          ~/new-orc-t.${{ env.SUFFIX }}
+          ~/new-orc.${{ env.SUFFIX }}
 
