@@ -1,4 +1,6 @@
  \timing off
+-- set search_path to testtpch_testorc_newqe_1g;
+-- set enforce_virtual_segment_number = 1;
  set gp_enable_agg_distinct = off;
 --set optimizer=on;
 set new_executor=on;

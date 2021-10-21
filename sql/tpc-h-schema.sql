@@ -1,5 +1,10 @@
 \set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8, stripesize=64)
 \set decimal_type DECIMAL(12,2)
+\set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8)
+\set char_type "char"
+\set char_type CHAR
+\set decimal_type FLOAT
+-- \set decimal_type DECIMAL(12,2)
 
 DROP TABLE IF EXISTS nation CASCADE;
 DROP TABLE IF EXISTS customer CASCADE;
@@ -74,7 +79,7 @@ CREATE TABLE orders
 (
     O_ORDERKEY      bigint,
     O_CUSTKEY       INTEGER,
-    O_ORDERSTATUS   CHAR,
+    O_ORDERSTATUS   :char_type,
     O_TOTALPRICE    :decimal_type,
     O_ORDERDATE     DATE,
     O_ORDERPRIORITy CHAR(15),
@@ -93,8 +98,8 @@ CREATE TABLE lineitem
     L_EXTENDEDPRICE :decimal_type,
     L_DISCOUNT      :decimal_type,
     L_TAX           :decimal_type,
-    L_RETURNFLAG    CHAR,
-    L_LINESTATUS    CHAR,
+    L_RETURNFLAG    :char_type,
+    L_LINESTATUS    :char_type,
     L_SHIPDATE      DATE,
     L_COMMITDATE    DATE,
     L_RECEIPTDATE   DATE,

@@ -9,6 +9,20 @@ import re
 
 planchecker_url = os.getenv('planchecker_url', "http://localhost:38324")
 
+io_counter = Counter()
+io_query_counter = Counter()
+
+suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+
+
+def human_size(nbytes):
+    i = 0
+    while nbytes >= 1024 and i < len(suffixes) - 1:
+        nbytes /= 1024.
+        i += 1
+    f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
+    return '%s %s' % (f, suffixes[i])
+
 
 def op_name(operator):
     """
@@ -26,10 +40,13 @@ def op_name(operator):
         op = (operator_pattern.search(op).group())
     op = op.replace(' ', '')
 
+    # if 'Workfile:' in operator and '0 spilling' not in operator:
+    #     op = 'Spill' + op
+
     return op
 
 
-def io_info(operator):
+def io_info(query_no, operator):
     if not args.verbose_io:
         return None
     io_info_pattern = re.compile(r'.*InputStream Info: ([0-9]+) byte.*in ([0-9.]+) ms with ([0-9]+) read call.*')
@@ -39,12 +56,19 @@ def io_info(operator):
         byte = int(search.group(1))
         time = float(search.group(2))
         call = int(search.group(3))
+        io_counter.update({op_name(operator): byte})
+        io_query_counter.update({query_no: byte})
         return {'byte': byte, 'time': time, 'call': call}
+
+    if search and 'Motion' in operator:
+        byte = int(search.group(1))
+        io_counter.update({op_name(operator): byte})
+        io_query_counter.update({query_no: byte})
 
     return None
 
 
-class MyHTMLParser(HTMLParser):
+class PlanCheckerHtmlParser(HTMLParser):
     """
     table format of the reponsed HTML
     Summary, Query Plan, Offset, First, End, Node, Prct
@@ -66,6 +90,7 @@ class MyHTMLParser(HTMLParser):
         self.timings = []
 
         self.new_executor = False
+        self.query_no = -1
         self.file_path = ''
         self.total_runtime = -0.0
 
@@ -80,7 +105,7 @@ class MyHTMLParser(HTMLParser):
         if tag == 'tr':  # end new row
             self.td = 0
             if self.curr_operator != '':  # skip invalid parsed row
-                info = io_info(self.curr_operator)
+                info = io_info(self.query_no, self.curr_operator)
                 if info:
                     op = op_name(self.curr_operator)
 
@@ -114,12 +139,13 @@ class MyHTMLParser(HTMLParser):
 
         if data == 'Total runtime:':
             self.total_runtime = 0.0
-        if self.total_runtime == 0.0 and MyHTMLParser.total_runtime_pattern.search(data):
-            self.total_runtime = float(MyHTMLParser.total_runtime_pattern.search(data).group(1))
+        if self.total_runtime == 0.0 and PlanCheckerHtmlParser.total_runtime_pattern.search(data):
+            self.total_runtime = float(PlanCheckerHtmlParser.total_runtime_pattern.search(data).group(1))
 
 
-def parse(file):
-    parser = MyHTMLParser()
+def parse(no, file):
+    parser = PlanCheckerHtmlParser()
+    parser.query_no = no
     parser.file_path = file
     data = [('action', 'parse')]
     files = {'uploadfile': open(file, 'rb')}
@@ -141,7 +167,7 @@ def parse_group_by_operator(query_num, query_file):
     operator_pattern = re.compile(r'([A-Z][a-z]+ )+')
     query_counter = {}
 
-    res = parse(query_file)
+    res = parse(query_num, query_file)
     # if (res.new_executor is False): return
 
     for node_idx in range(0, len(res.timings)):
@@ -215,9 +241,9 @@ def compare(old_file, new_file):
     new_parsed_results = []
 
     for spilt_file_idx in range(len(old_split_files)):
-        # print(old_split_files[i], new_split_files[i])
-        old_file = parse(old_split_files[spilt_file_idx])
-        new_file = parse(new_split_files[spilt_file_idx])
+        # print(old_split_files[spilt_file_idx], new_split_files[spilt_file_idx])
+        old_file = parse(spilt_file_idx, old_split_files[spilt_file_idx])
+        new_file = parse(spilt_file_idx, new_split_files[spilt_file_idx])
 
         old_parsed_results.append(old_file)
         new_parsed_results.append(new_file)
@@ -306,28 +332,42 @@ def analyze(path):
     tot_time = sum(map(lambda x: x[1], tot_counter.items()))
     print('Total {}'.format(tot_time))
 
-    print(' {:>6} {:>20} {:>10}'.format('Ratio', 'Operator', 'Time'))
+    print(' {:>6} {:>30} {:>10}'.format('Ratio', 'Operator', 'Time'))
     for operator, time in sorted(tot_counter.items(), key=lambda x: x[1]):
-        print('{:>6.2f}% {:>20} {:>10.2f}'.format(100.0 * time / tot_time, operator, time))
+        print('{:>6.2f}% {:>30} {:>10.2f}'.format(100.0 * time / tot_time, operator, time))
+
+    if args.verbose_io:
+        tot_io = sum(map(lambda x: x[1], io_counter.items()))
+        print('\nTotal IO {}'.format(human_size(tot_io)))
+        for operator, io in sorted(io_counter.items(), key=lambda x: x[1]):
+            print('{:>6.2f}% {:>30} {:>10} {:>10}/s'.format(100.0 * io / tot_io, operator, human_size(io),
+                                                            human_size(io / tot_counter['IO-' + operator] * 1024)
+                                                            if 'TABLE' in operator else
+                                                            (human_size(io / tot_counter[operator] * 1024)
+                                                             if tot_counter[operator] > 0 else '')))
+
+        print('\nTotal IO {}'.format(human_size(tot_io)))
+        for query_no, io in sorted(io_query_counter.items(), key=lambda x: x[1]):
+            print('{:>6.2f}% {:>10} {:>10}'.format(100.0 * io / tot_io, query_no, human_size(io)))
     exit()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbose", help="print summary output of each operator",
-                        action="store_true")
-    parser.add_argument("--verbose-io", help="print summary output of each operator",
-                        action="store_true")
-    parser.add_argument('-p', '--pattern', type=str,
-                        help='regex pattern to filter out operator')
-    parser.add_argument("-t", "--time", type=float, default=20.0,
-                        help="minimum timing counter in ms for single operator when checking old vs new (default: 20)")
-    parser.add_argument("-s", "--speedup", type=float, default=1.0,
-                        help="speedup requirement when checking old vs new (default: 3)")
-    parser.add_argument('input_args', metavar='path', type=str, nargs='+',
-                        help='old file vs new file, otherwise file/dir to be parsed')
+    args_parser = argparse.ArgumentParser()
+    args_parser.add_argument("-v", "--verbose", help="print summary output of each operator",
+                             action="store_true")
+    args_parser.add_argument("--verbose-io", help="print summary output of each operator",
+                             action="store_true")
+    args_parser.add_argument('-p', '--pattern', type=str,
+                             help='regex pattern to filter out operator')
+    args_parser.add_argument("-t", "--time", type=float, default=20.0,
+                             help="minimum timing counter in ms for single operator when checking old vs new (default: 20)")
+    args_parser.add_argument("-s", "--speedup", type=float, default=1.0,
+                             help="speedup requirement when checking old vs new (default: 3)")
+    args_parser.add_argument('input_args', metavar='path', type=str, nargs='+',
+                             help='old file vs new file, otherwise file/dir to be parsed')
 
-    args = parser.parse_args()
+    args = args_parser.parse_args()
 
     # Analyze all EXPLAIN ANALYZE output
     if len(args.input_args) == 1:
