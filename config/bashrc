@@ -577,6 +577,7 @@ hornet-test() {
     if [[ $(pwd) =~ "magma" ]]; then
       make $m-unit && test/unit/magma_server/unit --gtest_catch_exceptions=0 --gtest_filter=$1
     else
+      echo test/unit/$m-unit --gtest_catch_exceptions=0 --gtest_filter=$1
       make $m-unit && test/unit/$m-unit --gtest_catch_exceptions=0 --gtest_filter=$1
     fi
   else
@@ -661,7 +662,6 @@ docker-ps() {
 }
 saiting-ps() {
   # docker stats  --no-stream --format="table {{.Name}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.PIDs}}"
-  command -v docker || return 0
   echo
   docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
   echo
@@ -724,7 +724,7 @@ export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 
-if [[ -t 0 ]]; then
+if [[ -t 0 && -f /var/run/docker.sock ]]; then
   saiting-ps
   complete -W "$(saiting-ps | awk '/^exci/{print $1}')" saiting-login
 fi

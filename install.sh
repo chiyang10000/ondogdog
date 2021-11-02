@@ -10,13 +10,13 @@ case $1 in
   ;;
 esac
 
-export YZYPATH=$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)
+
 
 git config --global color.ui auto
 git config --global core.editor vim
 git config --global core.safecrlf true
 git config --global pull.ff only
-git config --global push.default current
+git config --global push.default upstream
 git config --global credential.helper store
 git config --global blame.date short
 git config --global grep.lineNumber true
@@ -24,7 +24,7 @@ git config --global alias.hs "log --pretty='%C(yellow)%h %C(cyan)%ad %Cblue%an%C
 
 
 
-
+export YZYPATH=$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)
 rm -rf "$YZYPATH/yizhiyang/config/git-*"
 version=$(git --version | cut -d' ' -f3)
 major_version=$(echo $version | cut -d. -f1)

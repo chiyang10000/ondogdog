@@ -71,6 +71,7 @@ opensource
 vals
 
 
+appendonly
 compresstype
 bloomfilter
 dicthreshold
