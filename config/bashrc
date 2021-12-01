@@ -464,20 +464,6 @@ hawq-test() {
 #
 #-------------------------------------------------------------------------------
 export RUN_UNITTEST=no
-hornet-build() {
-  cmake_dir=~/dev/oushudb/cmake-build-${1-debug}
-  if [[ $WITH_HORNET_EXECUTOR_ONLY == yes ]]; then
-    make executor-shared -C $cmake_dir/
-    make install -C $cmake_dir/hornet-opensource/
-    make install -C $cmake_dir/hornet/interconnect
-    make install -C $cmake_dir/hornet/executor
-    install -d /opt/dependency/include/magma/
-    touch /opt/dependency/package/include/magma/cwrapper/magma-client-c.h
-    touch /opt/dependency/package/include/storage/cwrapper/magma-format-c.h
-    return 0
-  fi
-  make install -C $cmake_dir/hornet/
-}
 hornet-debug() {
   # cd ~/dev/hornet && make incremental && cd -
   hornet-build debug
