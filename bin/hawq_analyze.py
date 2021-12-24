@@ -39,6 +39,8 @@ def op_name(operator):
     if operator_pattern.search(op):
         op = (operator_pattern.search(op).group())
     op = op.replace(' ', '')
+    if 'SubqueryScan' in op:
+     op = 'SubqueryScan'
 
     # if 'Workfile:' in operator and '0 spilling' not in operator:
     #     op = 'Spill' + op

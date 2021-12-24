@@ -267,7 +267,7 @@ hawq-qe() {
   fi
 }
 hawq-qd() {
-  ps -eo pid,command | grep [p]ostgres.*con.*cmd | awk '{print $1}'
+  ps -eo pid,command | grep [p]ostgres.*con | awk '!/seg/{print $1}'
 }
 hawq-perf() {
   t=100
