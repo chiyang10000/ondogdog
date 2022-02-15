@@ -4,4 +4,5 @@ if [[ ! -f /usr/local/hawq/greenplum_path.sh ]]; then
   exit 1
 fi
 source /usr/local/hawq/greenplum_path.sh
+export PAGER=pager_psql
 exec hawq "$@"

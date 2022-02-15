@@ -1,0 +1,32 @@
+#!/bin/bash
+
+export BOLD=$(echo -e '\033[1m')
+export UNDERLINE=$(echo -e '\033[4m')
+export CLEAR=$(echo -e '\033[0m')
+
+export BLUE=$(echo -e '\033[34m')
+export CYAN=$(echo -e '\033[36m')
+
+alias sed=gsed
+
+# start of code block quote
+echo
+echo "${BOLD}${BLUE}\`\`\`sql output${CLEAR}"
+
+##-e "s/(Hash.*)/${UNDERLINE}\\1${CLEAR}/" \
+sed -E \
+  -e "s/(InputStream.*)/${UNDERLINE}\\1${CLEAR}/" \
+  -e "s/(.+ statistics|Settings:)/${CYAN}\\1${CLEAR}/" \
+  <&0 >/tmp/pager.txt
+
+sed -E </tmp/pager.txt
+
+# ending of code block quote
+# grep hyphen from QUERY PLAN output
+chock_line=$(grep -- ---------- /tmp/pager.txt)
+# echo "${BOLD}---------- ---------- ---------- ---------- ---------- "
+if [[ -n $chock_line ]]; then
+  echo "${BOLD}${chock_line}"
+fi
+echo "${BOLD}${BLUE}\`\`\`${CLEAN}"
+echo
