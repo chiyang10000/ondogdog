@@ -1,4 +1,5 @@
 \timing on
+set new_executor=auto;
 insert into nation select * from e_nation;
 insert into region select * from e_region;
 insert into part select * from e_part;

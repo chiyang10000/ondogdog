@@ -121,3 +121,5 @@ jobs:
           ~/new-orc-t.${{ env.SUFFIX }}
           ~/new-orc.${{ env.SUFFIX }}
 
+  analyze:
+    needs: [install]

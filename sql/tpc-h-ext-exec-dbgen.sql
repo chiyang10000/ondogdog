@@ -1,5 +1,5 @@
 \set seg_num 4
-\set scale_factor 0.01
+\set scale_factor 1
 -- TPC-H V3
 
 

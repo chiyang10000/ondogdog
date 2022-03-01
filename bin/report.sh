@@ -1,5 +1,6 @@
 #!/bin/bash
 # $@ filename
+
 for filename in "$@"; do
   # filename=`echo $1`
   skip=1
@@ -9,6 +10,8 @@ for filename in "$@"; do
       #echo # Placeholder
       # echo "$buffer" # Query
       # echo "=d$((4+3*num))/c$((4+3*num))" # Excel function
+printf $@
+printf ' '
       sed 's/Time: //; s/ ms//;' <<<$line # Execution time
       #echo # Blank line
       buffer=''

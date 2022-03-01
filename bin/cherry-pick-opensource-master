@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [[ $(git branch --show-current) != opensource-master ]]; then
+  exit 1
+fi
+
+idx=0
+git fetch hornet-opensource
+main_branch=ww-stable-main
+main_branch=oushudb4.9.0.0-apache3.0.0.0
+# main_branch=master
+until [[ -z $(git diff --name-only hornet-opensource/${main_branch}~$idx HEAD) ]]; do
+  ((idx+=1))
+done
+
+if [[ $idx -gt 0 ]]; then
+  git log -n1 hornet-opensource/${main_branch}~$idx
+  git cherry-pick hornet-opensource/${main_branch}~$idx..hornet-opensource/${main_branch}
+fi
+
+git diff --name-only hornet-opensource/${main_branch}~$idx HEAD
+exit $?

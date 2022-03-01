@@ -13,3 +13,12 @@ ADD_LIBRARY(
         SHARED
         mymalloc.c
 )
+ADD_EXECUTABLE(
+        sum
+        sum.cpp
+)
+#ADD_EXECUTABLE(
+#        memory-mountain
+#        memory-mountain.cpp
+#)
+

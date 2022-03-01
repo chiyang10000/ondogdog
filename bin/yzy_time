@@ -1,4 +1,5 @@
 #!/bin/bash
+
 if [[ -z $* ]];then
   cat ~/yizhiyang/log/yzy_time.log | awk '/^[0-9.]+ C/{print $0}' | sort -nk1
   exit 0
@@ -7,4 +8,5 @@ fi
 TIMEFORMAT=%R
 target=$(echo $* | sed -E 's|.*-o +([^ ]+).*|\1|')
 timing=$((time $*) 2>&1)
+# exit 0
 echo -e "$timing $target" | tee -a "$yzy_ROOT/log/yzy_time.log"

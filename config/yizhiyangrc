@@ -9,6 +9,20 @@ export hawq_config_hawq_master_directory=/opt/db_data/hawq-data-directory/master
 export hawq_config_hawq_segment_directory=/opt/db_data/hawq-data-directory/segmentdd
 export hawq_config_gp_vmem_idle_resource_timeout=3600000
 
-# export hawq_config_hawq_init_with_magma=true
+export hawq_config_hawq_init_with_magma=false
 export hawq_config_node_log_directory=${hawq_config_hawq_segment_directory}/pg_log
 export hawq_config_node_data_directory=${hawq_config_hawq_magma_locations_segment}
+
+# export hawq_config_hawq_init_with_magma=true
+export hawq_config_gp_max_plan_slice=120
+export hawq_config_gp_autostats_mode=ON_NO_STATS
+export hawq_config_hawq_s3_config=/usr/local/hawq/credentials
+# export hawq_config_hawq_s3_config=/usr/local/hawq/fake
+# export hawq_config_hawq_s3_config=none
+export hawq_config_new_interconnect_type=TCP
+export hawq_config_gp_interconnect_type=TCP
+
+export hawq_config_hawq_segment_temp_directory=/tmp/hawq_segment_temp/
+export hawq_config_hawq_master_temp_directory=/tmp/hawq_master_temp/
+export hawq_config_optimizer=off
+export hawq_config_enable_master_auto_ha=off

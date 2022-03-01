@@ -1,10 +1,9 @@
  \timing off
--- set search_path to testtpch_testorc_newqe_1g;
 -- set enforce_virtual_segment_number = 1;
  set gp_enable_agg_distinct = off;
---set optimizer=on;
+-- set optimizer=on;
 set new_executor=on;
-set enable_groupagg=off; -- skip inferior SORT IMPL
+-- set enable_groupagg=off; -- skip inferior SORT IMPL
 set orc_enable_filter_pushdown=off;
 -- set new_executor_enable_partitioned_hashjoin=off;
 -- set new_executor_enable_partitioned_hashagg=off;
@@ -36,8 +35,9 @@ begin
    return oushudb_version_number;
 end
 $$ language plpgsql;
-select check_oushudb_config(1);
+select check_oushudb_config(3);
 
+ \set sql_prefix 'explain'
  \set sql_prefix 'explain analyze'
  \pset pager off
 

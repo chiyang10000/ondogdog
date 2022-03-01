@@ -17,6 +17,7 @@ if [ $system == Linux ]; then
   yzy_NPROC=$(nproc)
 fi
 if [ $system == Darwin ]; then
+  alias ldd='otool -L'
   CLICOLOR=1 #for mac and BSD
   export LSCOLORS=gxfxcxdxbxegedabagacad
   alias toolchain='source /opt/dependency-Darwin/package/env.sh'
@@ -433,6 +434,7 @@ checkout-hawq-test() {
     fi
   fi
   check $ftest
+  # complete -W "$(hawq-test-list)" hawq-test
 }
 hawq-test-list() {
   checkout-hawq-test || return 1
