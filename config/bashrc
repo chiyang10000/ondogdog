@@ -154,6 +154,10 @@ yizhiyang-log-file() {
   hawq_node=$2
   log_dir=$(hawq-dir $hawq_node)/pg_log
   log_file=$(ls -tr $log_dir | grep $hawq_component- | tail -n1)
+  if test -z "$log_file"; then
+    log_dir=/usr/local/oushu/log/oushudb/$hawq_node
+    log_file=$(ls -tr $log_dir | grep $hawq_component- | tail -n1)
+  fi
   echo $log_dir/$log_file
 }
 alias dir-master='hawq-dir master'
@@ -190,7 +194,7 @@ cat-log-hawq-segment() {
 
 alias vi-tpch='vi ~/dev/hawq/src/test/feature/tpchtest/tpchorc_newqe.xml'
 alias gpdb='source /usr/local/gpdb/greenplum_path.sh'
-alias oushudb='source /usr/local/hawq/greenplum_path.sh'
+alias oushudb-source='source /usr/local/oushu/oushudb/oushudb_path.sh || source /usr/local/hawq/greenplum_path.sh'
 alias apache-hawq='source /usr/local/apache-hawq/greenplum_path.sh'
 
 alias apache-diff='git diff oushu/wcy-merge-apache'
@@ -253,10 +257,10 @@ hawq-config-load() {
     name_value=${hawq_config#hawq_config_}
     name=${name_value%%=*}
     value=${name_value#*=}
-    echo "|   hawq-config $name $value"
+    warning "|   hawq-config $name $value"
     hawq-config $name $value
   done
-  echo '+---------------'
+  check '+---------------\n'
 }
 hawq-qe() {
   if [ -n "$1" ]; then
@@ -323,6 +327,13 @@ hawq-init() { (
   magma-clean
   hawq-clean
 
+  if [[ -d $OUSHUDB_HOME/conf.empty ]]; then
+    rm -rf /usr/local/oushu/conf/oushudb
+    ln -snf /usr/local/hawq/etc /usr/local/oushu/conf/oushudb
+    ln -snf hawq-site.xml /usr/local/hawq/etc/oushudb-site.xml
+    cp $OUSHUDB_HOME/conf.empty/* /usr/local/hawq/etc
+  fi
+
   if [[ -n $num ]]; then
     hawq-config default_hash_table_bucket_number $num
     hawq-config default_magma_hash_table_nvseg_per_node $num
@@ -343,6 +354,8 @@ hawq-init() { (
     sed 's|,| |g')
   sudo install -o $USER -d $(hawq-config hawq_master_directory)
   sudo install -o $USER -d $(hawq-config hawq_segment_directory)
+  sudo install -o $USER -d $(hawq-config hawq_master_temp_directory)
+  sudo install -o $USER -d $(hawq-config hawq_segment_temp_directory)
 
   if [[ $(hawq-config hawq_init_with_magma | uniq) == true ]]; then
     with_magma='--with_magma'
@@ -353,6 +366,10 @@ hawq-init() { (
     --lc-ctype='C' --lc-messages='C' \
     --lc-monetary='C' --lc-numeric='C' \
     --lc-time='C' ${with_magma}
+  if [[ $(psql -c 'select version();') =~ 'OushuDB 5' ]]; then
+    psql -ac "create vcluster test with(segments='localhost');"
+    psql -ac "alter role $USER with resource queue test.pg_default;"
+  fi
   hawq-setup-feature-test && rm -rf ~/hawqAdminLogs
   set +ex
 ); }
