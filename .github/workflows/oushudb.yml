@@ -123,3 +123,6 @@ jobs:
 
   analyze:
     needs: [install]
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v2
