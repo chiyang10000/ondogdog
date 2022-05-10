@@ -1,6 +1,8 @@
 \set seg_num 4
 \set scale_factor 10
 
+-- Only works for TPC-H 2.6, with `-N -n` specifying step
+
 
 DROP EXTERNAL WEB TABLE IF EXISTS e_nation;
 DROP EXTERNAL WEB TABLE IF EXISTS e_customer;

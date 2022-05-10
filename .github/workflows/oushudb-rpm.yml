@@ -10,8 +10,8 @@ jobs:
       matrix:
         platform: [ubuntu-18.04]
         version:
-          - 3.3.0.0
-          - 3.4.1.0
+          # - 3.3.0.0
+          # - 3.4.1.0
           - 4.0.5.0
           - 4.3.0.0
           - 4.4.0.0
@@ -19,6 +19,7 @@ jobs:
           - 4.6.1.0
           - 4.7.0.0
           - 4.8.0.0
+          - 4.9.0.0
 
     runs-on: ${{ matrix.platform }}
 
@@ -51,7 +52,7 @@ jobs:
     - name: install HAWQ
       run: |
         export RPM_VER=${{ matrix.version }}
-        export RPM_REPO=http://52.80.110.255:8080/oushurepo/yumrepo/release/oushu-database/centos6/$RPM_VER/release/
+        export RPM_REPO=http://yum.oushu.com/oushurepo/yumrepo/release/oushu-database/centos6/$RPM_VER/release/
         export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="(hawq-[^"]*)".*/\1/p')
         sudo rpm -ivh --nodeps $RPM_REPO/$RPM_NAME
         sudo chown -R $USER:$USER /usr/local/hawq/
@@ -64,7 +65,18 @@ jobs:
         .github/workflows/scripts/init_oushudb.sh
         psql -d postgres -c 'create database hawq_feature_test_db;'
 
-    - name: test HAWQ
+    - name: test HAWQ TPC-H schema
       run: |
         source /usr/local/hawq/greenplum_path.sh
         psql -d postgres -f sql/tpc-h-schema.sql 
+        if hawq version | grep '4\.[0-5]'; then
+          psql -d postgres -f sql/init_tpchschema.ext.sql
+        else
+          psql -d postgres -f sql/tpc-h-ext-exec-dbgen.sql
+        fi
+
+    - name: test HAWQ
+      run: |
+        source /usr/local/hawq/greenplum_path.sh
+        psql -d postgres -af sql/init_tpchschema.load.sql
+        psql -d postgres -af sql/init_tpchschema.analyze.sql

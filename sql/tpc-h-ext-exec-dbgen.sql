@@ -1,6 +1,30 @@
 \set seg_num 4
-\set scale_factor 1
--- TPC-H V3
+\set scale_factor 10
+\set ON_ERROR_STOP 1
+
+-- TPC-H V2.6 -- FIXME
+   -- OushuDB <= 4.5.2.0
+   -- --force not working
+   -- the output default to stdout
+-- dbgen -fq -b $(dirname $(command -v dbgen))/dists.dss -T r > region.tbl
+
+-- TPC-H V3 
+   -- the output file was hard-coded as TABLE.tbl.STEP
+-- dbgen -fq -b $(dirname $(command -v dbgen))/dists.dss -T r
+
+
+
+DROP EXTERNAL WEB TABLE IF EXISTS e_dbgen;
+CREATE READABLE EXTERNAL WEB TABLE e_dbgen(work_dir text)
+    EXECUTE 'test -f $GPHOME/bin/dbgen || exit 1;'
+            'pwd;'
+    on master format 'text';
+select * from e_dbgen;
+DROP EXTERNAL WEB TABLE IF EXISTS e_dbgen;
+CREATE READABLE EXTERNAL WEB TABLE e_dbgen(dbgen text)
+    EXECUTE '$GPHOME/bin/dbgen -h 2>&1| head -n2;'
+    on master format 'text';
+select * from e_dbgen;
 
 
 
