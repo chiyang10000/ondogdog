@@ -1,11 +1,11 @@
 #!/bin/bash
-if [[ ! -f /usr/local/hawq/greenplum_path.sh ]]; then
-  echo 'hawq not found in /usr/local/hawq/'
-  exit 1
-fi
 if [[ -f /usr/local/oushu/oushudb/oushudb_path.sh ]]; then
   source /usr/local/oushu/oushudb/oushudb_path.sh
   exec oushudb "$@"
+fi
+if [[ ! -f /usr/local/hawq/greenplum_path.sh ]]; then
+  echo 'hawq not found in /usr/local/hawq/'
+  exit 1
 fi
 source /usr/local/hawq/greenplum_path.sh
 export PAGER=pager_psql

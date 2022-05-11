@@ -155,8 +155,9 @@ yizhiyang-log-file() {
   log_dir=$(hawq-dir $hawq_node)/pg_log
   log_file=$(ls -tr $log_dir | grep $hawq_component- | tail -n1)
   if test -z "$log_file"; then
+    if [[ $hawq_component == hawq ]]; then hawq_component=oushudb; fi
     log_dir=/usr/local/oushu/log/oushudb/$hawq_node
-    log_file=$(ls -tr $log_dir | grep $hawq_component- | tail -n1)
+    log_file=$(ls -tr $log_dir | grep $hawq_component-2 | tail -n1) # -2 to identify the date in log file name
   fi
   echo $log_dir/$log_file
 }
@@ -292,15 +293,15 @@ hawq-instrument() { # timing in milisecond
 magma-clean() {
   set -x
   sudo rm -rf $(hawq-config hawq_magma_locations_master | sed -E 's|[^:,]+://||g' |
-    sed 's|,| |g')
+    sed 's|,| |g')/*
   sudo rm -rf $(hawq-config hawq_magma_locations_segment | sed -E 's|[^:,]+://||g' |
-    sed 's|,| |g')
+    sed 's|,| |g')/*
   set +x
 }
 hawq-clean() {
   set -x
-  sudo rm -rf $(hawq-config hawq_master_directory)
-  sudo rm -rf $(hawq-config hawq_segment_directory)
+  sudo rm -rf $(hawq-config hawq_master_directory)/*
+  sudo rm -rf $(hawq-config hawq_segment_directory)/*
   sudo rm -rf /tmp/.*PGSQL*
   sudo rm -rf /tmp/pgsql_tmp
   sudo rm -rf /tmp/checktmpdir.log
@@ -331,7 +332,7 @@ hawq-init() { (
     rm -rf /usr/local/oushu/conf/oushudb
     ln -snf /usr/local/hawq/etc /usr/local/oushu/conf/oushudb
     ln -snf hawq-site.xml /usr/local/hawq/etc/oushudb-site.xml
-    cp $OUSHUDB_HOME/conf.empty/* /usr/local/hawq/etc
+    cp -af $OUSHUDB_HOME/conf.empty/* /usr/local/hawq/etc
   fi
 
   if [[ -n $num ]]; then
@@ -467,7 +468,7 @@ hawq-test() {
   if [ -n "$1" ]; then
     bash -c "
     source /usr/local/hawq/greenplum_path.sh
-    $ftest --gtest_filter=$1"
+    $ftest --gtest_filter=$1-*TestS3*"
   else
     bash -c "
     source /usr/local/hawq/greenplum_path.sh
@@ -695,7 +696,7 @@ saiting-login() {
 #
 #-------------------------------------------------------------------------------
 # Green for Linux, yellow for macOS.
-PS1='\[\033[00m\][\t] ' # time
+PS1='\[\033[00m\][\t] '          # time
 if [[ $system == Darwin ]]; then # user and host
   PS1=$PS1'\[\033[01;33m\]\u\[\033[00m\]@\[\033[33m\]\h\[\033[00m\]'
 elif [[ $(hostname) =~ exciting ]]; then

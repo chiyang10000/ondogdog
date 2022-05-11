@@ -7,7 +7,10 @@ import os.path
 config_files = ['/usr/local/hawq/etc/hawq-site.xml', '/usr/local/hawq/etc/magma-site.xml']
 
 if __name__ == '__main__':
-    assert (len(sys.argv) <= 3)
+    #assert (len(sys.argv) <= 3)
+    if '.xml' in str(sys.argv[-1]):
+        config_files = [sys.argv[-1]]
+        sys.argv = sys.argv[0: len(sys.argv) - 1]
 
     for config_file in config_files:
         if not os.path.isfile(config_file):
