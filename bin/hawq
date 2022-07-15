@@ -1,4 +1,5 @@
 #!/bin/bash
+export PAGER=pager_psql
 if [[ -f /usr/local/oushu/oushudb/oushudb_path.sh ]]; then
   source /usr/local/oushu/oushudb/oushudb_path.sh
   exec oushudb "$@"
@@ -8,5 +9,4 @@ if [[ ! -f /usr/local/hawq/greenplum_path.sh ]]; then
   exit 1
 fi
 source /usr/local/hawq/greenplum_path.sh
-export PAGER=pager_psql
 exec hawq "$@"

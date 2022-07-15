@@ -3,6 +3,8 @@ set -e
 
 
 
+test -n "$HADOOP_HOME"
+
 # Configure
 tee $HADOOP_HOME/etc/hadoop/core-site.xml << EOF
 <configuration>
