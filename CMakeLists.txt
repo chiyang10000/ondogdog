@@ -35,6 +35,8 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-common/src/magma/commo
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-server/src/magma)
 add_subdirectory(hornet)
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet-new/coroutine/CMakeLists.txt)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/hornet-new/coroutine/src)
+    link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet-new/coroutine/src/)
     add_subdirectory(hornet-new/coroutine)
     add_dependencies(magma-server-shared coroutine-shared)
 endif()
