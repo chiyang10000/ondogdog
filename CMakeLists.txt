@@ -11,6 +11,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     add_compile_options(-fcolor-diagnostics)
 endif ()
 
+set(CMAKE_INSTALL_PREFIX /opt/dependency/package)
 
 #add_compile_options(-fprofile-arcs -ftest-coverage)
 #add_link_options(-fprofile-arcs -ftest-coverage)
@@ -54,7 +55,6 @@ add_subdirectory(hawq)
 if (EXISTS yizhiyang)
     add_subdirectory(yizhiyang/cpp)
 endif ()
-set(CMAKE_INSTALL_PREFIX /opt/dependency/package)
 
 add_custom_target(hawq-build
         COMMAND bash -ic 'hawq-config-load'

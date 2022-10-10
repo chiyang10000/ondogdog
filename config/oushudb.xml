@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+<language name="Object File">
+
+</language>
+<language name="Assembly Source File">
+
+</language>
+<language name="C++ Source File">
+<includepath workspace_path="true">/hornet-opensource/dbcommon/src</includepath>
+<includepath workspace_path="true">/hornet-opensource/univplan/src</includepath>
+<includepath workspace_path="true">/hornet-opensource/storage/src</includepath>
+<includepath workspace_path="true">/hornet/executor/src</includepath>
+<includepath workspace_path="true">/hornet/magma/src</includepath>
+<includepath workspace_path="true">/hornet/scheduler/src</includepath>
+<includepath workspace_path="true">/hornet/rm/src</includepath>
+<includepath workspace_path="true">/hornet/storage-format-magma/src</includepath>
+<includepath workspace_path="true">/hornet/external-catalog/src</includepath>
+
+<includepath workspace_path="true">/hawq/src/include</includepath>
+<includepath workspace_path="true">/hawq/src/test/feature</includepath>
+<includepath>/opt/dependency-Darwin/package/include</includepath>
+
+</language>
+<language name="C Source File">
+<includepath workspace_path="true">/hornet-opensource/dbcommon/src</includepath>
+<includepath workspace_path="true">/hornet-opensource/storage/src</includepath>
+<includepath workspace_path="true">/hornet-opensource/univplan/src</includepath>
+<includepath workspace_path="true">/hornet/executor/src</includepath>
+<includepath workspace_path="true">/hornet/magma/src</includepath>
+<includepath workspace_path="true">/hornet/scheduler/src</includepath>
+<includepath workspace_path="true">/hornet/rm/src</includepath>
+<includepath workspace_path="true">/hornet/storage-format-magma/src</includepath>
+<includepath workspace_path="true">/hornet/external-catalog/src</includepath>
+
+<includepath workspace_path="true">/hawq/src/include</includepath>
+<includepath workspace_path="true">/hawq/src/backend/gp_libpq_fe</includepath>
+<includepath workspace_path="true">/hawq/src/backend/resourcemanager/include</includepath>
+<includepath workspace_path="true">/hawq/src/include</includepath>
+<includepath workspace_path="true">/hawq/src/backend/gp_libpq_fe</includepath>
+<includepath workspace_path="true">/hawq/src/backend/resourcemanager/include</includepath>
+<includepath>/opt/dependency-Darwin/package/include</includepath>
+
+</language>
+</section>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.Macros">
+<language name="Object File">
+
+</language>
+<language name="Assembly Source File">
+
+</language>
+<language name="C++ Source File">
+<macro>
+<name>LOGTREE_NAME</name><value/>
+</macro>
+<macro>
+<name>USE_ORCA</name><value/>
+</macro>
+
+</language>
+<language name="C Source File">
+<macro>
+<name>FALSE</name><value>0</value>
+</macro>
+<macro>
+<name>TRUE</name><value>1</value>
+</macro>
+<macro>
+<name>USE_ORCA</name><value/>
+</macro>
+
+</language>
+</section>
+</cdtprojectproperties>
