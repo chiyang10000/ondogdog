@@ -59,7 +59,7 @@ HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
 hornet_src_dir=~/dev/hornet/
 hornet_cov_dir=~/dev/coverage/hornet/
-export MAKEFLAGS=-j$yzy_NPROC
+export MAKEFLAGS=-j$((yzy_NPROC/3+1))
 
 export PGDATABASE=postgres
 
@@ -163,7 +163,7 @@ yizhiyang-log-file() {
 }
 alias dir-master='hawq-dir master'
 alias dir-segment='hawq-dir segment'
-alias tail-log-hawq-master='tail -f `yizhiyang-log-file hawq master`'
+alias tail-log-hawq-master='tail -f `yizhiyang-log-file hawq master` | grep --line-buffered --colour=never -v range.h'
 alias tail-log-magma-master='tail -f `yizhiyang-log-file magma master`'
 alias tail-log-hawq-segment='tail -f `yizhiyang-log-file hawq segment` | grep --line-buffered --colour=never -v network_utils.c'
 tail-log-hawq-cache() {
@@ -477,6 +477,11 @@ hawq-test() {
 
   # export PGDATABASE=postgres
 }
+hawq-distclean() {
+  (cd ~/dev/hawq/ &&
+   make distclean && ./configure --enable-orca && make skip-orca-build
+  )
+}
 
 #-------------------------------------------------------------------------------
 #
@@ -486,11 +491,11 @@ hawq-test() {
 export RUN_UNITTEST=no
 hornet-debug() {
   # cd ~/dev/hornet && make incremental && cd -
-  hornet-build debug
+  time hornet-build debug
 }
 hornet-release() {
   # cd ~/dev/release/hornet && make incremental && cd -
-  hornet-build release
+  time hornet-build release
 }
 hornet-unittest() {
   cd ~/dev/hornet && RUN_UNITTEST=YES make incremental && cd -

@@ -17,6 +17,7 @@ echo "${BOLD}${BLUE}\`\`\`sql output${CLEAR}"
 sed -E \
   -e "s/(InputStream.*)/${UNDERLINE}\\1${CLEAR}/" \
   -e "s/(.+ statistics|Settings:)/${CYAN}\\1${CLEAR}/" \
+  -e "s/^/    /"
   <&0 >/tmp/pager.txt
 
 sed -E </tmp/pager.txt
@@ -28,5 +29,5 @@ chock_line=$(grep -- ---------- /tmp/pager.txt)
 if [[ -n $chock_line ]]; then
   echo "${BOLD}${chock_line}"
 fi
-echo "${BOLD}${BLUE}\`\`\`${CLEAN}"
+echo "${BOLD}${BLUE}\`\`\`${CLEAR}"
 echo
