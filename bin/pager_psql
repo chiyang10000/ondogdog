@@ -5,29 +5,54 @@ export UNDERLINE=$(echo -e '\033[4m')
 export CLEAR=$(echo -e '\033[0m')
 
 export BLUE=$(echo -e '\033[34m')
+export GREEN=$(echo -e '\033[32m')
+export GREEN_BG=$(echo -e '\033[42m')
+export MAGENTA=$(echo -e '\033[35m')
 export CYAN=$(echo -e '\033[36m')
 
 alias sed=gsed
 
+
+cat <&0 >/tmp/psql_pager.in.txt
+
+
+is_query_plan=$(grep 'QUERY PLAN' /tmp/psql_pager.in.txt)
+if [[ -n ${is_query_plan} ]]; then
+  echo '```SQL QUERY PLAN'   > /tmp/psql_pager.out.txt
+  cat /tmp/psql_pager.in.txt >>/tmp/psql_pager.out.txt
+  echo '```'                 >>/tmp/psql_pager.out.txt
+  cat /tmp/psql_pager.out.txt >/tmp/psql_pager.in.txt
+fi
+
 # start of code block quote
 echo
-echo "${BOLD}${BLUE}\`\`\`sql output${CLEAR}"
+# echo "${BOLD}${BLUE}\`\`\`SQL output${CLEAR}"  # start of code block
 
 ##-e "s/(Hash.*)/${UNDERLINE}\\1${CLEAR}/" \
+
+
+# 1. quote and indent
+# 2. modify the line under tuple header to generate mardown table
+
 sed -E \
+  -e "s/^/${GREEN}   > ${CLEAR}/" \
+  -e "s/(-+)\\+/\\1|/g" \
   -e "s/(InputStream.*)/${UNDERLINE}\\1${CLEAR}/" \
-  -e "s/(.+ statistics|Settings:)/${CYAN}\\1${CLEAR}/" \
-  -e "s/^/    /"
-  <&0 >/tmp/pager.txt
+  -e "s/(.+ statistics|Settings)/${CYAN}\\1${CLEAR}/" \
+  -e "s/([A-Za-z]+ statistics)/${CYAN}\\1${CLEAR}/" \
+  -e "s/(Total runtime.*)/${GREEN}\\1${CLEAR}/" \
+  -e "s/(New.*)/${CYAN}\\1${CLEAR}/" \
+  -e "s/(slice[0-9]+)/${MAGENTA}\\1${CLEAR}/" \
+  -e "" /tmp/psql_pager.in.txt >/tmp/pager.txt
 
 sed -E </tmp/pager.txt
 
 # ending of code block quote
 # grep hyphen from QUERY PLAN output
-chock_line=$(grep -- ---------- /tmp/pager.txt)
+# chock_line=$(grep -- ---------- /tmp/psql_pager.in.txt)
 # echo "${BOLD}---------- ---------- ---------- ---------- ---------- "
-if [[ -n $chock_line ]]; then
-  echo "${BOLD}${chock_line}"
-fi
-echo "${BOLD}${BLUE}\`\`\`${CLEAR}"
+# if [[ -n $chock_line ]]; then
+#   echo "${BOLD}${chock_line}"
+# fi
+# echo "${BOLD}${BLUE}\`\`\`${CLEAR}"  # end of code block
 echo
