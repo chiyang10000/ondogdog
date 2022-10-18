@@ -1,5 +1,5 @@
 \set seg_num 4
-\set scale_factor 10
+\set scale_factor 1
 \set ON_ERROR_STOP 1
 
 -- TPC-H V2.6 -- FIXME

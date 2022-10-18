@@ -7,6 +7,6 @@ fi
 
 TIMEFORMAT=%R
 target=$(echo $* | sed -E 's|.*-o +([^ ]+).*|\1|')
-timing=$((time $*) 2>&1)
+timing=$((time $*) 2>&1) # time is a keyword (not builtin) that is used to time a pipeline
 # exit 0
-echo -e "$timing $target" | tee -a "$yzy_ROOT/log/yzy_time.log"
+echo -e "\033[33m$timing\033[0m $target" | tee -a "$yzy_ROOT/log/yzy_time.log"

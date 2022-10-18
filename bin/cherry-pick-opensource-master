@@ -7,8 +7,8 @@ fi
 idx=0
 git fetch hornet-opensource
 main_branch=ww-stable-main
-main_branch=oushudb4.9.0.0-apache3.0.0.0
-# main_branch=master
+# main_branch=oushudb4.9.0.0-apache3.0.0.0
+main_branch=master
 until [[ -z $(git diff --name-only hornet-opensource/${main_branch}~$idx HEAD) ]]; do
   ((idx+=1))
 done

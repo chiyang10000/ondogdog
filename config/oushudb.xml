@@ -67,6 +67,9 @@
 <macro>
 <name>TRUE</name><value>1</value>
 </macro>
+<macro> <name>bool</name><value>char</value> </macro>
+<macro> <name>true</name><value>1</value> </macro>
+<macro> <name>false</name><value>0</value> </macro>
 <macro>
 <name>USE_ORCA</name><value/>
 </macro>
