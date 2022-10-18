@@ -1,7 +1,7 @@
  \timing off
 -- set enforce_virtual_segment_number = 1;
 -- set gp_enable_agg_distinct = off;
- set new_interconnect_type=tcp;
+-- set new_interconnect_type=tcp;
 -- set optimizer=on;
 -- set new_executor=on;
 -- set new_executor_enable_tb_convertor to on;

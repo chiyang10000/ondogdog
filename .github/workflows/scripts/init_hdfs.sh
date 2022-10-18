@@ -4,6 +4,7 @@ set -e
 
 
 test -n "$HADOOP_HOME"
+export HDFS_DATA="$HOME/db_data/hdfs/"
 
 # Configure
 tee $HADOOP_HOME/etc/hadoop/core-site.xml << EOF
@@ -26,11 +27,11 @@ tee $HADOOP_HOME/etc/hadoop/hdfs-site.xml << EOF
 <configuration>
     <property>
         <name>dfs.namenode.name.dir</name>
-        <value>file:///tmp/db_data/hdfs/name</value>
+        <value>file://${HDFS_DATA}/name</value>
     </property>
     <property>
         <name>dfs.datanode.data.dir</name>
-        <value>file:///tmp/db_data/hdfs/data</value>
+        <value>file://${HDFS_DATA}/data</value>
     </property>
     <property>
         <name>dfs.replication</name>
@@ -52,8 +53,7 @@ EOF
 
 # Initialize
 sudo install -o $USER -d /var/lib/hadoop-hdfs/
-install -d /tmp/db_data/hdfs/name
-install -d /tmp/db_data/hdfs/data
+install -d ${HDFS_DATA}/name ${HDFS_DATA}/data
 hadoop checknative || true #FIXME: Abort trap: 6 ???
 hdfs namenode -format
 

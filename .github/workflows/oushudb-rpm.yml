@@ -3,23 +3,47 @@ name: OushuDB RPM
 on: [push, pull_request]
 
 jobs:
-  Build-and-Test:
+  Cache-Binary:
+    runs-on: ubuntu-18.04
+    steps:
+ 
+    - name: Cache HDFS tar
+      id: cache-hdfs-tar
+      uses: actions/cache@v3
+      with:
+        key: hadoop-3.3.0
+        path: hadoop-3.3.0.tar.gz
+
+    - name: Download HDFS tar
+      if: ${{ steps.cache-hdfs-tar.outputs.cache-hit != 'true' }}
+      run: wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
+
+  Install-and-Test:
+    needs: Cache-Binary
+    defaults:
+      run:
+        shell: bash -e -l {0}
 
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-18.04]
+        platform: [ubuntu-20.04]
         version:
+          # missing RPM
           # - 3.3.0.0
           # - 3.4.1.0
-          - 4.0.5.0
+
+          - 4.0.7.0
+          - 4.2.0.0
           - 4.3.0.0
           - 4.4.0.0
           - 4.5.2.0
           - 4.6.1.0
           - 4.7.0.0
-          - 4.8.0.0
-          - 4.9.0.0
+          - 4.8.0.2
+          - 4.9.4.0
+
+          # - 5.0.0.0
 
     runs-on: ${{ matrix.platform }}
 
@@ -33,50 +57,105 @@ jobs:
           Darwin) .github/workflows/scripts/init_macos.sh ;;
           Linux)  .github/workflows/scripts/init_linux.sh ;;
         esac
+        ./install.sh
+
+    - name: check yzy script
+      run: |
+        # command -v oushudb # DEBUG yzy install succeed
+        command -v psql
+        env
+
+    - name: Cache HDFS tar
+      id: cache-hdfs-tar
+      uses: actions/cache@v3
+      with:
+        key: hadoop-3.3.0
+        path: hadoop-3.3.0.tar.gz
+
+    - if: ${{ steps.cache-hdfs-tar.outputs.cache-hit != 'true' }}
+      name: Download HDFS tar
+      run: wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
 
     - name: install HDFS
       run: |
-        wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
         sudo install -o $USER -d /usr/local/hadoop-3.3.0
         sudo ln -snf hadoop-3.3.0 /usr/local/hadoop
         sudo tee /usr/local/bin/hdfs <<<'exec /usr/local/hadoop/bin/hdfs $@'
         sudo chmod a+x /usr/local/bin/hdfs
         tar xf hadoop-3.3.0.tar.gz -C /usr/local/
 
+    - name: Detect HAWQ RPM
+      run: |
+        export RPM_VER=${{ matrix.version }}
+        export RPM_REPO_PREFIX=http://yum.oushu.com/oushurepo/yumrepo/release/oushu-database/centos6/
+        export RPM_REPO_PREFIX=http://139.217.102.138:12000/oushurepo/yumrepo/test/oushu-database/centos6/
+
+        export RPM_REPO=$RPM_REPO_PREFIX/$RPM_VER/release/
+        export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="((hawq|oushudb)-[0-9][^"]*)".*/\1/p')
+
+        echo "RPM_REPO=${RPM_REPO}" >> $GITHUB_ENV
+        echo "RPM_NAME=${RPM_NAME}" >> $GITHUB_ENV
+
+        sudo chmod a+rw /usr/local # XXX: ensure for cache export
+
+    - name: Cache HAWQ RPM
+      id: cache-hawq-rpm
+      uses: actions/cache@v3
+      with:
+        key: ${{ env.RPM_NAME }}
+        # path: ${{ env.RPM_NAME }}
+        path: /usr/local/oushudb-${{ matrix.version }}
+
+    - name: Download HAWQ RPM
+      if: ${{ steps.cache-hawq-rpm.outputs.cache-hit != 'true' }}
+      run: |
+        wget $RPM_REPO/$RPM_NAME
+        sudo rpm -ivh --nodeps $RPM_NAME
+
+    - name: install HAWQ
+      run: |
+        sudo ln -snf oushudb-${{ matrix.version }} /usr/local/hawq
+        sudo ln -snf oushudb-${{ matrix.version }} /usr/local/oushudb
+        sudo chown -R $USER:$USER /usr/local/oushudb/
+
+        ls -ltr /usr/local
+        source /usr/local/oushudb/greenplum_path.sh
+        postgres -V
+        echo "PGDATABASE=postgres" >> $GITHUB_ENV
+        echo "PGHOST=localhost" >> $GITHUB_ENV
+
     - name: initilize HDFS
       run: |
         export HADOOP_HOME=/usr/local/hadoop/
         .github/workflows/scripts/init_hdfs.sh
-        sudo -u $USER hdfs dfs -ls /
-
-    - name: install HAWQ
-      run: |
-        export RPM_VER=${{ matrix.version }}
-        export RPM_REPO=http://yum.oushu.com/oushurepo/yumrepo/release/oushu-database/centos6/$RPM_VER/release/
-        export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="(hawq-[^"]*)".*/\1/p')
-        sudo rpm -ivh --nodeps $RPM_REPO/$RPM_NAME
-        sudo chown -R $USER:$USER /usr/local/hawq/
-        source /usr/local/hawq/greenplum_path.sh
-        postgres -V
 
     - name: initilize HAWQ
       run: |
-        source /usr/local/hawq/greenplum_path.sh
+        source /usr/local/oushudb/greenplum_path.sh
         .github/workflows/scripts/init_oushudb.sh
+        psql -c 'select version();'
         psql -d postgres -c 'create database hawq_feature_test_db;'
 
     - name: test HAWQ TPC-H schema
       run: |
-        source /usr/local/hawq/greenplum_path.sh
+        source /usr/local/oushudb/greenplum_path.sh
         psql -d postgres -f sql/tpc-h-schema.sql 
-        if hawq version | grep '4\.[0-5]'; then
-          psql -d postgres -f sql/init_tpchschema.ext.sql
+        if hawq version | grep 'version 4\.[0-5]'; then
+          psql -d postgres -f sql/tpc-h.ext.exec.dbgen.2.6.sql
         else
           psql -d postgres -f sql/tpc-h-ext-exec-dbgen.sql
         fi
+        psql -d postgres -f sql/tpc-h.analyze.sql
 
-    - name: test HAWQ
+    - name: test HAWQ TPC-H load
       run: |
-        source /usr/local/hawq/greenplum_path.sh
+        source /usr/local/oushudb/greenplum_path.sh
         psql -d postgres -af sql/init_tpchschema.load.sql
-        psql -d postgres -af sql/init_tpchschema.analyze.sql
+
+    - name: test HAWQ TPC-H analyze
+      run: psql -af sql/tpc-h.analyze.sql
+
+    - name: test HAWQ TPC-H execute
+      run: |
+        source /usr/local/oushudb/greenplum_path.sh
+        psql -d postgres -v ON_ERROR_STOP=1 -af sql/tpc-h.sql

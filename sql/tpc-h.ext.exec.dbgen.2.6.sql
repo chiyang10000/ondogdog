@@ -1,5 +1,5 @@
 \set seg_num 4
-\set scale_factor 10
+\set scale_factor 1
 
 -- Only works for TPC-H 2.6, with `-N -n` specifying step
 
@@ -17,7 +17,8 @@ CREATE EXTERNAL WEB TABLE e_nation (N_NATIONKEY INTEGER ,
     N_NAME VARCHAR(25) ,
     N_REGIONKEY INTEGER ,
     N_COMMENT VARCHAR(152))
-    execute 'bash -c "$GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T n -s ':'scale_factor''"' on 1 format 'text' (delimiter '|');
+    execute 'bash -c "$GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T n -s ':'scale_factor''"'
+    on 1 format 'text' (delimiter '|');
 
 CREATE external web TABLE e_REGION ( R_REGIONKEY INTEGER ,
     R_NAME VARCHAR(25) ,

@@ -1,7 +1,7 @@
 \set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8)
 \set storage_spec with (appendonly=true, orientation=orc, compresstype=lz4, dicthreshold=0.8)
 \set char_type "char"
--- \set char_type CHAR
+\set char_type CHAR
 \set decimal_type FLOAT
 -- \set decimal_type DECIMAL(12,2)
 
