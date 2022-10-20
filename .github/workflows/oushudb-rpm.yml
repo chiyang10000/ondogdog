@@ -165,4 +165,17 @@ jobs:
       if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
-        psql -d postgres -v ON_ERROR_STOP=1 -af sql/tpc-h.sql
+        psql -d postgres -v ON_ERROR_STOP=1 -af sql/tpc-h.sql | tee $RPM_NAME.out
+
+    - name: archive results
+      uses: actions/upload-artifact@v2
+      with:
+        name: result
+        path: |
+          $RPM_NAME.out
+
+  analyze:
+    needs: [Install-and-Test]
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v2
