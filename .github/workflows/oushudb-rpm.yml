@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   Cache-Binary:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
  
     - name: Cache HDFS tar
@@ -27,16 +27,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-20.04]
+        # platform: []ubuntu-20.04]
         version:
           # missing RPM
           # - 3.3.0.0
           # - 3.4.1.0
 
-          - 4.0.7.0
-          - 4.2.0.0
-          - 4.3.0.0
-          - 4.4.0.0
+          # severe performance issue on ClickBench
+          # - 4.0.7.0
+          # - 4.2.0.0
+          # - 4.3.0.0
+          # - 4.4.0.0
+
           - 4.5.2.0
           - 4.6.1.0
           - 4.7.0.0
@@ -48,7 +50,7 @@ jobs:
           - tpc-h
           - clickbench
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-20.04 # ${{ matrix.platform }}
 
     steps:
 
@@ -143,6 +145,7 @@ jobs:
       if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
+        mkdir tpc-h/
         psql -d postgres -f sql/tpc-h-schema.sql 
         if hawq version | grep 'version 4\.[0-5]'; then
           psql -d postgres -f sql/tpc-h.ext.exec.dbgen.2.6.sql
@@ -165,17 +168,80 @@ jobs:
       if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
-        psql -d postgres -v ON_ERROR_STOP=1 -af sql/tpc-h.sql | tee $RPM_NAME.out
+        psql -d postgres -v ON_ERROR_STOP=1 -af sql/tpc-h.sql | tee tpc-h/$RPM_NAME.out |
+          sed -n 's/Time://p' | awk '{print NR, $0}'
+
+    - name: Cache ClickBench tar
+      if: ${{ matrix.benchmark == 'clickbench' }}
+      id: cache-clickbench-tar
+      uses: actions/cache@v3
+      with:
+        key: clickbench-10M
+        path: hits.tsv
+
+    - name: Download ClickBench tar
+      if: ${{ steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
+      run: |
+        curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
+          gunzip  | head -n 10000000 > hits.tsv # 10M tuple
+
+    - name: test ClickBench schema
+      if: ${{ matrix.benchmark == 'clickbench' }}
+      run: |
+        source /usr/local/oushudb/greenplum_path.sh
+        nohup gpfdist -l gpfdist.log &
+        mkdir clickbench/
+        psql -f sql/clickbench/create.sql
+        psql -c "insert into hits select * from hits_ext order by CounterID, EventDate, UserID, EventTime, WatchID;"
+        psql -c "select pg_size_pretty(pg_relation_size('hits'));"
+
+    - name: test ClickBench execute
+      if: ${{ matrix.benchmark == 'clickbench' }}
+      run: |
+        source /usr/local/oushudb/greenplum_path.sh
+        psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;'
+        psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;'
+        psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
+        
+        # psql -f <(echo '\timing on'; cat sql/clickbench/queries.sql;) |
+        #  tee clickbench/$RPM_NAME.out |
+        #  sed -n 's/Time://p' | awk '{print NR, $0}'
+        cd sql/clickbench
+        ./run.sh > $GITHUB_WORKSPACE/clickbench/$RPM_NAME.out
 
     - name: archive results
       uses: actions/upload-artifact@v2
       with:
-        name: result
+        name: results
         path: |
-          $RPM_NAME.out
+          tpc-h/${{ env.RPM_NAME }}.out
+          clickbench/${{ env.RPM_NAME }}.out
 
   analyze:
     needs: [Install-and-Test]
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    
+    - name: Download all workflow run artifacts
+      uses: actions/download-artifact@v3
+
+    - name: html
+      run: |
+        ls results/
+        mkdir ~/dev/
+        git clone https://github.com/ClickHouse/ClickBench/ ~/dev/ClickBench
+
+        cd $GITHUB_WORKSPACE/results/tpc-h
+        $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
+        cp ~/dev/ClickBench/index.html ./
+
+        cd $GITHUB_WORKSPACE/results/clickbench
+        $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
+        cp ~/dev/ClickBench/index.html ./
+
+    - name: archive results
+      uses: actions/upload-artifact@v2
+      with:
+        name: results
+        path: results

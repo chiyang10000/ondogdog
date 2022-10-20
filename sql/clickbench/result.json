@@ -1,0 +1,16 @@
+{
+    "system": "Greenplum",
+    "date": "2022-07-01",
+    "machine": "ww",
+    "cluster_size": 1,
+    "comment": "",
+
+    "tags": ["C", "column-oriented", "PostgreSQL compatible"],
+
+    "load_time": 1080,
+    "data_size": 42000000000,
+
+    "result": [
+    	
+    ]
+}
