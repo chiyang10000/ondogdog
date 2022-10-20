@@ -44,6 +44,9 @@ jobs:
           - 4.9.4.0
 
           # - 5.0.0.0
+        benchmark:
+          - tpc-h
+          - clickbench
 
     runs-on: ${{ matrix.platform }}
 
@@ -137,6 +140,7 @@ jobs:
         psql -d postgres -c 'create database hawq_feature_test_db;'
 
     - name: test HAWQ TPC-H schema
+      if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         psql -d postgres -f sql/tpc-h-schema.sql 
@@ -148,14 +152,17 @@ jobs:
         psql -d postgres -f sql/tpc-h.analyze.sql
 
     - name: test HAWQ TPC-H load
+      if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         psql -d postgres -af sql/init_tpchschema.load.sql
 
     - name: test HAWQ TPC-H analyze
+      if: ${{ matrix.benchmark == 'tpc-h' }}
       run: psql -af sql/tpc-h.analyze.sql
 
     - name: test HAWQ TPC-H execute
+      if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         psql -d postgres -v ON_ERROR_STOP=1 -af sql/tpc-h.sql
