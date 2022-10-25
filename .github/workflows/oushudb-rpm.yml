@@ -39,13 +39,13 @@ jobs:
           # - 4.3.0.0
           # - 4.4.0.0
 
-          - 4.5.2.0
-          - 4.6.1.0
-          - 4.7.0.0
-          - 4.8.0.2
+          # - 4.5.2.0
+          # - 4.6.1.0
+          # - 4.7.0.0
+          # - 4.8.0.2
           - 4.9.4.0
 
-          # - 5.0.0.0
+          - 5.0.0.0
         benchmark:
           - tpc-h
           - clickbench
@@ -121,6 +121,13 @@ jobs:
       run: |
         sudo ln -snf oushudb-${{ matrix.version }} /usr/local/hawq
         sudo ln -snf oushudb-${{ matrix.version }} /usr/local/oushudb
+        if [[ -d /usr/local/oushu/oushudb ]]; then # in case of 5.0
+          sudo ln -snf /usr/local/oushu/oushudb /usr/local/hawq
+          sudo ln -snf /usr/local/oushu/oushudb /usr/local/oushudb
+          sudo ln -snf /usr/local/hawq/oushudb_path.sh /usr/local/hawq/greenplum_path.sh
+          sudo chown -R $USER:$USER /usr/local/oushu/
+          echo 'export GPHOME=$OUSHUDB_HOME' >>/usr/local/hawq/oushudb_path.sh
+        fi
         sudo chown -R $USER:$USER /usr/local/oushudb/
 
         ls -ltr /usr/local
