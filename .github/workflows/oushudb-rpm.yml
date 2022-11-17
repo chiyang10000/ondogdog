@@ -18,8 +18,60 @@ jobs:
       if: ${{ steps.cache-hdfs-tar.outputs.cache-hit != 'true' }}
       run: wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
 
+
+  Cache-ClickBench-Hits-Data:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cache ClickBench tar
+      id: cache-clickbench-tar
+      uses: actions/cache@v3
+      with:
+        key: clickbench-10M
+        path: hits.tsv
+
+    - name: Download ClickBench tar
+      if: ${{ steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
+      run: |
+        curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
+          gunzip  | head -n 10000000 > hits.tsv # 10M tuple
+
+  ClickBench-ClickHouse:
+    needs: Cache-ClickBench-Hits-Data
+    runs-on: ubuntu-20.04 # ${{ matrix.platform }}
+    steps:
+    - name: repo
+      run: |
+        mkdir ~/dev/
+        git clone https://github.com/ClickHouse/ClickBench/ ~/dev/ClickBench
+
+    - name: Cache ClickBench tar
+      id: cache-clickbench-tar
+      uses: actions/cache@v3
+      with:
+        key: clickbench-10M
+        path: hits.tsv
+
+    - name: ClickHouse
+      run: |
+        mv hits.tsv ~/dev/ClickBench/clickhouse
+        cd ~/dev/ClickBench/clickhouse
+        ./benchmark.sh
+
+    - name: parse out
+      run: |
+        cd ~/dev/ClickBench/clickhouse
+        mkdir $GITHUB_WORKSPACE/clickbench
+        awk -F, '{print "Time:", $3*1000, "ms"} ' result.csv >$GITHUB_WORKSPACE/clickbench/clickhouse-21.4-38324.x86.out
+
+    - name: archive results
+      uses: actions/upload-artifact@v3
+      with:
+        name: results
+        path: |
+          clickbench/*.out
+
   Install-and-Test:
-    needs: Cache-Binary
+    needs: [Cache-Binary, Cache-ClickBench-Hits-Data]
     defaults:
       run:
         shell: bash -e -l {0}
@@ -60,7 +112,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: initilize OS
       run: |
@@ -232,7 +284,7 @@ jobs:
         ./run.sh > $GITHUB_WORKSPACE/clickbench/$RPM_NAME.out
 
     - name: archive results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: results
         path: |
@@ -240,10 +292,10 @@ jobs:
           clickbench/${{ env.RPM_NAME }}.out
 
   analyze:
-    needs: [Install-and-Test]
+    needs: [Install-and-Test, ClickBench-ClickHouse]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v3
@@ -258,12 +310,17 @@ jobs:
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
         cp ~/dev/ClickBench/index.html ./
 
+    - name: ClickBench html
+      run: |
+        rm -rf ~/dev/ClickBench/*/results
+
+        cp $GITHUB_WORKSPACE/results/clickhouse* $GITHUB_WORKSPACE/results/clickbench # FIXME: ugly hack artifact
         cd $GITHUB_WORKSPACE/results/clickbench
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
         cp ~/dev/ClickBench/index.html ./
 
     - name: archive results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: results
         path: results
