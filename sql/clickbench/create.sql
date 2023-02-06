@@ -116,3 +116,6 @@ drop external table if exists hits_ext;
 CREATE EXTERNAL TABLE hits_ext (like hits)
 LOCATION ('gpfdist://localhost:8080/hits.tsv')
 FORMAT 'TEXT';
+
+explain analyze SELECT COUNT(*) FROM hits; -- smoke test QD-PQD-QE
+

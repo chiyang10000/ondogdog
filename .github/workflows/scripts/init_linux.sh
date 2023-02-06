@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+df -h
+free -h
+lscpu
+
 
 
 # Setup passphraseless ssh

@@ -55,6 +55,9 @@ jobs:
       run: |
         mv hits.tsv ~/dev/ClickBench/clickhouse
         cd ~/dev/ClickBench/clickhouse
+        sed -i 's/wget/wget -nv /' benchmark.sh
+        sed -i 's/wget.*hits/# /' benchmark.sh
+        sed -i 's/gzip.*hits/# /' benchmark.sh
         ./benchmark.sh
 
     - name: parse out
@@ -101,9 +104,11 @@ jobs:
           - 4.6.1.0
           - 4.7.0.0
           - 4.8.0.2
-          - 4.9.4.0
+          - 4.9.5.0
 
-          - 5.0.0.0
+          # release candidate
+          - 4.9.6.0
+          - 5.1.0.0
         benchmark:
           - tpc-h
           - clickbench
@@ -254,7 +259,7 @@ jobs:
         path: hits.tsv
 
     - name: Download ClickBench tar
-      if: ${{ steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
+      if: ${{ matrix.benchmark == 'clickbench' && steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
       run: |
         curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
           gunzip  | head -n 10000000 > hits.tsv # 10M tuple
@@ -275,7 +280,7 @@ jobs:
         source /usr/local/oushudb/greenplum_path.sh
         psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;'
         psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;'
-        psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
+        # psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
         
         # psql -f <(echo '\timing on'; cat sql/clickbench/queries.sql;) |
         #  tee clickbench/$RPM_NAME.out |
