@@ -4,7 +4,11 @@ import sys
 import xml.etree.ElementTree as et
 import os.path
 
-config_files = ['/usr/local/hawq/etc/hawq-site.xml', '/usr/local/hawq/etc/magma-site.xml']
+config_files = ['/usr/local/hawq/etc/hawq-site.xml',
+                '/usr/local/hawq/etc/magma-site.xml',
+                '/usr/local/oushu/conf/oushudb/oushudb-site.xml',
+                '/usr/local/oushu/conf/oushudb/magma-site.xml',
+                ]
 
 if __name__ == '__main__':
     #assert (len(sys.argv) <= 3)
@@ -35,4 +39,5 @@ if __name__ == '__main__':
                 value_node.text = value
             else:
                 value_node.text = value
+            # print('UPDATE {}={} {}'.format(name, value, config_file))
             tree.write(config_file)

@@ -43,9 +43,10 @@ sed -E \
   -e "s/(Total runtime.*)/${GREEN}\\1${CLEAR}/" \
   -e "s/(New.*)/${CYAN}\\1${CLEAR}/" \
   -e "s/(slice[0-9]+)/${MAGENTA}\\1${CLEAR}/" \
+  -e "s/(operatorMem=[0-9]+KB)/${CYAN}\\1${CLEAR}/" \
   -e "" /tmp/psql_pager.in.txt >/tmp/pager.txt
 
-sed -E </tmp/pager.txt
+cat /tmp/pager.txt
 
 # ending of code block quote
 # grep hyphen from QUERY PLAN output
