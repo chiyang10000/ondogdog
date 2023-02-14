@@ -22,7 +22,8 @@ file_list=`git diff ${start_sha} --name-only`
 for file in $file_list
 do
   [[ -f $file ]] || continue
+  [[ $file =~ \.(h|c|cc|cpp) ]] || continue
   git blame $file |
-    grep -E "^${git_sha_pattern}" |
-    sed -E "s|[0-9a-z]+.*\([^)]* ([0-9]+)\)(.*)|$file:\1\2|"
+    sed -n -E "s#^${git_sha_pattern}.*\([^)]* ([0-9]+)\)(.*)#$file:\2\3#p"
+    # grep -E "^${git_sha_pattern}" |
 done
