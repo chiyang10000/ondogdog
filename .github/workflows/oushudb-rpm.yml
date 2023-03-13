@@ -33,16 +33,26 @@ jobs:
       if: ${{ steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
       run: |
         curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
-          gunzip  | head -n 10000000 > hits.tsv # 10M tuple
+          gunzip  | head -n 10000000 > hits.tsv
+        # 10M tuple is the nearest size to run out of available disk space on GitHub Action
+        # 1/10 of the full size
 
   ClickBench-ClickHouse:
     needs: Cache-ClickBench-Hits-Data
+    strategy:
+      fail-fast: false
+      matrix:
+        dbms:
+          - StarRocks
+          - ClickHouse
+
     runs-on: ubuntu-20.04 # ${{ matrix.platform }}
     steps:
     - name: repo
       run: |
         mkdir ~/dev/
         git clone https://github.com/ClickHouse/ClickBench/ ~/dev/ClickBench
+        mkdir $GITHUB_WORKSPACE/clickbench
 
     - name: Cache ClickBench tar
       id: cache-clickbench-tar
@@ -51,7 +61,20 @@ jobs:
         key: clickbench-10M
         path: hits.tsv
 
+    - name: StarRocks
+      if: ${{ matrix.dbms == 'StarRocks' }}
+      run: |
+        mv hits.tsv ~/dev/ClickBench/starrocks
+        cd ~/dev/ClickBench/starrocks
+        sed -i 's/wget/wget -nv /' benchmark.sh
+        sed -i 's/wget.*hits/# /' benchmark.sh
+        sed -i 's/gzip.*hits/# /' benchmark.sh
+        sed -i 's/.*java.*/# /' benchmark.sh
+        ./benchmark.sh
+        awk -F, '{print "Time:", $2*1000, "ms"} {print "Time:", $3*1000, "ms"} {print "Time:", $4*1000, "ms"}' run.log >$GITHUB_WORKSPACE/clickbench/starrocks-3.0-14122.x86.out
+
     - name: ClickHouse
+      if: ${{ matrix.dbms == 'ClickHouse' }}
       run: |
         mv hits.tsv ~/dev/ClickBench/clickhouse
         cd ~/dev/ClickBench/clickhouse
@@ -59,11 +82,6 @@ jobs:
         sed -i 's/wget.*hits/# /' benchmark.sh
         sed -i 's/gzip.*hits/# /' benchmark.sh
         ./benchmark.sh
-
-    - name: parse out
-      run: |
-        cd ~/dev/ClickBench/clickhouse
-        mkdir $GITHUB_WORKSPACE/clickbench
         awk -F, '{print "Time:", $3*1000, "ms"} ' result.csv >$GITHUB_WORKSPACE/clickbench/clickhouse-21.4-38324.x86.out
 
     - name: archive results
@@ -258,12 +276,6 @@ jobs:
         key: clickbench-10M
         path: hits.tsv
 
-    - name: Download ClickBench tar
-      if: ${{ matrix.benchmark == 'clickbench' && steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
-      run: |
-        curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
-          gunzip  | head -n 10000000 > hits.tsv # 10M tuple
-
     - name: test ClickBench schema
       if: ${{ matrix.benchmark == 'clickbench' }}
       run: |
@@ -319,9 +331,12 @@ jobs:
       run: |
         rm -rf ~/dev/ClickBench/*/results
 
+        cp $GITHUB_WORKSPACE/results/starrocks* $GITHUB_WORKSPACE/results/clickbench # FIXME: ugly hack artifact
         cp $GITHUB_WORKSPACE/results/clickhouse* $GITHUB_WORKSPACE/results/clickbench # FIXME: ugly hack artifact
         cd $GITHUB_WORKSPACE/results/clickbench
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
+        sed -i 's|curr_timing.toFixed(2)|curr_timing.toFixed(3)|' ~/dev/ClickBench/index.html
+        sed -i 's|×${ratio.toFixed(2)}|×${ratio == 1 ? "🚩" : ratio.toFixed(2)}|' ~/dev/ClickBench/index.html
         cp ~/dev/ClickBench/index.html ./
 
     - name: archive results

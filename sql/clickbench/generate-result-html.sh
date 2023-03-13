@@ -17,7 +17,7 @@ fi
 
 for out_file in `ls *.out`; do
   ls $out_file
-  db_name=$(sed -E 's/((hawq|oushudb|clickhouse).*)-[0-9]+.x86.*/\1/' <<<$out_file)
+  db_name=$(sed -E 's/(([^-]*).*)-[0-9]+.x86.*/\1/' <<<$out_file)
   
   output_dir=~/dev/ClickBench/$db_name
   output_json=${output_dir}/results/result.json
