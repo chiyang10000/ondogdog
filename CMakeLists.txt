@@ -4,6 +4,7 @@ PROJECT(OushuDB)
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "yzy_time")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+## set(CMAKE_CXX_COMPILER_LAUNCHER ccache) # XXX: ok?
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fdiagnostics-color=always)
@@ -41,6 +42,7 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-common/src/magma/commo
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/hornet/magma-server/src/magma)
 add_subdirectory(hornet)
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet-new/coroutine/CMakeLists.txt)
+    add_dependencies(interconnect-shared coroutine-shared)
     add_dependencies(magma-server-shared coroutine-shared)
 endif()
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/hornet/external-catalog/CMakeLists.txt)

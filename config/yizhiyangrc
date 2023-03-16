@@ -2,11 +2,11 @@
 export PKG_PATH="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
 
 # Deprecated in new version
-export hawq_config_hawq_magma_locations_master=file:///opt/db_data/hawq-data-directory/magma_catalog
-export hawq_config_hawq_magma_locations_segment=file:///opt/db_data/hawq-data-directory/magma_data
+export hawq_config_hawq_magma_locations_master=file://${HOME}/db_data/hawq-data-directory/magma_catalog
+export hawq_config_hawq_magma_locations_segment=file://${HOME}/db_data/hawq-data-directory/magma_data
 
-export hawq_config_hawq_master_directory=/opt/db_data/hawq-data-directory/masterdd
-export hawq_config_hawq_segment_directory=/opt/db_data/hawq-data-directory/segmentdd
+export hawq_config_hawq_master_directory=${HOME}/db_data/hawq-data-directory/masterdd
+export hawq_config_hawq_segment_directory=${HOME}/db_data/hawq-data-directory/segmentdd
 export hawq_config_gp_vmem_idle_resource_timeout=3600000
 
 export hawq_config_hawq_init_with_magma=false
@@ -28,3 +28,14 @@ export hawq_config_optimizer=off
 export hawq_config_enable_master_auto_ha=off
 export hawq_config_log_components=none
 export hawq_config_max_jump_hash_map_num=16
+
+export hawq_config_autocompact_launcher_numbers=1
+export hawq_config_autocompact_s3cleaner_numbers=1
+
+export hawq_config_gp_enable_explain_allstat=on
+export hawq_config_gp_resqueue_print_operator_memory_limits=on
+
+export hawq_config_new_executor_config='explain_analyze_verbose:true'
+export hawq_config_new_executor_enable_proxy_dispatcher=on
+export hawq_config_new_executor_elastic_dop_per_segment=1
+

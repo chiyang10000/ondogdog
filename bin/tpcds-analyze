@@ -10,8 +10,9 @@ file_base=$HOME/dev/hawq/src/test/feature/tpcds/sql/query/${scale}g/stream_1/str
 #search_path="magmaap_hash_notpartition_none_none_notpk_numeric_${scale}g"
 
 if psql -d tpcds -c 'select gp_opt_version();'; then
-  log_warning 'TPC-DS analyze start...'
+  :
 else
+  log_error 'psql connect error'
   exit 1
 fi
 
@@ -27,6 +28,9 @@ option_base+="set new_executor=auto;"
 # option_base+="set optimizer=on;" # disable orca
 # option="${option}set enable_groupagg=off;set gp_enable_fallback_plan=off;"
 # option="${option}set gp_enable_agg_distinct=off;set gp_enable_sort_distinct = off;"
+echo "$option_base"
+log_warning 'TPC-DS analyze start...'
+
 
 # Check NewQE planner support
 echo -e '\033[1mNO\tTime/ms\tStatus\tOperator TBD\tExpression TBD\033[0m'
@@ -37,7 +41,7 @@ for query_idx in $query_set; do
   option+="set client_min_messages=debug1;"
 
   printf "\033[32m${query_idx}\033[0m\t"
-  ts_start=$(date +%s%3N)
+  ts_start=$(date +%s%3N) # macOS unsupport %3N
   output=$(psql -d tpcds -v ON_ERROR_STOP=1 -P pager=off -v EXPLAIN_ANALYZE="${option}EXPLAIN" -af "$file" 2>&1) || echo "$output"
   ts_end=$(date +%s%3N)
   planner_time=$((ts_end - ts_start))
@@ -55,12 +59,12 @@ for query_idx in $query_set; do
     mode="\033[31mOFF\033[0m"
     operator=$(echo "${output}" |
       grep 'not support plan ' |
-      sed 's|.* not support plan node of {\([^ ]\+\).*}|\1|' |
+      sed -E 's|.* not support plan node of \{([^ ]+).*\}|\1|' |
       cut -c 1-40 | tr '\n' ' ' | xargs echo)
 
     expression=$(echo "${output}" |
       grep 'not support expression ' |
-      sed 's|.* not support expression of {\([^ ]\+\).*}|\1|' |
+      sed -E 's|.* not support expression of \{([^ ]+).*\}|\1|' |
       cut -c 1-40 | tr '\n' ' ' | xargs echo)
   fi
 
@@ -75,6 +79,8 @@ done
 log_success "Unsupported $off_counter"
 
 # Compare ORC/Parquet old QE
+temp_dir=/tmp/tpc-ds-analyze/
+mkdir -p ${temp_dir}
 for query_idx in $query_set; do
   file="$file_base/query${query_idx}_rept1.sql"
   log_warning "Running $query_idx ..."
@@ -98,10 +104,10 @@ for query_idx in $query_set; do
   fi
 
   warning "Checking $query_idx ..."
-  echo "$output_parquet" >/tmp/parquet.txt
-  echo "$output_orc_old" >/tmp/orc_old.txt
-  echo "$output_orc_new" >/tmp/orc_new.txt
+  echo "$output_parquet" >${temp_dir}/parquet.${query_idx}.txt
+  echo "$output_orc_old" >${temp_dir}/orc_old.${query_idx}.txt
+  echo "$output_orc_new" >${temp_dir}/orc_new.${query_idx}.txt
   # hawq_analyze.py /tmp/parquet.txt /tmp/orc_old.txt
-  hawq_analyze.py /tmp/orc_old.txt /tmp/orc_new.txt
+  hawq_analyze.py ${temp_dir}/orc_old.${query_idx}.txt ${temp_dir}/orc_new.${query_idx}.txt
   echo
 done
