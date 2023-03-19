@@ -59,7 +59,7 @@ HAWQ_SRC=~/dev/hawq
 HORNET_SRC=~/dev/hornet
 hornet_src_dir=~/dev/hornet/
 hornet_cov_dir=~/dev/coverage/hornet/
-export MAKEFLAGS=-j$((yzy_NPROC/3+1))
+export MAKEFLAGS=-j$((yzy_NPROC-1))
 
 export PGDATABASE=postgres
 
@@ -318,6 +318,12 @@ hawq-clean() {
   fi
   set +x
 }
+oushudb-clean() {
+  hawq-stop
+  magma-stop
+  hawq-clean
+  magma-clean
+}
 magma-init() {
   hawq sql -c "drop database hawq_feature_test_db;"
   hawq-setup-feature-test
@@ -378,9 +384,9 @@ hawq-init() { (
   set +ex
 ); }
 hawq-stop() {
-  sudo pkill -9 -u $USER 'pg_ctl|postgres|gpfdist|feature-test|-unit' || true
-  sudo pkill -9 -u $USER hawq_ctl || true
-  sudo pkill -9 -u $USER cacheserver || true
+  pkill -9 -u $USER 'pg_ctl|postgres|gpfdist|feature-test|-unit' || true
+  pkill -9 -u $USER hawq_ctl || true
+  pkill -9 -u $USER cacheserver || true
   rm -f "$(hawq-config hawq_master_directory)/postmaster.pid"
   rm -f "$(hawq-config hawq_segment_directory)/postmaster.pid"
   rm -f /tmp/.s.PGSQL.*.lock
@@ -422,6 +428,13 @@ hawq-restart() {
     psql -ac "ALTER VCLUSTER vc_default with (magma_hash_table_nvseg_perseg=$val);"
   fi
 }
+oushudb-stop() {
+  oushudb stop cluster -a --with_magma -M immediate
+  rm -f /tmp/magma-client.*socket
+}
+oushudb-restart() {
+  oushudb restart cluster -a --with_magma -M immediate
+}
 hawq-setup-feature-test() {
   TEST_DB_NAME="hawq_feature_test_db"
   source /usr/local/hawq/greenplum_path.sh
@@ -462,7 +475,7 @@ hawq-test-list() {
   $ftest --gtest_list_tests | awk '$1 ~ /\./ {kk=$1; print kk}; $1 !~ /\./  {print "  " kk $1}'
 
   echo
-  check $ftest
+  check $ftest --gtest_list_tests
 }
 hawq-test() {
   checkout-hawq-test || return 1
@@ -470,16 +483,26 @@ hawq-test() {
   export PGDATABASE=$TEST_DB_NAME
   if [ -n "$1" ]; then
     bash -c "
+    source /usr/local/oushu/oushudb/oushudb_path.sh ||
     source /usr/local/hawq/greenplum_path.sh
     $ftest --gtest_filter=$1-*TestS3*"
   else
     bash -c "
+    source /usr/local/oushu/oushudb/oushudb_path.sh ||
     source /usr/local/hawq/greenplum_path.sh
-    $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*"
+
+    python \
+      $(dirname $ftest)/gtest-parallel \
+      --workers=$yzy_NPROC \
+      --output_dir=/tmp/oushudb-test-ll \
+      $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*:*Hudi* \
+             --gtest_color=yes $gtest_output
+    # $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*"
   fi
 
   # export PGDATABASE=postgres
 }
+
 hawq-distclean() {
   (cd ~/dev/hawq/ &&
    make distclean && ./configure --enable-orca && make skip-orca-build
