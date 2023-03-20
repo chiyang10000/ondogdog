@@ -45,6 +45,7 @@ jobs:
         dbms:
           - StarRocks
           - ClickHouse
+          - Databend
 
     runs-on: ubuntu-20.04 # ${{ matrix.platform }}
     steps:
@@ -83,6 +84,18 @@ jobs:
         sed -i 's/gzip.*hits/# /' benchmark.sh
         ./benchmark.sh
         awk -F, '{print "Time:", $3*1000, "ms"} ' result.csv >$GITHUB_WORKSPACE/clickbench/clickhouse-21.4-38324.x86.out
+
+    - name: Databend
+      if: ${{ matrix.dbms == 'Databend' }}
+      run: |
+        mv hits.tsv ~/dev/ClickBench/databend
+        cd ~/dev/ClickBench/databend
+        sed -i 's/wget/wget -nv /' benchmark.sh
+        sed -i 's/wget.*hits/# /' benchmark.sh
+        sed -i 's/gzip.*hits/# /' benchmark.sh
+        sed -i '/databend-query/ asleep 10' benchmark.sh
+        ./benchmark.sh
+        awk -F, '{print "Time:", $3*1000, "ms"} ' result.csv >$GITHUB_WORKSPACE/clickbench/databend-0.9-4546.x86.out
 
     - name: archive results
       uses: actions/upload-artifact@v3
@@ -269,7 +282,7 @@ jobs:
           sed -n 's/Time://p' | awk '{print NR, $0}'
 
     - name: Cache ClickBench tar
-      if: ${{ matrix.benchmark == 'clickbench' }}
+      if: ${{ matrix.benchmark == 'clickbench' && matrix.version >= '4.9' }}
       id: cache-clickbench-tar
       uses: actions/cache@v3
       with:
@@ -277,7 +290,7 @@ jobs:
         path: hits.tsv
 
     - name: test ClickBench schema
-      if: ${{ matrix.benchmark == 'clickbench' }}
+      if: ${{ matrix.benchmark == 'clickbench' && matrix.version >= '4.9' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         nohup gpfdist -l gpfdist.log &
@@ -287,7 +300,7 @@ jobs:
         psql -c "select pg_size_pretty(pg_relation_size('hits'));"
 
     - name: test ClickBench execute
-      if: ${{ matrix.benchmark == 'clickbench' }}
+      if: ${{ matrix.benchmark == 'clickbench' && matrix.version >= '4.9' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;'
@@ -331,8 +344,7 @@ jobs:
       run: |
         rm -rf ~/dev/ClickBench/*/results
 
-        cp $GITHUB_WORKSPACE/results/starrocks* $GITHUB_WORKSPACE/results/clickbench # FIXME: ugly hack artifact
-        cp $GITHUB_WORKSPACE/results/clickhouse* $GITHUB_WORKSPACE/results/clickbench # FIXME: ugly hack artifact
+        cp $GITHUB_WORKSPACE/results/*.out $GITHUB_WORKSPACE/results/clickbench # FIXME: ugly hack artifact
         cd $GITHUB_WORKSPACE/results/clickbench
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
         sed -i 's|curr_timing.toFixed(2)|curr_timing.toFixed(3)|' ~/dev/ClickBench/index.html
