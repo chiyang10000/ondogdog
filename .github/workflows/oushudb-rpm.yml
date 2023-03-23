@@ -312,6 +312,7 @@ jobs:
         #  sed -n 's/Time://p' | awk '{print NR, $0}'
         cd sql/clickbench
         ./run.sh > $GITHUB_WORKSPACE/clickbench/$RPM_NAME.out
+        psql -af <(sed 's/SELECT/explain analyze select/' $GITHUB_WORKSPACE/sql/clickbench/queries.sql) >$GITHUB_WORKSPACE/clickbench/$RPM_NAME.out.explain.analyze
 
     - name: archive results
       uses: actions/upload-artifact@v3
@@ -319,7 +320,7 @@ jobs:
         name: results
         path: |
           tpc-h/${{ env.RPM_NAME }}.out
-          clickbench/${{ env.RPM_NAME }}.out
+          clickbench/${{ env.RPM_NAME }}.out*
 
   analyze:
     needs: [Install-and-Test, ClickBench-ClickHouse]
