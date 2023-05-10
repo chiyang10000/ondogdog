@@ -156,6 +156,7 @@ vsc:
 magma_topology_EOF
 
   sed -i "s/localhost/$master_host/g" magma-client.xml
+  sed -i 's|</configuration>|<property><name>default_tablespace</name><value>magma_default</value></property> </configuration>|g' /usr/local/oushu/conf/oushudb/oushudb-site.xml
 
   oushudb init cluster -a --with_magma
 else
