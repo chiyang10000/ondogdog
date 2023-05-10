@@ -135,11 +135,12 @@ jobs:
           - 4.6.1.0
           - 4.7.0.0
           - 4.8.0.2
-          - 4.9.5.0
+          - 4.9.6.0
+          - 5.1.3.0
 
           # release candidate
-          - 4.9.6.0
-          - 5.1.0.0
+          - 5.2.0.0
+
         benchmark:
           - tpc-h
           - clickbench
@@ -194,7 +195,7 @@ jobs:
         # check out the RPM URL
         for RPM_REPO_PREFIX in "${RPM_REPO_PREFIX_LIST[@]}"; do
           export RPM_REPO=$RPM_REPO_PREFIX/$RPM_VER/release/
-          export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="((hawq|oushudb)-[0-9][^"]*)".*/\1/p')
+          export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="((hawq|oushudb)-[0-9][^"]*rpm)".*/\1/p')
           if test -n "$RPM_NAME"; then
             break;
           fi
