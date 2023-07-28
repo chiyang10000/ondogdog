@@ -109,12 +109,12 @@ CREATE TABLE hits
 )
 -- with (appendoptimized=true,orientation=column,compresstype=zstd)
 -- DISTRIBUTED RANDOMLY;
--- with (appendonly=true, orientation=orc, compresstype=lz4, dicthreshold=0.8)
+with (appendonly=true, orientation=orc, compresstype=lz4, dicthreshold=0.8)
 distributed by (CounterID, EventDate, UserID, EventTime, WatchID);
 -- CREATE INDEX hits_idx on hits using btree (CounterID, EventDate, UserID, EventTime, WatchID); 
 drop external table if exists hits_ext;
 CREATE EXTERNAL TABLE hits_ext (like hits)
-LOCATION ('gpfdist://localhost:8080/hits.tsv')
+LOCATION ('gpfdist://localhost:8080/hits.tsv.gz')
 FORMAT 'TEXT';
 
 explain analyze SELECT COUNT(*) FROM hits; -- smoke test QD-PQD-QE

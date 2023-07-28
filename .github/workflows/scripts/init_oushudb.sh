@@ -76,6 +76,10 @@ tee $GPHOME/etc/hawq-site.xml << EOF
         <value>appendonly</value>
         <description>default table format when creating table </description>
     </property>
+        <property>
+                <name>default_hash_table_bucket_number</name>
+                <value>4</value>
+        </property>
 
         <property>
                 <name>max_jump_hash_map_num</name>
@@ -156,7 +160,6 @@ vsc:
 magma_topology_EOF
 
   sed -i "s/localhost/$master_host/g" magma-client.xml
-  sed -i 's|</configuration>|<property><name>default_tablespace</name><value>magma_default</value></property> </configuration>|g' /usr/local/oushu/conf/oushudb/oushudb-site.xml
 
   oushudb init cluster -a --with_magma
 else

@@ -13,11 +13,11 @@ jobs:
       with:
         key: hadoop-3.3.0
         path: hadoop-3.3.0.tar.gz
+        lookup-only: true
 
     - name: Download HDFS tar
       if: ${{ steps.cache-hdfs-tar.outputs.cache-hit != 'true' }}
       run: wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
-
 
   Cache-ClickBench-Hits-Data:
     runs-on: ubuntu-latest
@@ -26,14 +26,31 @@ jobs:
       id: cache-clickbench-tar
       uses: actions/cache@v3
       with:
-        key: clickbench-10M
+        key: clickbench_10M_row
         path: hits.tsv
+        lookup-only: true
 
     - name: Download ClickBench tar
       if: ${{ steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
       run: |
         curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
           gunzip  | head -n 10000000 > hits.tsv
+        # 10M tuple is the nearest size to run out of available disk space on GitHub Action
+        # 1/10 of the full size
+
+    - name: Cache ClickBench gz
+      id: cache-clickbench-gz
+      uses: actions/cache@v3
+      with:
+        key: clickbench_10M_row_gz
+        path: hits.tsv.gz
+        lookup-only: true
+
+    - name: Download ClickBench gz
+      if: ${{ steps.cache-clickbench-gz.outputs.cache-hit != 'true' }}
+      run: |
+        curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
+          gunzip  | head -n 10000000 | gzip --stdout >hits.tsv.gz
         # 10M tuple is the nearest size to run out of available disk space on GitHub Action
         # 1/10 of the full size
 
@@ -59,7 +76,7 @@ jobs:
       id: cache-clickbench-tar
       uses: actions/cache@v3
       with:
-        key: clickbench-10M
+        key: clickbench_10M_row
         path: hits.tsv
 
     - name: StarRocks
@@ -96,6 +113,12 @@ jobs:
         sed -i '/databend-query/ asleep 10' benchmark.sh
         ./benchmark.sh
         awk -F, '{print "Time:", $3*1000, "ms"} ' result.csv >$GITHUB_WORKSPACE/clickbench/databend-0.9-4546.x86.out
+
+    - name: check storage size
+      run: |
+        free -h
+        df -h
+        lscpu
 
     - name: archive results
       uses: actions/upload-artifact@v3
@@ -137,15 +160,18 @@ jobs:
           - 4.8.0.2
           - 4.9.6.0
           - 5.1.3.0
+          - 5.2.1.0
 
           # release candidate
-          - 5.2.0.0
+          - 5.3.0.0
 
         benchmark:
           - tpc-h
           - clickbench
 
     runs-on: ubuntu-20.04 # ${{ matrix.platform }}
+    # if: ${{ matrix.benchmark != 'clickbench' || matrix.version >= '4.9' }}
+    # GitHub is unable to checkout the value of matrix in job.if
 
     steps:
 
@@ -287,14 +313,16 @@ jobs:
       id: cache-clickbench-tar
       uses: actions/cache@v3
       with:
-        key: clickbench-10M
-        path: hits.tsv
+        key: clickbench_10M_row_gz
+        path: hits.tsv.gz
+        fail-on-cache-miss: true
 
     - name: test ClickBench schema
       if: ${{ matrix.benchmark == 'clickbench' && matrix.version >= '4.9' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         nohup gpfdist -l gpfdist.log &
+        # gzip hits.tsv
         mkdir clickbench/
         psql -f sql/clickbench/create.sql
         psql -c "insert into hits select * from hits_ext order by CounterID, EventDate, UserID, EventTime, WatchID;"
