@@ -505,7 +505,7 @@ hawq-test() {
 
 hawq-distclean() {
   (cd ~/dev/hawq/ &&
-   make distclean && ./configure --enable-orca && make skip-orca-build
+   make distclean && ./configure --enable-orca --with-python && make skip-orca-build
   )
 }
 
