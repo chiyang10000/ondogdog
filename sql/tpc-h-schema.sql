@@ -1,6 +1,6 @@
 \set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8)
 \set storage_spec with (appendonly=true, orientation=orc, compresstype=none, dicthreshold=0.8)
-\set storage_spec
+\set storage_spec 
 \set char_type "char"
 \set char_type CHAR
 \set decimal_type FLOAT

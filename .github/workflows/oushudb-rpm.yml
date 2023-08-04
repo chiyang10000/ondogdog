@@ -110,7 +110,7 @@ jobs:
         sed -i 's/wget/wget -nv /' benchmark.sh
         sed -i 's/wget.*hits/# /' benchmark.sh
         sed -i 's/gzip.*hits/# /' benchmark.sh
-        sed -i '/databend-query/ asleep 10' benchmark.sh
+        sed -i '/databend-query/ asleep 30' benchmark.sh
         ./benchmark.sh
         awk -F, '{print "Time:", $3*1000, "ms"} ' result.csv >$GITHUB_WORKSPACE/clickbench/databend-0.9-4546.x86.out
 
@@ -295,7 +295,7 @@ jobs:
       if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
-        psql -d postgres -af sql/init_tpchschema.load.sql
+        psql -d postgres -af sql/tpc-h.load.sql
 
     - name: test HAWQ TPC-H analyze
       if: ${{ matrix.benchmark == 'tpc-h' }}

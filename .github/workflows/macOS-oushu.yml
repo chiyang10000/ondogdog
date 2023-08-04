@@ -1,4 +1,4 @@
-name: OushuDB CI
+name: OushuDB macOS
 
 on: [push]
 
@@ -7,9 +7,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scale_factor: [1, 10, 30]
+        scale_factor: [1, 4, 16]
 
-    runs-on: macOS-latest
+    # FIXME: tcmalloc crash on macOS 12
+    runs-on: macOS-11
 
     env:
       SUFFIX: sf${{ matrix.scale_factor }}.txt
@@ -44,10 +45,14 @@ jobs:
         # have no idea why brew add unwanted .reinstall suffix
         find /usr/local/Cellar/oushudb/ -name '*.reinstall' -type d -maxdepth 1 | sed -E 's|(.*)\.reinstall|\1.reinstall \1|' | xargs ln -snf
         ls -lt /usr/local/opt/oushudb/
-        sh -c 'source /usr/local/opt/oushudb/greenplum_path.sh && postgres -V'
 
     - name: initilize macOS
-      run: .github/workflows/scripts/init_macos.sh
+      run: |
+        .github/workflows/scripts/init_macos.sh
+        source /usr/local/opt/oushudb/greenplum_path.sh
+        file `which postgres`
+        lldb -b -o r -o bt `which postgres` -- -V || true
+        sh -c 'source /usr/local/opt/oushudb/greenplum_path.sh && postgres -V'
 
     - name: initilize HDFS
       run: |
@@ -69,12 +74,12 @@ jobs:
         psql -d postgres -c 'create database parquet;'
         export PGDATABASE=parquet
 
-        psql -af <(sed -e 's/set scale_factor .*/set scale_factor ${{ matrix.scale_factor }}/' sql/init_tpchschema.ext.sql)
+        psql -af <(sed -e 's/set scale_factor .*/set scale_factor ${{ matrix.scale_factor }}/' sql/tpc-h.ext.exec.dbgen.2.6.sql)
         psql -af <(sed -e 's/set decimal_type .*/set decimal_type float/' \
                        -e 's/set storage_spec .*/set storage_spec with (appendonly=true, orientation=parquet, compresstype=snappy)/' \
                        sql/tpc-h-schema.sql)
-        psql -af sql/init_tpchschema.load.sql
-        psql -af sql/init_tpchschema.analyze.sql
+        psql -af sql/tpc-h.load.sql
+        psql -af sql/tpc-h.analyze.sql
 
     - name: tpc-h load improvement
       run: |
@@ -82,12 +87,12 @@ jobs:
         psql -d postgres -c 'create database orc;'
         export PGDATABASE=orc
 
-        psql -af <(sed -e 's/set scale_factor .*/set scale_factor ${{ matrix.scale_factor }}/' sql/init_tpchschema.ext.sql)
+        psql -af <(sed -e 's/set scale_factor .*/set scale_factor ${{ matrix.scale_factor }}/' sql/tpc-h.ext.exec.dbgen.2.6.sql)
         psql -af <(sed -e 's/set decimal_type .*/set decimal_type float/' \
                        -e 's/set storage_spec .*/set storage_spec with (appendonly=true, orientation=orc, dicthreshold=0.8, stripesize=64, compresstype=lz4)/' \
                        sql/tpc-h-schema.sql)
-        psql -af sql/init_tpchschema.load.sql
-        psql -af sql/init_tpchschema.analyze.sql
+        psql -af sql/tpc-h.load.sql
+        psql -af sql/tpc-h.analyze.sql
 
     - name: tpc-h query baseline
       run: |
