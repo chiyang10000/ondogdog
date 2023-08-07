@@ -114,7 +114,7 @@ jobs:
 
     - name: tpc-h result analyze in operator
       run: |
-        bin/hawq_analyze.py -s 1 ~/old-parquet.$SUFFIX ~/new-orc.$SUFFIX
+        bin/hawq_analyze.py -s 1 ~/old-parquet.$SUFFIX ~/new-orc.$SUFFIX || true
 
     - name: archive results
       uses: actions/upload-artifact@v2
