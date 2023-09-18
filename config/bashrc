@@ -448,6 +448,7 @@ hawq-setup-feature-test() {
   alter database $TEST_DB_NAME set timezone_abbreviations to 'Default';
   alter database $TEST_DB_NAME set timezone to 'PST8PDT';
   alter database $TEST_DB_NAME set datestyle to 'postgres,MDY';
+  alter database $TEST_DB_NAME set default_numeric_unconstrained_storage to 'NUMERIC';
 EOF
 }
 checkout-hawq-test() {
@@ -495,7 +496,7 @@ hawq-test() {
       $(dirname $ftest)/gtest-parallel \
       --workers=$yzy_NPROC \
       --output_dir=/tmp/oushudb-test-ll \
-      $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*:*Hudi* \
+      $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*:*Hudi*:*ObjectStoragePerfUtil \
              --gtest_color=yes $gtest_output
     # $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*"
   fi
@@ -505,7 +506,10 @@ hawq-test() {
 
 hawq-distclean() {
   (cd ~/dev/hawq/ &&
-   make distclean && ./configure --enable-orca --with-python && make skip-orca-build
+   make distclean && ./configure --enable-orca --with-python && make skip-orca-build)
+  return
+  (cd ~/dev/hawq/ &&
+   CPPFLAGS="$CPPFLAGS -DMEMORY_CONTEXT_CHECKING" make distclean && ./configure --enable-orca --with-address-sanitize --enable-cassert --with-python && make skip-orca-build
   )
 }
 

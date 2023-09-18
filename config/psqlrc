@@ -13,5 +13,6 @@
 \set PROMPT2 '    '
 \set PROMPT2 '%[%033[45m%]    %[%033[0m%]% '
 
+\conninfo
 \echo '\033[33mSkip above startup settings via psql -X.\033[0m'
 
