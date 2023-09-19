@@ -215,13 +215,13 @@ jobs:
         export RPM_VER=${{ matrix.version }}
         RPM_REPO_PREFIX_LIST=(http://yum.oushu.com/oushurepo/yumrepo/release/oushu-database/centos6/
                               http://yum.oushu.com/oushurepo/yumrepo/release/oushu-database/centos7/
-                              http://139.217.102.138:12000/oushurepo/yumrepo/test/oushu-database/centos6/
+                              http://82.157.61.64:12000/oushurepo/yumrepo/test/oushu-database/centos6/
                              )
 
         # check out the RPM URL
         for RPM_REPO_PREFIX in "${RPM_REPO_PREFIX_LIST[@]}"; do
           export RPM_REPO=$RPM_REPO_PREFIX/$RPM_VER/release/
-          export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="((hawq|oushudb)-[0-9][^"]*rpm)".*/\1/p')
+          export RPM_NAME=$(curl -s $RPM_REPO/ | sed -E -n 's/.*href="((hawq|oushudb)(UserBuild)?-[0-9][^"]*rpm)".*/\1/p')
           if test -n "$RPM_NAME"; then
             break;
           fi
