@@ -1,0 +1,10 @@
+name: 'OnDogDog Actions Collection'
+description: ''
+author: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Aha
+      shell: bash
+      run: echo haha
+

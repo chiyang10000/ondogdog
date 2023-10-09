@@ -13,3 +13,5 @@ jobs:
       - name: install
         run: |
           ./install.sh
+
+      - uses: chiyang10000/ondogdog@test

@@ -1,6 +1,10 @@
 name: OushuDB RPM
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+  pull_request:
 
 jobs:
   Cache-Binary:
