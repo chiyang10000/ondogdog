@@ -1,0 +1,119 @@
+version: '3'
+
+services:
+  magma:
+    image: oushu-image
+    build:
+      context: ./
+      dockerfile: Dockerfile 
+    volumes:
+      - ./conf:/home/oushu/conf
+      - ./start_magma.sh:/home/oushu/start.sh
+      - ./oushuhostfile:/home/oushu/oushuhostfile
+    networks:
+      oushu_net1:
+        ipv4_address: 172.25.0.7
+    privileged: true
+    entrypoint: /home/oushu/start.sh
+    healthcheck:
+      test: source /usr/local/oushu/oushudb/oushudb_path.sh && test $(magma status | grep "healthy. healthy" | wc -l) -eq 2 || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 1s
+  hdfs:
+    image: oushu-image
+    volumes:
+      - ./conf:/home/oushu/conf
+      - ./start_hdfs.sh:/home/oushu/start.sh
+      - ./oushuhostfile:/home/oushu/oushuhostfile
+    entrypoint: /home/oushu/start.sh
+    networks:
+      oushu_net1:
+        ipv4_address: 172.25.0.6
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  main:
+    image: oushu-image
+    volumes:
+      - ./conf:/home/oushu/conf
+      - ./start_main.sh:/home/oushu/start.sh
+      - ./oushuhostfile:/home/oushu/oushuhostfile
+      - /opt/cmake-3.12.4-Linux-x86_64:/opt/cmake
+      - /opt/clang+llvm-8.0.1-x86_64-linux-sles11.3:/opt/clang
+      - /opt/dependency-clang-x86_64-Linux:/opt/dependency-clang-x86_64-Linux
+      - /opt/oushudb:/home/oushu/oushudb
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    cap_add:
+      - SYS_PTRACE
+    privileged: true
+    entrypoint: /home/oushu/start.sh
+    networks:
+      oushu_net1:
+        ipv4_address: 172.25.0.5
+    healthcheck:
+      test: source /usr/local/oushu/oushudb/oushudb_path.sh && test $(psql -d postgres -t -c "select * from oushu_cluster_status where status='u';" | wc -l) -gt 4 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 1s
+  segment1:
+    image: oushu-image
+    volumes:
+      - ./conf:/home/oushu/conf
+      - ./start_segment.sh:/home/oushu/start.sh
+      - ./oushuhostfile:/home/oushu/oushuhostfile
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    cap_add:
+      - SYS_PTRACE
+    privileged: true
+    entrypoint: /home/oushu/start.sh
+    networks:
+      oushu_net1:
+        ipv4_address: 172.25.0.4
+  segment2:
+    image: oushu-image
+    volumes:
+      - ./conf:/home/oushu/conf
+      - ./start_segment.sh:/home/oushu/start.sh
+      - ./oushuhostfile:/home/oushu/oushuhostfile
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    cap_add:
+      - SYS_PTRACE
+    privileged: true
+    entrypoint: /home/oushu/start.sh
+    networks:
+      oushu_net1:
+        ipv4_address: 172.25.0.3
+  segment3:
+    image: oushu-image
+    volumes:
+      - ./conf:/home/oushu/conf
+      - ./start_segment.sh:/home/oushu/start.sh
+      - ./oushuhostfile:/home/oushu/oushuhostfile
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    cap_add:
+      - SYS_PTRACE
+    privileged: true
+    entrypoint: /home/oushu/start.sh
+    networks:
+      oushu_net1:
+        ipv4_address: 172.25.0.2
+
+networks:
+  oushu_net1:
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

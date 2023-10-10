@@ -1,0 +1,77 @@
+name: test-oushudb-docker-compose
+on:
+  push:
+    paths:
+      - '.github/workflows/*docker-compose*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: cache dependency
+        id: cache-dependency
+        uses: actions/cache@v3
+        with:
+          key: cache-dependency
+          path: |
+            contrib/hawq-docker/oushudb-docker/hadoop-3.3.1.tar.gz
+            contrib/hawq-docker/oushudb-docker/oushudb-5.2.1.0-86028.x86_64.rpm
+
+      - name: dld
+        if: ${{steps.cache-dependency.outputs.cache-hit != 'true'}}
+        run: |
+          cd docker/oushudb
+          curl -sOL http://yum.oushu.com/oushurepo/yumrepo/release/oushu-database/centos6/5.2.1.0/release/oushudb-5.2.1.0-86028.x86_64.rpm
+          curl -sOL https://archive.apache.org/dist/hadoop/common/hadoop-3.3.1/hadoop-3.3.1.tar.gz
+
+      - name: build
+        run: |
+          cd docker/oushudb
+          docker compose build
+
+      - name: up
+        run: |
+          cd docker/oushudb
+          docker compose up -d
+      - name: check
+        timeout-minutes: 5
+        run: |
+          cd docker/oushudb
+          docker compose exec -it main bash -lc "while ! test \$(psql -d postgres -t -c \"select * from oushu_cluster_status where status='u';\" | wc -l) -gt 4 2> /dev/null; do sleep 1; done;"
+          docker compose exec -it main bash -lc "psql -d postgres -t -c \"select * from oushu_cluster_status where status='u';\""
+          docker compose exec -it main bash -lc "psql -d postgres -t -c \"alter database postgres set default_numeric_unconstrained_storage to 'NUMERIC';\""
+          docker compose exec -it hdfs bash -lc "while ! test \$(hdfs dfsadmin -report | grep \"Live datanodes (1)\" | wc -l) -gt 0 2> /dev/null; do sleep 1; done;"
+          docker compose exec -it hdfs bash -lc "hdfs dfsadmin -report"
+      - name: execute
+        run: |
+          cd docker/oushudb
+          echo $?
+
+      - name: stop
+        run: |
+          cd docker/oushudb
+          docker compose stop
+      - name: restart
+        run: |
+          cd docker/oushudb
+          docker compose restart
+      - name: check2
+        timeout-minutes: 5
+        run: |
+          cd docker/oushudb
+          docker compose exec -it main bash -lc "while ! test \$(psql -d postgres -t -c \"select * from oushu_cluster_status where status='u';\" | wc -l) -gt 4 2> /dev/null; do sleep 1; done;"
+          docker compose exec -it main bash -lc "psql -d postgres -t -c \"select * from oushu_cluster_status where status='u';\""
+          docker compose exec -it main bash -lc "psql -d postgres -t -c \"alter database postgres set default_numeric_unconstrained_storage to 'NUMERIC';\""
+          docker compose exec -it hdfs bash -lc "while ! test \$(hdfs dfsadmin -report | grep \"Live datanodes (1)\" | wc -l) -gt 0 2> /dev/null; do sleep 1; done;"
+          docker compose exec -it hdfs bash -lc "hdfs dfsadmin -report"
+          sleep 10
+
+      - name: execute2
+        run: |
+          cd docker/oushudb
+          echo $?
+      - name: ps
+        run: |
+          cd docker/oushudb
+          docker compose ps

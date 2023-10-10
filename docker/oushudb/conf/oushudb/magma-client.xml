@@ -1,0 +1,19 @@
+<configuration>
+
+  <property>
+    <name>nameservices</name>
+    <value>oushu_magma</value>
+  </property>
+
+  <property>
+    <name>oushu_magma</name>
+    <value>magma_node1</value>
+  </property>
+
+  <property>
+    <name>oushu_magma.magma_node1</name>
+    <value>magma:6666</value>
+  </property>
+
+</configuration>
+

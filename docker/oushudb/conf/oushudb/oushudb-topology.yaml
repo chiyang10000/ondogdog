@@ -1,0 +1,31 @@
+nodes:
+  - id: m[001]
+    addr: main
+    label: { region: "regionA", zone: "zoneA"}
+  - id: m[002]
+    addr: segment1
+    label: { region: "regionA", zone: "zoneA"}
+  - id: m[003]
+    addr: segment2
+    label: { region: "regionA", zone: "zoneA"}
+  - id: m[004]
+    addr: segment3
+    label: { region: "regionA", zone: "zoneA"}
+  - id: m[005]
+    addr: hdfs
+    label: { region: "regionA", zone: "zoneA"} 
+  - id: m[006]
+    addr: magma
+    label: { region: "regionA", zone: "zoneA"}
+
+vc:
+  - name: mains
+    vci:
+      - nodes: m[001]
+  - name: vc_default
+    hash_table_bucket_number: 12
+    magma_hash_table_nvseg_perseg: 4
+    max_nvseg_perquery_perseg: 4
+    vci:
+      - name: vci1
+        nodes: m[002-004]

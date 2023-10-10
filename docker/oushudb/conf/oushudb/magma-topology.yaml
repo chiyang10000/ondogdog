@@ -1,0 +1,23 @@
+nodes:
+  - id: m1
+    addr: magma
+    label: { region: "regionA", zone: "zoneA"}
+
+vsc:
+  - name: vsc_catalog
+    nodes: m1
+    port: 6666
+    num_ranges: 1
+    num_replicas: 1
+    data_dir: /tmp/db_data/hawq-data-directory/magma_master
+    replica_locations: "regionA.zoneA:1"
+    leader_preferences: "regionA.zoneA"
+
+  - name: vsc_default
+    nodes: m1
+    port: 6676
+    num_ranges: 4
+    num_replicas: 1
+    data_dir: /tmp/db_data/hawq-data-directory/magma_segment
+    replica_locations: "regionA.zoneA:1"
+    leader_preferences: "regionA.zoneA"
