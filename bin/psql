@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export PAGER=pager_psql
+exec /usr/local/oushu/oushudb/bin/psql "$@"

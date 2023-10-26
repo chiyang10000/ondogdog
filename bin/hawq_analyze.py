@@ -40,7 +40,7 @@ def op_name(operator):
         op = (operator_pattern.search(op).group())
     op = op.replace(' ', '')
     if 'SubqueryScan' in op:
-     op = 'SubqueryScan'
+        op = 'SubqueryScan'
 
     # if 'Workfile:' in operator and '0 spilling' not in operator:
     #     op = 'Spill' + op
@@ -130,7 +130,7 @@ class PlanCheckerHtmlParser(HTMLParser):
 
     def handle_data(self, data):
         # skip first two line of header
-        if 'New Executor' in data:
+        if 'New' in data:
             self.new_executor = True
         if self.tr <= 2:
             return
@@ -200,7 +200,7 @@ def split(file, suffix=''):
     ret = []
     input_stream = open(file, 'r')
     plan_matcher = re.compile(r'QUERY PLAN')
-    mark_matcher = re.compile(r'Time: [0-9.]+ ms')
+    mark_matcher = re.compile(r'Time: [0-9.]+ ms|\([0-9]+ rows\)')
 
     count = 1
     is_plan = False
@@ -296,8 +296,42 @@ def compare(old_file, new_file):
             operator, time, new_op_counter[operator]))
 
 
+class Node:
+    child_node = []
+    is_part_of_init_plan: bool
+    slice_no: int
+    op_no: int  # unique no in the whole query(including sub-plan)
+    indent: int  # for checking parent-child relation in parsing
+    name: str = ''
+
+    def __str__(self):
+        return " " * self.indent + "{} {}".format(self.op_no, self.name)
+
+
+def dev_local_parse(file_path):
+    input_stream = open(file_path, 'r')
+    indent_stack = list()
+    node_list = list()
+    node_stack = list()  # of
+    for line in input_stream:
+        if str(line).find('->') >= 0:
+            indent_curr = (str(line).find('->') + 3) // 6
+            check_init_plan = (str(line).find('->') + 3) - indent_curr * 6
+            print(indent_curr, 'INIT' if check_init_plan > 0 else '')  # TODO: add support
+            print(line.rstrip())
+
+            node = Node()
+            node.op_no = len(node_list)
+            node.indent = indent_curr
+            node.name = op_name(line)
+            node_list.append(node)
+
+    for node in node_list:
+        print(node)
+
+
 def analyze(path):
-    assert (os.path.isdir(path) or os.path.isfile(path))
+    assert (os.path.isdir(path) or os.path.isfile(path) or str(path).startswith('/dev/fd'))
 
     query_num_matcher = re.compile(r'query([0-9]+)')
     tpch_query_num_matcher = re.compile(r'tpch_?([0-9]+)')
@@ -324,6 +358,7 @@ def analyze(path):
             query_idx += 1
             if os.path.isfile(path): query_num = str(query_idx)
             query_counter = parse_group_by_operator(query_num, single_query_file)
+            # dev_local_parse(single_query_file)  # TODO: dev
             tot_counter.update(query_counter)
 
     # Print group by tot_counter
@@ -334,9 +369,9 @@ def analyze(path):
     tot_time = sum(map(lambda x: x[1], tot_counter.items()))
     print('Total {}'.format(tot_time))
 
-    print(' {:>6} {:>30} {:>10}'.format('Ratio', 'Operator', 'Time'))
+    print(' {:>6}\t{:>10}\t{:>30}'.format('Ratio', 'Time','Operator'))
     for operator, time in sorted(tot_counter.items(), key=lambda x: x[1]):
-        print('{:>6.2f}% {:>30} {:>10.2f}'.format(100.0 * time / tot_time, operator, time))
+        print('{:>6.2f}%\t{:>10.2f}\t{:<}'.format(100.0 * time / tot_time, time, operator))
 
     if args.verbose_io:
         tot_io = sum(map(lambda x: x[1], io_counter.items()))

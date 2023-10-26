@@ -14,7 +14,7 @@ if [ $system == Linux ]; then
     source ~/dev/hornet-opensource/thirdparty/toolchain-gcc-$(uname -m)-Linux.sh
   }
   yzy_CORE_DIR=$(dirname $(/sbin/sysctl -n kernel.core_pattern))
-  yzy_NPROC=$(nproc)
+  yzy_NPROC=$(( $(nproc) / 2 + 1 ))
 fi
 if [ $system == Darwin ]; then
   alias ldd='otool -L'
@@ -398,6 +398,8 @@ hawq-stop() {
   ps -eo pid,command | grep -E '^ *[0-9]+ [^ ]*gpfdist' | awk '{print $1}' | xargs sudo kill -9
 }
 hawq-restart() {
+  # rm -rf /usr/local/oushu/log/oushudb/master/*
+  # rm -rf /usr/local/oushu/log/oushudb/segment/*
   if [ "$#" -eq 1 ]; then
     local val=$1
     echo "set QE num to $1"
@@ -473,7 +475,7 @@ checkout-hawq-test() {
 }
 hawq-test-list() {
   checkout-hawq-test || return 1
-  $ftest --gtest_list_tests | awk '$1 ~ /\./ {kk=$1; print kk}; $1 !~ /\./  {print "  " kk $1}'
+  $ftest --gtest_list_tests | awk '$1 ~ /\./ {kk=$1; print "\033[33m" kk "\033[0m"}; $1 !~ /\./  {print "  " kk $1}'
 
   echo
   check $ftest --gtest_list_tests
@@ -496,7 +498,7 @@ hawq-test() {
       $(dirname $ftest)/gtest-parallel \
       --workers=$yzy_NPROC \
       --output_dir=/tmp/oushudb-test-ll \
-      $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*:*Hudi*:*ObjectStoragePerfUtil \
+      $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*:*ObjectStoragePerfUtil \
              --gtest_color=yes $gtest_output
     # $ftest --gtest_filter=TestNewExec*:-*MagmaTP*:*MagmaAP*:*TestS3*"
   fi

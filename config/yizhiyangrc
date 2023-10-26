@@ -16,10 +16,12 @@ export hawq_config_node_data_directory=${hawq_config_hawq_magma_locations_segmen
 # export hawq_config_hawq_init_with_magma=true
 export hawq_config_gp_max_plan_slice=120
 export hawq_config_gp_autostats_mode=ON_NO_STATS
+export hawq_config_autostat_disabled=off
+export hawq_config_autostat_on_no_stat=on
 export hawq_config_hawq_s3_config=/usr/local/hawq/credentials
 # export hawq_config_hawq_s3_config=/usr/local/hawq/fake
 # export hawq_config_hawq_s3_config=none
-export hawq_config_new_interconnect_type=TCP
+export hawq_config_new_interconnect_type=UDP
 export hawq_config_gp_interconnect_type=UDP
 
 export hawq_config_hawq_segment_temp_directory=/tmp/hawq_segment_temp/
@@ -36,6 +38,12 @@ export hawq_config_gp_enable_explain_allstat=on
 export hawq_config_gp_resqueue_print_operator_memory_limits=on
 
 export hawq_config_new_executor_config='explain_analyze_verbose:true'
-export hawq_config_new_executor_enable_proxy_dispatcher=on
-export hawq_config_new_executor_elastic_dop_per_segment=1
+export hawq_config_new_executor_enable_proxy_dispatcher=off
+export hawq_config_new_executor_elastic_dop_per_segment=0
+export hawq_config_new_executor_enable_self_tuning=on
+export hawq_config_enable_result_cache=off
+# export hawq_config_oushu_trace_level=summary
+
+export hawq_config_cache_read_protocols=hdfs
+export hawq_config_cache_skip_local=off
 

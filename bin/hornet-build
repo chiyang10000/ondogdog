@@ -32,10 +32,11 @@ if [[ $WITH_HORNET_EXECUTOR_ONLY == yes ]]; then
   touch /opt/dependency/package/include/storage/cwrapper/magma-format-c.h
   exit 0
 fi
-make install -C $cmake_dir/hornet-new/ || true
-make install -C $cmake_dir/hornet-new/morsel_executor || true
+# make install -C $cmake_dir/hornet-new/ || true
 make install -C $cmake_dir/hornet-opensource/
 make install -C $cmake_dir/hornet/
-make install -C $cmake_dir/hornet/external-catalog  # XXX: backward-compatibility
+make install -C $cmake_dir/hornet-new/morsel_executor || true
+# XXX: backward-compatibility
+make install -C $cmake_dir/hornet/external-catalog
 cp /opt/dependency/package/bin/* /usr/local/oushu/oushudb/bin/
 ls -lhtr --color /opt/dependency/package/lib/

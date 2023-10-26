@@ -18,9 +18,9 @@ cat <&0 >/tmp/psql_pager.in.txt
 
 is_query_plan=$(grep 'QUERY PLAN' /tmp/psql_pager.in.txt)
 if [[ -n ${is_query_plan} ]]; then
-  echo '```SQL QUERY PLAN'   > /tmp/psql_pager.out.txt
+  echo "${GREEN}\`\`\`SQL QUERY PLAN${CLEAR}"   > /tmp/psql_pager.out.txt
   cat /tmp/psql_pager.in.txt >>/tmp/psql_pager.out.txt
-  echo '```'                 >>/tmp/psql_pager.out.txt
+  echo "${GREEN}\`\`\`${CLEAR}"                 >>/tmp/psql_pager.out.txt
   cat /tmp/psql_pager.out.txt >/tmp/psql_pager.in.txt
 fi
 
@@ -34,15 +34,16 @@ echo
 # 1. quote and indent
 # 2. modify the line under tuple header to generate mardown table
 
+# -e "s/^/${GREEN}   > ${CLEAR}/" \
 sed -E \
-  -e "s/^/${GREEN}   > ${CLEAR}/" \
   -e "s/(-+)\\+/\\1|/g" \
   -e "s/(InputStream.*)/${UNDERLINE}\\1${CLEAR}/" \
   -e "s/(.+ statistics|Settings)/${CYAN}\\1${CLEAR}/" \
   -e "s/([A-Za-z]+ statistics)/${CYAN}\\1${CLEAR}/" \
   -e "s/(Total runtime.*)/${GREEN}\\1${CLEAR}/" \
-  -e "s/(New.*)/${CYAN}\\1${CLEAR}/" \
+  -e "s/(New.*mode)/${CYAN}\\1${CLEAR}/" \
   -e "s/(slice[0-9]+)/${MAGENTA}\\1${CLEAR}/" \
+  -e "s/(EXPERIMENTAL)/${MAGENTA}\\1${CLEAR}/" \
   -e "s/(operatorMem=[0-9]+KB)/${CYAN}\\1${CLEAR}/" \
   -e "" /tmp/psql_pager.in.txt >/tmp/pager.txt
 

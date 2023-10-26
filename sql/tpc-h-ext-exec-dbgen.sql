@@ -1,5 +1,5 @@
 \set seg_num 4
-\set scale_factor 1
+\set scale_factor 10
 \set ON_ERROR_STOP 1
 
 -- TPC-H V2.6 -- FIXME
@@ -39,9 +39,9 @@ DROP EXTERNAL WEB TABLE IF EXISTS e_lineitem;
 
 CREATE EXTERNAL WEB TABLE e_nation (
     N_NATIONKEY INTEGER,
-    N_NAME CHAR(25),
+    N_NAME TEXT,
     N_REGIONKEY INTEGER,
-    N_COMMENT VARCHAR(152) )
+    N_COMMENT TEXT )
     execute
         'rm -f nation.tbl; mkfifo nation.tbl;'
             '($GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -q -T n -s ':'scale_factor''&);'
@@ -50,8 +50,8 @@ CREATE EXTERNAL WEB TABLE e_nation (
 
 CREATE external web TABLE e_REGION (
     R_REGIONKEY INTEGER,
-    R_NAME CHAR(25),
-    R_COMMENT VARCHAR(152) )
+    R_NAME TEXT,
+    R_COMMENT TEXT )
     execute
         'rm -f region.tbl; mkfifo region.tbl;'
             '($GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T r -s ':'scale_factor''&);'
@@ -60,14 +60,14 @@ CREATE external web TABLE e_REGION (
 
 CREATE external web TABLE e_PART (
     P_PARTKEY INTEGER,
-    P_NAME VARCHAR(55),
-    P_MFGR CHAR(25),
-    P_BRAND CHAR(10),
-    P_TYPE VARCHAR(25),
+    P_NAME TEXT,
+    P_MFGR TEXT,
+    P_BRAND TEXT,
+    P_TYPE TEXT,
     P_SIZE INTEGER,
-    P_CONTAINER CHAR(10),
+    P_CONTAINER TEXT,
     P_RETAILPRICE FLOAT,
-    P_COMMENT VARCHAR(23) )
+    P_COMMENT TEXT )
     execute
         'rm -f part.tbl.$((GP_SEGMENT_ID + 1)); mkfifo part.tbl.$((GP_SEGMENT_ID + 1));'
             '($GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T P -s ':'scale_factor'' -C ':'seg_num'' -S $((GP_SEGMENT_ID + 1)) &);'
@@ -76,12 +76,12 @@ CREATE external web TABLE e_PART (
 
 CREATE external web TABLE e_SUPPLIER (
     S_SUPPKEY INTEGER,
-    S_NAME CHAR(25),
-    S_ADDRESS VARCHAR(40),
+    S_NAME TEXT,
+    S_ADDRESS TEXT,
     S_NATIONKEY INTEGER,
-    S_PHONE CHAR(15),
+    S_PHONE TEXT,
     S_ACCTBAL FLOAT,
-    S_COMMENT VARCHAR(101) )
+    S_COMMENT TEXT )
     execute
         'rm -f supplier.tbl.$((GP_SEGMENT_ID + 1)); mkfifo supplier.tbl.$((GP_SEGMENT_ID + 1));'
             '($GPHOME/bin/dbgen -q -b $GPHOME/bin/dists.dss -T s -s ':'scale_factor'' -C ':'seg_num'' -S $((GP_SEGMENT_ID + 1)) &);'
@@ -93,7 +93,7 @@ CREATE external web TABLE e_PARTSUPP (
     PS_SUPPKEY INTEGER,
     PS_AVAILQTY INTEGER,
     PS_SUPPLYCOST FLOAT,
-    PS_COMMENT VARCHAR(199) )
+    PS_COMMENT TEXT )
     execute
         'rm -f partsupp.tbl.$((GP_SEGMENT_ID + 1)); mkfifo partsupp.tbl.$((GP_SEGMENT_ID + 1));'
             '($GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T S -s ':'scale_factor'' -C ':'seg_num'' -S $((GP_SEGMENT_ID + 1)) &);'
@@ -102,13 +102,13 @@ CREATE external web TABLE e_PARTSUPP (
 
 CREATE external web TABLE e_CUSTOMER (
     C_CUSTKEY INTEGER,
-    C_NAME VARCHAR(25),
-    C_ADDRESS VARCHAR(40),
+    C_NAME TEXT,
+    C_ADDRESS TEXT,
     C_NATIONKEY INTEGER,
-    C_PHONE CHAR(15),
+    C_PHONE TEXT,
     C_ACCTBAL FLOAT,
-    C_MKTSEGMENT CHAR(10),
-    C_COMMENT VARCHAR(117) )
+    C_MKTSEGMENT TEXT,
+    C_COMMENT TEXT )
     execute
         'rm -f customer.tbl.$((GP_SEGMENT_ID + 1)); mkfifo customer.tbl.$((GP_SEGMENT_ID + 1));'
             '(bash -c "$GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T c -s ':'scale_factor'' -C ':'seg_num'' -S $((GP_SEGMENT_ID + 1))" &);'
@@ -118,13 +118,13 @@ CREATE external web TABLE e_CUSTOMER (
 CREATE external web TABLE e_ORDERS (
     O_ORDERKEY INT8 ,
     O_CUSTKEY INTEGER,
-    O_ORDERSTATUS CHAR(1),
+    O_ORDERSTATUS TEXT,
     O_TOTALPRICE FLOAT,
     O_ORDERDATE DATE,
-    O_ORDERPRIORITY CHAR(15),
-    O_CLERK CHAR(15),
+    O_ORDERPRIORITY TEXT,
+    O_CLERK TEXT,
     O_SHIPPRIORITY INTEGER,
-    O_COMMENT VARCHAR(79) )
+    O_COMMENT TEXT )
     execute
         'rm -f orders.tbl.$((GP_SEGMENT_ID + 1)); mkfifo orders.tbl.$((GP_SEGMENT_ID + 1));'
             '(bash -c "$GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T O -s ':'scale_factor'' -C ':'seg_num'' -S $((GP_SEGMENT_ID + 1))" &);'
@@ -140,14 +140,14 @@ CREATE EXTERNAL WEB TABLE E_LINEITEM (
     L_EXTENDEDPRICE FLOAT,
     L_DISCOUNT FLOAT,
     L_TAX FLOAT,
-    L_RETURNFLAG CHAR(1),
-    L_LINESTATUS CHAR(1),
+    L_RETURNFLAG TEXT,
+    L_LINESTATUS TEXT,
     L_SHIPDATE DATE,
     L_COMMITDATE DATE,
     L_RECEIPTDATE DATE,
-    L_SHIPINSTRUCT CHAR(25),
-    L_SHIPMODE CHAR(10),
-    L_COMMENT VARCHAR(44) )
+    L_SHIPINSTRUCT TEXT,
+    L_SHIPMODE TEXT,
+    L_COMMENT TEXT )
     EXECUTE
         'rm -f lineitem.tbl.$((GP_SEGMENT_ID + 1)); mkfifo lineitem.tbl.$((GP_SEGMENT_ID + 1));'
             '(bash -c "$GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T L -s ':'scale_factor'' -C ':'seg_num'' -S $((GP_SEGMENT_ID + 1))" &);'
