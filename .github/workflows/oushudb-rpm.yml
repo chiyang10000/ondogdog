@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/**'
+      - 'sql/**'
   pull_request:
 
 jobs:
@@ -172,7 +173,17 @@ jobs:
 
         benchmark:
           - tpc-h
-          - clickbench
+        include:
+          - benchmark: clickbench
+            version: 4.9.6.0
+          - benchmark: clickbench
+            version: 5.1.3.0
+          - benchmark: clickbench
+            version: 5.2.3.0
+          - benchmark: clickbench
+            version: 5.3.1.0
+          - benchmark: clickbench
+            version: 5.4.0.0
 
     runs-on: ubuntu-20.04 # ${{ matrix.platform }}
     # if: ${{ matrix.benchmark != 'clickbench' || matrix.version >= '4.9' }}
@@ -339,13 +350,15 @@ jobs:
         source /usr/local/oushudb/greenplum_path.sh
         psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;'
         psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;'
+        psql -c 'ALTER DATABASE postgres set new_interconnect_type to tcp;'
+        psql -c 'ALTER DATABASE postgres set new_executor_enable_proxy_dispatcher to on;' || true
         # psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
         
         # psql -f <(echo '\timing on'; cat sql/clickbench/queries.sql;) |
         #  tee clickbench/$RPM_NAME.out |
         #  sed -n 's/Time://p' | awk '{print NR, $0}'
         cd sql/clickbench
-        ./run.sh > $GITHUB_WORKSPACE/clickbench/$RPM_NAME.out
+        ./run.sh | tee $GITHUB_WORKSPACE/clickbench/$RPM_NAME.out
         psql -af <(sed 's/SELECT/explain analyze select/' $GITHUB_WORKSPACE/sql/clickbench/queries.sql) >$GITHUB_WORKSPACE/clickbench/$RPM_NAME.out.explain.analyze
 
     - name: archive results
