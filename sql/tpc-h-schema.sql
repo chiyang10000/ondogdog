@@ -1,5 +1,4 @@
 \set storage_spec with (appendonly=true, orientation=orc, compresstype=none, dicthreshold=0.8)
-\set storage_spec 
 
 -- a combo <=2048MB for SF=10
 \set storage_spec with (appendonly=true, orientation=orc, compresstype=zlib, dicthreshold=0.8)
@@ -7,6 +6,8 @@
 \set flag_status_type "char"
 \set decimal_type DECIMAL(12,2)
 
+\set storage_spec
+\set not_null_constraint 'NOT NULL'
 \set flag_status_type CHAR
 \set decimal_type FLOAT
 
@@ -21,93 +22,93 @@ DROP TABLE IF EXISTS lineitem CASCADE;
 
 CREATE TABLE nation
 (
-    N_NATIONKEY INTEGER,
-    N_NAME      :char_type(25),
-    N_REGIONKEY INTEGER,
-    N_COMMENT   VARCHAR(152)
+    N_NATIONKEY INTEGER        :not_null_constraint,
+    N_NAME      :char_type(25) :not_null_constraint,
+    N_REGIONKEY INTEGER        :not_null_constraint,
+    N_COMMENT   VARCHAR(152)   :not_null_constraint
 ) :storage_spec;
 
 CREATE TABLE region
 (
-    R_REGIONKEY INTEGER,
-    R_NAME      :char_type(25),
-    R_COMMENT   VARCHAR(152)
+    R_REGIONKEY INTEGER        :not_null_constraint,
+    R_NAME      :char_type(25) :not_null_constraint,
+    R_COMMENT   VARCHAR(152)   :not_null_constraint
 ) :storage_spec;
 
 CREATE TABLE part
 (
-    P_PARTKEY     INTEGER,
-    P_NAME        VARCHAR(55),
-    P_MFGR        :char_type(25),
-    P_BRAND       :char_type(10),
-    P_TYPE        VARCHAR(25),
-    P_SIZE        INTEGER,
-    P_CONTAINER   :char_type(10),
-    P_RETAILPRICE :decimal_type,
-    P_COMMENT     VARCHAR(23)
+    P_PARTKEY     INTEGER        :not_null_constraint,
+    P_NAME        VARCHAR(55)    :not_null_constraint,
+    P_MFGR        :char_type(25) :not_null_constraint,
+    P_BRAND       :char_type(10) :not_null_constraint,
+    P_TYPE        VARCHAR(25)    :not_null_constraint,
+    P_SIZE        INTEGER        :not_null_constraint,
+    P_CONTAINER   :char_type(10) :not_null_constraint,
+    P_RETAILPRICE :decimal_type  :not_null_constraint,
+    P_COMMENT     VARCHAR(23)    :not_null_constraint
 ) :storage_spec;
 
 CREATE TABLE supplier
 (
-    S_SUPPKEY   INTEGER,
-    S_NAME      :char_type(25),
-    S_ADDRESS   VARCHAR(40),
-    S_NATIONKEY INTEGER,
-    S_PHONE     :char_type(15),
-    S_ACCTBAL   :decimal_type,
-    S_COMMENT   VARCHAR(101)
+    S_SUPPKEY   INTEGER        :not_null_constraint,
+    S_NAME      :char_type(25) :not_null_constraint,
+    S_ADDRESS   VARCHAR(40)    :not_null_constraint,
+    S_NATIONKEY INTEGER        :not_null_constraint,
+    S_PHONE     :char_type(15) :not_null_constraint,
+    S_ACCTBAL   :decimal_type  :not_null_constraint,
+    S_COMMENT   VARCHAR(101)   :not_null_constraint
 ) :storage_spec;
 
 CREATE TABLE partsupp
 (
-    PS_PARTKEY    INTEGER,
-    PS_SUPPKEY    INTEGER,
-    PS_AVAILQTY   INTEGER,
-    PS_SUPPLYCOST :decimal_type,
-    PS_COMMENT    VARCHAR(199)
+    PS_PARTKEY    INTEGER       :not_null_constraint,
+    PS_SUPPKEY    INTEGER       :not_null_constraint,
+    PS_AVAILQTY   INTEGER       :not_null_constraint,
+    PS_SUPPLYCOST :decimal_type :not_null_constraint,
+    PS_COMMENT    VARCHAR(199)  :not_null_constraint
 ) :storage_spec;
 
 CREATE TABLE customer
 (
-    C_CUSTKEY    INTEGER,
-    C_NAME       VARCHAR(25),
-    C_ADDRESS    VARCHAR(40),
-    C_NATIONKEY  INTEGER,
-    C_PHONE      :char_type(15),
-    C_ACCTBAL    :decimal_type,
-    C_MKTSEGMENT :char_type(10),
-    C_COMMENT    VARCHAR(117)
+    C_CUSTKEY    INTEGER        :not_null_constraint,
+    C_NAME       VARCHAR(25)    :not_null_constraint,
+    C_ADDRESS    VARCHAR(40)    :not_null_constraint,
+    C_NATIONKEY  INTEGER        :not_null_constraint,
+    C_PHONE      :char_type(15) :not_null_constraint,
+    C_ACCTBAL    :decimal_type  :not_null_constraint,
+    C_MKTSEGMENT :char_type(10) :not_null_constraint,
+    C_COMMENT    VARCHAR(117)   :not_null_constraint
 ) :storage_spec;
 
 CREATE TABLE orders
 (
-    O_ORDERKEY      bigint,
-    O_CUSTKEY       INTEGER,
-    O_ORDERSTATUS   :flag_status_type,
-    O_TOTALPRICE    :decimal_type,
-    O_ORDERDATE     DATE,
-    O_ORDERPRIORITy :char_type(15),
-    O_CLERK         :char_type(15),
-    O_SHIPPRIORITY  INTEGER,
-    O_COMMENT       VARCHAR(79)
+    O_ORDERKEY      bigint            :not_null_constraint,
+    O_CUSTKEY       INTEGER           :not_null_constraint,
+    O_ORDERSTATUS   :flag_status_type :not_null_constraint,
+    O_TOTALPRICE    :decimal_type     :not_null_constraint,
+    O_ORDERDATE     DATE              :not_null_constraint,
+    O_ORDERPRIORITy :char_type(15)    :not_null_constraint,
+    O_CLERK         :char_type(15)    :not_null_constraint,
+    O_SHIPPRIORITY  INTEGER           :not_null_constraint,
+    O_COMMENT       VARCHAR(79)       :not_null_constraint
 ) :storage_spec;
 
 CREATE TABLE lineitem
 (
-    L_ORDERKEY      bigint,
-    L_PARTKEY       INTEGER,
-    L_SUPPKEY       INTEGER,
-    L_LINENUMBER    INTEGER,
-    L_QUANTITY      :decimal_type,
-    L_EXTENDEDPRICE :decimal_type,
-    L_DISCOUNT      :decimal_type,
-    L_TAX           :decimal_type,
-    L_RETURNFLAG    :flag_status_type,
-    L_LINESTATUS    :flag_status_type,
-    L_SHIPDATE      DATE,
-    L_COMMITDATE    DATE,
-    L_RECEIPTDATE   DATE,
-    L_SHIPINSTRUCT  :char_type(25),
-    L_SHIPMODE      :char_type(10),
-    L_COMMENT       VARCHAR(44)
+    L_ORDERKEY      bigint            :not_null_constraint,
+    L_PARTKEY       INTEGER           :not_null_constraint,
+    L_SUPPKEY       INTEGER           :not_null_constraint,
+    L_LINENUMBER    INTEGER           :not_null_constraint,
+    L_QUANTITY      :decimal_type     :not_null_constraint,
+    L_EXTENDEDPRICE :decimal_type     :not_null_constraint,
+    L_DISCOUNT      :decimal_type     :not_null_constraint,
+    L_TAX           :decimal_type     :not_null_constraint,
+    L_RETURNFLAG    :flag_status_type :not_null_constraint,
+    L_LINESTATUS    :flag_status_type :not_null_constraint,
+    L_SHIPDATE      DATE              :not_null_constraint,
+    L_COMMITDATE    DATE              :not_null_constraint,
+    L_RECEIPTDATE   DATE              :not_null_constraint,
+    L_SHIPINSTRUCT  :char_type(25)    :not_null_constraint,
+    L_SHIPMODE      :char_type(10)    :not_null_constraint,
+    L_COMMENT       VARCHAR(44)       :not_null_constraint
 ) :storage_spec;
