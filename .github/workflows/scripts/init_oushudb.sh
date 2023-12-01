@@ -8,6 +8,7 @@ test -n "$GPHOME" || test -n "OUSHUDB_HOME"
 if [[ -n $OUSHUDB_HOME ]]; then
   export GPHOME=$OUSHUDB_HOME
   mkdir -p /usr/local/oushu/conf/oushudb
+  mkdir -p /usr/local/oushu/log/oushudb/admin/
   cp -a $GPHOME/conf.empty/* /usr/local/oushu/conf/oushudb/
   ln -snf /usr/local/oushu/conf/oushudb /usr/local/oushu/oushudb/etc
   ln -snf oushudb-site.xml /usr/local/oushu/oushudb/etc/hawq-site.xml
@@ -36,11 +37,11 @@ tee $GPHOME/etc/hawq-site.xml << EOF
     </property>
     <property>
         <name>hawq_master_directory</name>
-        <value>/tmp/db_data/hawq-data-directory/masterdd</value>
+        <value>${HOME}/db_data/hawq-data-directory/masterdd</value>
     </property>
     <property>
         <name>hawq_segment_directory</name>
-        <value>/tmp/db_data/hawq-data-directory/segmentdd</value>
+        <value>${HOME}/db_data/hawq-data-directory/segmentdd</value>
     </property>
     <property>
         <name>hawq_master_temp_directory</name>
@@ -60,11 +61,11 @@ tee $GPHOME/etc/hawq-site.xml << EOF
     </property>
     <property>
         <name>hawq_magma_locations_master</name>
-        <value>file:///tmp/db_data/hawq-data-directory/magma_master</value>
+        <value>file://${HOME}/db_data/hawq-data-directory/magma_master</value>
     </property>
     <property>
         <name>hawq_magma_locations_segment</name>
-        <value>file:///tmp/db_data/hawq-data-directory/magma_segment</value>
+        <value>file://${HOME}/db_data/hawq-data-directory/magma_segment</value>
     </property>
     <property>
         <name>hawq_init_with_hdfs</name>
@@ -97,12 +98,12 @@ tee $GPHOME/etc/hawq-site.xml << EOF
 EOF
 
 # Initialize
-rm -rf /opt/dependency*
-rm -rf /tmp/db_data/hawq-data-directory
-install -d /tmp/db_data/hawq-data-directory/masterdd
-install -d /tmp/db_data/hawq-data-directory/segmentdd
-install -d /tmp/db_data/hawq-data-directory/magma_master
-install -d /tmp/db_data/hawq-data-directory/magma_segment
+# rm -rf /opt/dependency*
+rm -rf ${HOME}/db_data/hawq-data-directory
+install -d ${HOME}/db_data/hawq-data-directory/masterdd
+install -d ${HOME}/db_data/hawq-data-directory/segmentdd
+install -d ${HOME}/db_data/hawq-data-directory/magma_master
+install -d ${HOME}/db_data/hawq-data-directory/magma_segment
 
 export PGDATABASE=postgres
 version=$(hawq version | sed -E 's/.*version (.*)/\1/')
@@ -145,7 +146,7 @@ vsc:
    port: 6666
    num_ranges: 1
    num_replicas: 1
-   data_dir: /tmp/db_data/hawq-data-directory/magma_master
+   data_dir: ${HOME}/db_data/hawq-data-directory/magma_master
    replica_locations: "regionA.zoneA:1"
    leader_preferences: "regionA.zoneA"
 
@@ -154,7 +155,7 @@ vsc:
    port: 6676
    num_ranges: 4
    num_replicas: 1
-   data_dir: /tmp/db_data/hawq-data-directory/magma_segment
+   data_dir: ${HOME}/db_data/hawq-data-directory/magma_segment
    replica_locations: "regionA.zoneA:1"
    leader_preferences: "regionA.zoneA"
 magma_topology_EOF

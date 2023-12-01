@@ -767,7 +767,7 @@ export LS_COLORS="rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 export PROMPT_COMMAND='echo -ne "\033];${PWD##/Users/admin/}\007";'
 
-if [[ -t 0 && -f /var/run/docker.sock ]]; then
+if [[ -t 0 && -e /var/run/docker.sock ]]; then
   saiting-ps
   complete -W "$(saiting-ps | awk '/^exci/{print $1}')" saiting-login
 fi
