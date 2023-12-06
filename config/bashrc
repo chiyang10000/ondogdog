@@ -237,7 +237,7 @@ hdfs-start() {
 #-------------------------------------------------------------------------------
 # alias hawq-config='hawq-config.py'
 hawq-config() {
-  hawq-config.py $@ | uniq
+  hawq-config.py "$@" | uniq
 }
 hawq-config-deprecated() {
   if [[ $# -eq 1 ]]; then
