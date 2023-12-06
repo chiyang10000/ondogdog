@@ -259,7 +259,7 @@ hawq-config-load() {
     name=${name_value%%=*}
     value=${name_value#*=}
     warning "|   hawq-config $name $value"
-    hawq-config $name $value
+    hawq-config "$name" "$value"
   done
   check '+---------------\n'
 }
