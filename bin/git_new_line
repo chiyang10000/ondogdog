@@ -3,16 +3,22 @@ if [[ ! -d ./.git ]]; then
   echo "Current working directory `pwd` is not a git repo"
   exit 1
 fi
-master_branch=${master_branch-master}
+master_branch=$(git remote show origin | awk '/HEAD branch/{printf "origin/"; print $3}')
+if [[ -z $master_branch ]]; then
+  master_branch=$(git symbolic-ref refs/remotes/origin/HEAD)
+fi
+if [[ -z $master_branch ]]; then
+  master_branch=origin/main
+fi
 
-start_sha=`git merge-base origin/$master_branch HEAD`
+start_sha=`git merge-base $master_branch HEAD`
 git_sha_pattern="("
 for sha in `git rev-list ${start_sha}..HEAD^ | cut -c1-7`
 do
   git_sha_pattern="${git_sha_pattern}${sha}|"
 done
 git_sha_pattern="${git_sha_pattern}`git rev-parse HEAD | cut -c1-7`)"
-echo "Commit diveraged from origin/$master_branch: $git_sha_pattern" | sed 's/|/| /g'
+echo "Commit diveraged from $master_branch: $git_sha_pattern" | sed 's/|/| /g'
 
 if [[ $start_sha == `git rev-parse HEAD` ]]; then
   start_sha=HEAD^

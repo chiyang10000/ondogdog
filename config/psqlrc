@@ -1,6 +1,6 @@
 \echo '\033[33mLoading startup settings from ~/.psqlrc.\033[0m'
 
-\timing off
+\timing on
 \pset pager always
 \pset null 'NULL'
 

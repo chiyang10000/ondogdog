@@ -53,6 +53,12 @@ sudo sysctl -p
 # Add data folder
 sudo install -o $USER -d /tmp/db_data/
 
+# RPM BASH for [[ ???
+sudo chsh -s /bin/bash root
+sudo chsh -s /bin/bash
+getent group oushu  || sudo groupadd -r oushu
+getent passwd oushu || sudo /usr/sbin/useradd -M -r -g oushu oushu # XXX: skip RPM %pre error
+
 # check RPM util
 if ! command -v rpm; then
   if command -v apt-get; then

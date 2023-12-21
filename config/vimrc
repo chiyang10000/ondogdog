@@ -12,7 +12,7 @@ set shiftwidth=2
 set expandtab
 set listchars=tab:^I
 color desert
-highlight ColorColumn ctermbg=235 guibg=#2c2d27
+highlight ColorColumn ctermbg=100 guibg=#2c2d27
 let &colorcolumn="72,80,".join(range(120,999),",")
 
 " set clipboard=unnamed

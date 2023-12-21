@@ -109,7 +109,7 @@ CREATE TABLE hits
 )
 -- with (appendoptimized=true,orientation=column,compresstype=zstd)
 -- DISTRIBUTED RANDOMLY;
-with (appendonly=true, orientation=orc, compresstype=lz4, dicthreshold=0.8)
+-- with (appendonly=true, orientation=orc, compresstype=lz4, dicthreshold=0.8)
 distributed by (UserID);
 -- distributed by (CounterID, EventDate, UserID, EventTime, WatchID);
 -- CREATE INDEX hits_idx on hits using btree (CounterID, EventDate, UserID, EventTime, WatchID); 

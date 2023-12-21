@@ -61,7 +61,7 @@ jobs:
         # 10M tuple is the nearest size to run out of available disk space on GitHub Action
         # 1/10 of the full size
 
-  ClickBench-ClickHouse:
+  ClickBench:
     needs: Cache-ClickBench-Hits-Data
     strategy:
       fail-fast: false
@@ -186,10 +186,12 @@ jobs:
             version: 5.3.1.0
           - benchmark: clickbench
             version: 5.4.0.0
+          - benchmark: clickbench
+            version: 6.0.0.0
 
     runs-on: ubuntu-20.04 # ${{ matrix.platform }}
     # if: ${{ matrix.benchmark != 'clickbench' || matrix.version >= '4.9' }}
-    # GitHub is unable to checkout the value of matrix in job.if
+    # GitHub is unable to check out the value of matrix in job.if
 
     steps:
 
@@ -257,12 +259,14 @@ jobs:
       with:
         key: ${{ env.RPM_NAME }}
         # path: ${{ env.RPM_NAME }}
-        path: /usr/local/oushudb-${{ matrix.version }}
+        path: |
+          /usr/local/oushudb-${{ matrix.version }}
+          /usr/local/oushu
 
     - name: Download HAWQ RPM
       if: ${{ steps.cache-hawq-rpm.outputs.cache-hit != 'true' }}
       run: |
-        wget $RPM_REPO/$RPM_NAME
+        wget --progress=dot:giga $RPM_REPO/$RPM_NAME
         sudo rpm -ivh --nodeps $RPM_NAME
 
     - name: install HAWQ
@@ -272,24 +276,35 @@ jobs:
         if [[ -d /usr/local/oushu/oushudb ]]; then # in case of 5.0
           sudo ln -snf /usr/local/oushu/oushudb /usr/local/hawq
           sudo ln -snf /usr/local/oushu/oushudb /usr/local/oushudb
-          sudo ln -snf /usr/local/hawq/oushudb_path.sh /usr/local/hawq/greenplum_path.sh
+          test -f /usr/local/hawq/greenplum_path.sh || sudo ln -snf /usr/local/hawq/oushudb_path.sh /usr/local/hawq/greenplum_path.sh
           sudo chown -R $USER:$USER /usr/local/oushu/
           echo 'export GPHOME=$OUSHUDB_HOME' >>/usr/local/hawq/oushudb_path.sh
         fi
-        sudo chown -R $USER:$USER /usr/local/oushudb/
+        if [[ -d /usr/local/oushu/oushudb-6.0.0.0 ]]; then
+          sudo ln -snf /usr/local/oushu/oushudb-6.0.0.0 /usr/local/oushudb
+          sudo ln -snf /usr/local/oushu/oushudb-6.0.0.0 /usr/local/gpdb
 
-        ls -ltr /usr/local
+          # FIX undefined symbol: pthread_mutex_lock
+          echo 'export LD_PRELOAD=/usr/local/oushu/oushudb-6.0.0.0/lib/libbrpc.so' >>/usr/local/gpdb/greenplum_path.sh
+          echo 'EXPORT_LIB_PATH=". ${GPHOME}/greenplum_path.sh ; $EXPORT_LIB_PATH"' >>/usr/local/gpdb/bin/lib/gp_bash_functions.sh
+        fi
+
+        sudo chown -R $USER:$USER /usr/local/hawq/
+
+        ls -ltr /usr/local/
+        ls -ltr /usr/local/oushudb/
+        ssh localhost 'echo CHECKED ssh localhost'
         source /usr/local/oushudb/greenplum_path.sh
         postgres -V
         echo "PGDATABASE=postgres" >> $GITHUB_ENV
         echo "PGHOST=localhost" >> $GITHUB_ENV
 
-    - name: initilize HDFS
+    - name: initialize HDFS
       run: |
         export HADOOP_HOME=/usr/local/hadoop/
         .github/workflows/scripts/init_hdfs.sh
 
-    - name: initilize HAWQ
+    - name: initialize HAWQ
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         .github/workflows/scripts/init_oushudb.sh
@@ -343,16 +358,16 @@ jobs:
         # gzip hits.tsv
         mkdir clickbench/
         psql -f sql/clickbench/create.sql
-        psql -c "insert into hits select * from hits_ext order by CounterID, EventDate, UserID, EventTime, WatchID;"
+        psql -c "insert into hits select * from hits_ext order by CounterID, EventDate, UserID, EventTime, WatchID;" || true
         psql -c "select pg_size_pretty(pg_relation_size('hits'));"
 
     - name: test ClickBench execute
       if: ${{ matrix.benchmark == 'clickbench' && matrix.version >= '4.9' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
-        psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;'
-        psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;'
-        psql -c 'ALTER DATABASE postgres set new_interconnect_type to tcp;'
+        psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;' || true
+        psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;' || true
+        psql -c 'ALTER DATABASE postgres set new_interconnect_type to tcp;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_enable_proxy_dispatcher to on;' || true
         # psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
         
@@ -372,7 +387,7 @@ jobs:
           clickbench/${{ env.RPM_NAME }}.out*
 
   analyze:
-    needs: [Install-and-Test, ClickBench-ClickHouse]
+    needs: [Install-and-Test, ClickBench]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

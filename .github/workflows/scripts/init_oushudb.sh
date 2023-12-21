@@ -5,6 +5,11 @@ set -ex
 
 # Install
 test -n "$GPHOME" || test -n "OUSHUDB_HOME"
+if [[ $GPHOME =~ 6.0 ]]; then
+  path="$(cd "$(dirname "${BASH_SOURCE[0]-$0}")" && pwd)"
+  $path/init_oushudb6.sh
+  exit
+fi
 if [[ -n $OUSHUDB_HOME ]]; then
   export GPHOME=$OUSHUDB_HOME
   mkdir -p /usr/local/oushu/conf/oushudb

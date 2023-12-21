@@ -49,6 +49,10 @@ segno
 fcinfo
 tupdesc
 
+# Build & Link
+CFLAGS
+CXXFLAGS
+
 # SQL Data type
 varchar
 bpchar
@@ -64,6 +68,7 @@ oushudb
 
 # Data set
 tpch
+clickbench
 
 
 unset

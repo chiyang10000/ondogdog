@@ -1,4 +1,4 @@
-\set hdfs_prefix hdfs://localhost:8020/hawq_default/
+\set hdfs_prefix hdfs://localhost:8020/tpc-h/
 
 \set url :hdfs_prefix/nation
 CREATE EXTERNAL TABLE NATION
