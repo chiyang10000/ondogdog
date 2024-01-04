@@ -21,6 +21,7 @@
 # all the commands in the subshell. [Emphasis added.]
 
 set -e
+source /opt/dependency-Darwin/package/env.sh
 cmake_dir=~/dev/oushudb/cmake-build-${1-debug}
 if [[ $WITH_HORNET_EXECUTOR_ONLY == yes ]]; then
   make executor-shared -C $cmake_dir/
