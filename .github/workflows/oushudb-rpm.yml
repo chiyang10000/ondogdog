@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/**'
       - 'sql/**'
+  schedule:
+    - cron: '0 8 * * *'
   pull_request:
 
 jobs:
