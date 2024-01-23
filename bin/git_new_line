@@ -3,7 +3,7 @@ if [[ ! -d ./.git ]]; then
   echo "Current working directory `pwd` is not a git repo"
   exit 1
 fi
-master_branch=$(git remote show origin | awk '/HEAD branch/{printf "origin/"; print $3}')
+master_branch=$(git remote show origin | awk '/HEAD branch:/{printf "origin/"; print $3}')
 if [[ -z $master_branch ]]; then
   master_branch=$(git symbolic-ref refs/remotes/origin/HEAD)
 fi
