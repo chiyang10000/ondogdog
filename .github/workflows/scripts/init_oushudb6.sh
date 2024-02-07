@@ -19,6 +19,7 @@ ssh ${main_host} 'echo test ssh passphraseless'
 
 
 
+
 # echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
 # main_host=localhost
 # cat /etc/hosts
@@ -26,6 +27,11 @@ ssh ${main_host} 'echo test ssh passphraseless'
 OUSHU_DATA_DIR=$HOME/db_data/oushudb6
 rm -rf ${OUSHU_DATA_DIR}
 mkdir -p ${OUSHU_DATA_DIR}
+
+for segIdx in `seq 1 4`; do
+  SEG_DATA_DIRECTORY="$SEG_DATA_DIRECTORY ${OUSHU_DATA_DIR}/seg"
+done
+echo $SEG_DATA_DIRECTORY
 
 tee >${OUSHU_DATA_DIR}/nodeConfig <<EOF_conf
 # This file must exist in the same directory that you execute gpinitsystem in
@@ -36,6 +42,7 @@ MACHINE_LIST_FILE=${OUSHU_DATA_DIR}/hostfile
 COORDINATOR_HOSTNAME=${main_host}
 COORDINATOR_DIRECTORY=${OUSHU_DATA_DIR}/qddir
 COORDINATOR_PORT=5432
+COORDINATOR_MAX_CONNECT=100
 
 # This names the data directories for the Segment Instances and the Entry Postmaster
 # This is the port at which to contact the resulting Greenplum database, e.g.
@@ -45,7 +52,7 @@ PORT_BASE=7002
 
 # Array of data locations for each hosts Segment Instances, the number of directories in this array will
 # set the number of segment instances per host
-declare -a DATA_DIRECTORY=(${OUSHU_DATA_DIR}/seg)
+declare -a DATA_DIRECTORY=(${SEG_DATA_DIRECTORY})
 EOF_conf
 echo ${main_host} >${OUSHU_DATA_DIR}/hostfile
 
@@ -62,15 +69,16 @@ gpssh -f ${OUSHU_DATA_DIR}/hostfile 'source /usr/local/gpdb/greenplum_path.sh ; 
 
 
 
-pkill -SIGKILL magma_server || true
+pkill -SIGKILL -f magma_server || true
 rm -rf /tmp/magma_catalog /tmp/magma_data
 mkdir -p /tmp/magma_catalog /tmp/magma_data
+mkdir -p ${OUSHU_DATA_DIR}/magma_catalog ${OUSHU_DATA_DIR}/magma_data
 magma start cluster && magma create vscluster
 magma status
 
 
 
-pkill -SIGKILL postgres || true
+pkill -SIGKILL -f postgres || true
 rm -rf /tmp/.s.PGSQL.*.lock ${OUSHU_DATA_DIR}/qddir ${OUSHU_DATA_DIR}/seg
 mkdir -p ${OUSHU_DATA_DIR}/qddir ${OUSHU_DATA_DIR}/seg
 gpinitsystem --locale=C --lc-ctype=C -ac ${OUSHU_DATA_DIR}/nodeConfig
@@ -78,4 +86,21 @@ gpinitsystem --locale=C --lc-ctype=C -ac ${OUSHU_DATA_DIR}/nodeConfig
 
 
 psql -c 'select * from gp_segment_configuration;'
-psql -c 'alter database postgres set default_tablespace = magma_catalog;'
+
+psql -c "create tablespace vsc_default location 'magma://oushu/vsc_default';"
+psql -c "grant all on tablespace vsc_default to public;"
+export COORDINATOR_DATA_DIRECTORY=${OUSHU_DATA_DIR}/qddir/data-1
+gpconfig -c default_tablespace -v vsc_default
+gpconfig -c temp_tablespaces -v vsc_default
+gpconfig --skipvalidation -c timezone -v 'Asia/Shanghai'  # TestType.TestNoStorageDate
+gpconfig -c max_connections -v 128 --masteronly
+oushudb config --skipvalidation -c max_connections -v 128 || true
+gpstop -a && gpstart -a
+
+# psql -c 'alter database postgres set default_tablespace = vsc_default;'
+# psql -c 'alter database postgres set temp_tablespaces = vsc_default;'
+# psql -c 'ALTER database postgres set default_table_access_method = magmaap;'
+
+# psql -c 'alter database postgres set enable_new_executor = on;'
+psql -c 'alter database postgres set gp_enable_explain_allstat = on;'
+psql -c 'create table t as select generate_series(1, 10) k, generate_series(10, 10, -1) v;'

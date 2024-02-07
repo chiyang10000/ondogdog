@@ -8,8 +8,10 @@ grep 'dependency-6.0' /usr/local/gpdb/greenplum_path.sh ||
 export COORDINATOR_DATA_DIRECTORY=$HOME/db_data/oushudb6/qddir/data-1
 ls -ltr $COORDINATOR_DATA_DIRECTORY
 source /usr/local/gpdb/greenplum_path.sh
+pkill -9 -f postgres
 gpstop -a
 gpstart -a
 
-psql -Xxc 'select * from gp_segment_configuration'
-psql
+psql -Xc 'select * from gp_segment_configuration'
+
+osql || psql
