@@ -16,7 +16,7 @@ jobs:
  
     - name: Cache HDFS tar
       id: cache-hdfs-tar
-      uses: actions/cache@v3
+      uses: actions/cache@main
       with:
         key: hadoop-3.3.0
         path: hadoop-3.3.0.tar.gz
@@ -31,7 +31,7 @@ jobs:
     steps:
     - name: Cache ClickBench tar
       id: cache-clickbench-tar
-      uses: actions/cache@v3
+      uses: actions/cache@main
       with:
         key: clickbench_10M_row
         path: hits.tsv
@@ -47,7 +47,7 @@ jobs:
 
     - name: Cache ClickBench gz
       id: cache-clickbench-gz
-      uses: actions/cache@v3
+      uses: actions/cache@main
       with:
         key: clickbench_10M_row_gz
         path: hits.tsv.gz
@@ -81,7 +81,7 @@ jobs:
 
     - name: Cache ClickBench tar
       id: cache-clickbench-tar
-      uses: actions/cache@v3
+      uses: actions/cache@main
       with:
         key: clickbench_10M_row
         path: hits.tsv
@@ -128,7 +128,7 @@ jobs:
         lscpu
 
     - name: archive results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: results
         path: |
@@ -195,7 +195,7 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@main
 
     - name: initilize OS
       run: |
@@ -213,7 +213,7 @@ jobs:
 
     - name: Cache HDFS tar
       id: cache-hdfs-tar
-      uses: actions/cache@v3
+      uses: actions/cache@main
       with:
         key: hadoop-3.3.0
         path: hadoop-3.3.0.tar.gz
@@ -255,7 +255,7 @@ jobs:
 
     - name: Cache HAWQ RPM
       id: cache-hawq-rpm
-      uses: actions/cache@v3
+      uses: actions/cache@main
       with:
         key: ${{ env.RPM_NAME }}
         # path: ${{ env.RPM_NAME }}
@@ -344,7 +344,7 @@ jobs:
     - name: Cache ClickBench tar
       if: ${{ matrix.benchmark == 'clickbench' && matrix.version >= '4.9' }}
       id: cache-clickbench-tar
-      uses: actions/cache@v3
+      uses: actions/cache@main
       with:
         key: clickbench_10M_row_gz
         path: hits.tsv.gz
@@ -379,7 +379,7 @@ jobs:
         psql -af <(sed 's/SELECT/explain analyze select/' $GITHUB_WORKSPACE/sql/clickbench/queries.sql) >$GITHUB_WORKSPACE/clickbench/$RPM_NAME.out.explain.analyze
 
     - name: archive results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: results
         path: |
@@ -390,10 +390,10 @@ jobs:
     needs: [Install-and-Test, ClickBench]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@main
     
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v2
 
     - name: html
       run: |
@@ -417,7 +417,7 @@ jobs:
         cp ~/dev/ClickBench/index.html ./
 
     - name: archive results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: results
         path: results
