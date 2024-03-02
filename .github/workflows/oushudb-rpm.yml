@@ -359,6 +359,7 @@ jobs:
         mkdir clickbench/
         psql -f sql/clickbench/create.sql
         psql -c "insert into hits select * from hits_ext order by CounterID, EventDate, UserID, EventTime, WatchID;" || true
+        psql -c 'analyze hits;'
         psql -c "select pg_size_pretty(pg_relation_size('hits'));"
 
     - name: test ClickBench execute

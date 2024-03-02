@@ -2,6 +2,7 @@
 set -e
 
 main_host=$(hostname)
+num_segment=4
 
 ssh ${main_host} 'echo hello' || tee >/usr/local/gpdb/bin/ssh <<EOF_ssh
 #!/bin/bash
@@ -25,13 +26,18 @@ ssh ${main_host} 'echo test ssh passphraseless'
 # cat /etc/hosts
 
 OUSHU_DATA_DIR=$HOME/db_data/oushudb6
+rm -rf $HOME/gpAdminLogs/*
 rm -rf ${OUSHU_DATA_DIR}
 mkdir -p ${OUSHU_DATA_DIR}
 
-for segIdx in `seq 1 4`; do
+for segIdx in `seq 1 $((num_segment-1))`; do
   SEG_DATA_DIRECTORY="$SEG_DATA_DIRECTORY ${OUSHU_DATA_DIR}/seg"
+  SEG_LIST="${SEG_LIST}m1,"
 done
+SEG_DATA_DIRECTORY="$SEG_DATA_DIRECTORY ${OUSHU_DATA_DIR}/seg"
+SEG_LIST="${SEG_LIST}m1"
 echo $SEG_DATA_DIRECTORY
+echo $SEG_LIST
 
 tee >${OUSHU_DATA_DIR}/nodeConfig <<EOF_conf
 # This file must exist in the same directory that you execute gpinitsystem in
@@ -54,7 +60,7 @@ PORT_BASE=7002
 # set the number of segment instances per host
 declare -a DATA_DIRECTORY=(${SEG_DATA_DIRECTORY})
 EOF_conf
-echo ${main_host} >${OUSHU_DATA_DIR}/hostfile
+echo localhost >${OUSHU_DATA_DIR}/hostfile
 
 
 
@@ -81,26 +87,44 @@ magma status
 pkill -SIGKILL -f postgres || true
 rm -rf /tmp/.s.PGSQL.*.lock ${OUSHU_DATA_DIR}/qddir ${OUSHU_DATA_DIR}/seg
 mkdir -p ${OUSHU_DATA_DIR}/qddir ${OUSHU_DATA_DIR}/seg
-gpinitsystem --locale=C --lc-ctype=C -ac ${OUSHU_DATA_DIR}/nodeConfig
+rm -rf ${OUSHU_DATA_DIR}/qedir && mkdir -p ${OUSHU_DATA_DIR}/qedir
+# mkdir -p ${OUSHU_DATA_DIR}/qddir/data-1/log
+# gpinitsystem --locale=C --lc-ctype=C -ac ${OUSHU_DATA_DIR}/nodeConfig || err=1
+perl -i -pe "s|/tmp|${OUSHU_DATA_DIR}|" $OUSHUDB_CONF/oushudb-site.xml
+perl -i -pe "s|7000|5432|" $OUSHUDB_CONF/oushudb-site.xml
+perl -i -pe "s|m1,m1.*|${SEG_LIST}|" $OUSHUDB_CONF/oushudb-topology.yaml
+oushudb init cluster -a
+
+if [[ -n $err ]]; then
+  ls -ltr $HOME/gpAdminLogs/
+  cat $HOME/gpAdminLogs/*.log
+fi
 
 
 
 psql -c 'select * from gp_segment_configuration;'
 
-psql -c "create tablespace vsc_default location 'magma://oushu/vsc_default';"
-psql -c "grant all on tablespace vsc_default to public;"
-export COORDINATOR_DATA_DIRECTORY=${OUSHU_DATA_DIR}/qddir/data-1
-gpconfig -c default_tablespace -v vsc_default
-gpconfig -c temp_tablespaces -v vsc_default
-gpconfig --skipvalidation -c timezone -v 'Asia/Shanghai'  # TestType.TestNoStorageDate
-gpconfig -c max_connections -v 128 --masteronly
-oushudb config --skipvalidation -c max_connections -v 128 || true
-gpstop -a && gpstart -a
+psql -c "create tablespace magma_default location 'magma://oushu/vsc_default';"
+psql -c "grant all on tablespace magma_default to public;"
+#export COORDINATOR_DATA_DIRECTORY=${OUSHU_DATA_DIR}/qddir/data-1
+# gpconfig -c default_tablespace -v magma_default
+# gpconfig -c temp_tablespaces -v magma_default
+# gpconfig --skipvalidation -c timezone -v 'Asia/Shanghai'  # TestType.TestNoStorageDate
+# gpconfig -c max_connections -v 128 --masteronly
+# gpstop -a && gpstart -a
 
-# psql -c 'alter database postgres set default_tablespace = vsc_default;'
-# psql -c 'alter database postgres set temp_tablespaces = vsc_default;'
+oushudb config --skipvalidation -c max_connections -v 128 || true
+oushudb config --skipvalidation -c default_tablespace -v magma_default || true
+oushudb config --skipvalidation -c temp_tablespaces -v magma_default || true
+oushudb restart cluster -a
+
+# psql -c 'alter database postgres set default_tablespace = magma_default;'
+# psql -c 'alter database postgres set temp_tablespaces = magma_default;'
 # psql -c 'ALTER database postgres set default_table_access_method = magmaap;'
 
-# psql -c 'alter database postgres set enable_new_executor = on;'
-psql -c 'alter database postgres set gp_enable_explain_allstat = on;'
-psql -c 'create table t as select generate_series(1, 10) k, generate_series(10, 10, -1) v;'
+psql -ac 'alter database postgres set gp_enable_explain_allstat = on;'
+psql -ac "alter database postgres set max_statement_mem = '8GB';"
+psql -ac "alter database postgres set statement_mem = '4GB';"
+psql -ac 'create table test(i int); select * from test;'
+psql -ac 'create table t as select generate_series(1, 10) k, generate_series(10, 10, -1) v;'
+psql -ac 'explain analyze select * from t;'
