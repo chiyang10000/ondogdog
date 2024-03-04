@@ -22,6 +22,7 @@
 
 set -e
 
+toolchain-clang || true
 source /opt/dependency-Darwin/package/env.sh || true
 
 cmake_dir=~/dev/oushudb/cmake-build-${1-debug}
@@ -41,5 +42,5 @@ make install -C $cmake_dir/hornet/
 make install -C $cmake_dir/hornet-new/morsel_executor || true
 # XXX: backward-compatibility
 make install -C $cmake_dir/hornet/external-catalog
-cp /opt/dependency/package/bin/* /usr/local/oushu/oushudb/bin/
+cp -f /opt/dependency/package/bin/* /usr/local/oushu/oushudb/bin/
 ls -lhtr --color /opt/dependency/package/lib/

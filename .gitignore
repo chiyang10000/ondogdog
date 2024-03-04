@@ -2,6 +2,9 @@ bin/cpplint.py
 bin/lava
 bin/lib/__pycache__/
 bin/lib/*.pyc
+docker/oushudb
+*.res
+hits.tsv
 
 config/git-completion.bash
 config/git-prompt.sh
