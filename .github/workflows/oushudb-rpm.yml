@@ -339,7 +339,7 @@ jobs:
       if: ${{ matrix.benchmark == 'tpc-h' }}
       run: |
         source /usr/local/oushudb/greenplum_path.sh
-        psql -d postgres -v ON_ERROR_STOP=1 -af sql/tpc-h.sql | tee tpc-h/$RPM_NAME.out |
+        psql -d postgres -af sql/tpc-h.sql | tee tpc-h/$RPM_NAME.out |
           sed -n 's/Time://p' | awk '{print NR, $0}'
 
     - name: Cache ClickBench tar
@@ -368,6 +368,7 @@ jobs:
       run: |
         source /usr/local/oushudb/greenplum_path.sh
         psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;' || true
+        psql -c 'ALTER DATABASE postgres set new_executor_enable_external_sort to off;' || true
         psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;' || true
         psql -c 'ALTER DATABASE postgres set new_interconnect_type to tcp;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_enable_proxy_dispatcher to on;' || true

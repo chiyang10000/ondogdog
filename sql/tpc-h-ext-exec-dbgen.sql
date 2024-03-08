@@ -11,6 +11,7 @@
 -- TPC-H V3 
    -- the output file was hard-coded as TABLE.tbl.STEP
 -- dbgen -fq -b $(dirname $(command -v dbgen))/dists.dss -T r
+   -- -S requires >1
 
 
 
