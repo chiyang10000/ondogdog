@@ -128,9 +128,9 @@ jobs:
         lscpu
 
     - name: archive results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@main
       with:
-        name: results
+        name: results-${{ matrix.dbms }}
         path: |
           clickbench/*.out
 
@@ -382,9 +382,9 @@ jobs:
         psql -af <(sed 's/SELECT/explain analyze select/' $GITHUB_WORKSPACE/sql/clickbench/queries.sql) >$GITHUB_WORKSPACE/clickbench/$RPM_NAME.out.explain.analyze
 
     - name: archive results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@main
       with:
-        name: results
+        name: results-${{ matrix.version }}-${{ matrix.benchmark }}
         path: |
           tpc-h/${{ env.RPM_NAME }}.out
           clickbench/${{ env.RPM_NAME }}.out*
@@ -396,15 +396,17 @@ jobs:
     - uses: actions/checkout@main
     
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@main
 
     - name: html
       run: |
-        ls results/
+        ls results*/
         mkdir ~/dev/
         git clone https://github.com/ClickHouse/ClickBench/ ~/dev/ClickBench
 
+        mkdir -p $GITHUB_WORKSPACE/results/tpc-h
         cd $GITHUB_WORKSPACE/results/tpc-h
+        cp $GITHUB_WORKSPACE/results*/tpc-h/*.out ./
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
         cp ~/dev/ClickBench/index.html ./
 
@@ -412,15 +414,18 @@ jobs:
       run: |
         rm -rf ~/dev/ClickBench/*/results
 
-        cp $GITHUB_WORKSPACE/results/*.out $GITHUB_WORKSPACE/results/clickbench # FIXME: ugly hack artifact
+        mkdir -p $GITHUB_WORKSPACE/results/clickbench
         cd $GITHUB_WORKSPACE/results/clickbench
+        # cp -f $GITHUB_WORKSPACE/results*/*.out ./ # FIXME: ugly hack artifact
+        cp -f $GITHUB_WORKSPACE/results*/clickbench/*.out ./ # FIXME: ugly hack artifact
+
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
         sed -i 's|curr_timing.toFixed(2)|curr_timing.toFixed(3)|' ~/dev/ClickBench/index.html
         sed -i 's|×${ratio.toFixed(2)}|×${ratio == 1 ? "🚩" : ratio.toFixed(2)}|' ~/dev/ClickBench/index.html
         cp ~/dev/ClickBench/index.html ./
 
     - name: archive results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@main
       with:
         name: results
         path: results

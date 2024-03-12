@@ -104,8 +104,8 @@ fi
 
 psql -c 'select * from gp_segment_configuration;'
 
-psql -c "create tablespace magma_default location 'magma://oushu/vsc_default';"
-psql -c "grant all on tablespace magma_default to public;"
+psql -c "create tablespace magma_default location 'magma://oushu/vsc_default';" || true
+psql -c "grant all on tablespace magma_default to public;" || true
 #export COORDINATOR_DATA_DIRECTORY=${OUSHU_DATA_DIR}/qddir/data-1
 # gpconfig -c default_tablespace -v magma_default
 # gpconfig -c temp_tablespaces -v magma_default
