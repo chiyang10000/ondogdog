@@ -1,3 +1,8 @@
+\set table_option
+\echo :table_option
+-- with (appendoptimized=true,orientation=column,compresstype=zstd)
+-- with (appendonly=true, orientation=orc, compresstype=lz4, dicthreshold=0.8)
+
 drop table if exists hits;
 CREATE TABLE hits
 (
@@ -107,10 +112,9 @@ CREATE TABLE hits
     URLHash BIGINT NOT NULL,
     CLID INTEGER NOT NULL
 )
--- with (appendoptimized=true,orientation=column,compresstype=zstd)
--- DISTRIBUTED RANDOMLY;
--- with (appendonly=true, orientation=orc, compresstype=lz4, dicthreshold=0.8)
+:table_option
 distributed by (UserID);
+-- DISTRIBUTED RANDOMLY;
 -- distributed by (CounterID, EventDate, UserID, EventTime, WatchID);
 -- CREATE INDEX hits_idx on hits using btree (CounterID, EventDate, UserID, EventTime, WatchID); 
 

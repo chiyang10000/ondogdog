@@ -358,7 +358,10 @@ jobs:
         nohup gpfdist -l gpfdist.log &
         # gzip hits.tsv
         mkdir clickbench/
-        psql -f sql/clickbench/create.sql
+        if [[ $RPM_NAME =~ 5.4 ]]; then
+          perl -i -pe "s|set table_option|set table_option 'with(orientation=magmaap) tablespace magma_default'|" sql/clickbench/create.sql
+        fi
+        psql -af sql/clickbench/create.sql
         psql -c "insert into hits select * from hits_ext order by CounterID, EventDate, UserID, EventTime, WatchID;" || true
         psql -c 'analyze hits;'
         psql -c "select pg_size_pretty(pg_relation_size('hits'));"
@@ -389,7 +392,7 @@ jobs:
           tpc-h/${{ env.RPM_NAME }}.out
           clickbench/${{ env.RPM_NAME }}.out*
 
-  analyze:
+  report:
     needs: [Install-and-Test, ClickBench]
     runs-on: ubuntu-latest
     steps:

@@ -121,6 +121,11 @@ oushudb restart cluster -a
 # psql -c 'alter database postgres set default_tablespace = magma_default;'
 # psql -c 'alter database postgres set temp_tablespaces = magma_default;'
 # psql -c 'ALTER database postgres set default_table_access_method = magmaap;'
+psql -d postgres -a <<sql_EOF
+alter database postgres set timezone_abbreviations to 'Default';
+alter database postgres set timezone to 'PST8PDT';
+alter database postgres set datestyle to 'postgres,MDY';
+sql_EOF
 
 psql -ac 'alter database postgres set gp_enable_explain_allstat = on;'
 psql -ac "alter database postgres set max_statement_mem = '8GB';"
