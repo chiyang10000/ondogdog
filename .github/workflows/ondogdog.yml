@@ -1,6 +1,8 @@
 name: 🐶ondogdog
 
-on: [push]
+on:
+  push:
+  workflow_call:
 
 jobs:
   build:
@@ -8,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@main
 
       - name: install
         run: |

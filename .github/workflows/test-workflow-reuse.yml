@@ -1,0 +1,49 @@
+name: Call a reusable workflow
+
+on:
+  push:
+    paths:
+      - '.github/workflows/*workflow-reuse.yml'
+      - '.github/action/**'
+
+jobs:
+  call-workflow-in-local-repo:
+    uses: ./.github/workflows/workflow-reuse.yml
+
+  call-workflow-ondogdog:
+    # pay attention to the dot slash before the path
+    uses: ./.github/workflows/ondogdog.yml
+
+  call-workflow-ondogdog-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - uses: ./.github/action/ondogdog-install
+
+  call-workflow-hdfs-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - uses: ./.github/action/hdfs-deploy
+
+  call-workflow-hdfs-steps-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - uses: ./.github/action/hdfs-deploy
+        name: test with param
+        with:
+          version: 2.10.2
+
+  call-workflow:
+    uses: chiyang10000/ondogdog/.github/workflows/workflow-reuse.yml@test-Linux
+
+  call-workflow-passing-data:
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: chiyang10000/ondogdog/.github/workflows/workflow-reuse.yml@test-Linux
+    with:
+      config-path: .github/labeler.yml
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}

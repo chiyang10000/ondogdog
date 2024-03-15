@@ -10,22 +10,6 @@ on:
   pull_request:
 
 jobs:
-  Cache-Binary:
-    runs-on: ubuntu-latest
-    steps:
- 
-    - name: Cache HDFS tar
-      id: cache-hdfs-tar
-      uses: actions/cache@main
-      with:
-        key: hadoop-3.3.0
-        path: hadoop-3.3.0.tar.gz
-        lookup-only: true
-
-    - name: Download HDFS tar
-      if: ${{ steps.cache-hdfs-tar.outputs.cache-hit != 'true' }}
-      run: wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
-
   Cache-ClickBench-Hits-Data:
     runs-on: ubuntu-latest
     steps:
@@ -135,7 +119,7 @@ jobs:
           clickbench/*.out
 
   Install-and-Test:
-    needs: [Cache-Binary, Cache-ClickBench-Hits-Data]
+    needs: [Cache-ClickBench-Hits-Data]
     defaults:
       run:
         shell: bash -e -l {0}
@@ -212,25 +196,6 @@ jobs:
         command -v psql
         env
 
-    - name: Cache HDFS tar
-      id: cache-hdfs-tar
-      uses: actions/cache@main
-      with:
-        key: hadoop-3.3.0
-        path: hadoop-3.3.0.tar.gz
-
-    - if: ${{ steps.cache-hdfs-tar.outputs.cache-hit != 'true' }}
-      name: Download HDFS tar
-      run: wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
-
-    - name: install HDFS
-      run: |
-        sudo install -o $USER -d /usr/local/hadoop-3.3.0
-        sudo ln -snf hadoop-3.3.0 /usr/local/hadoop
-        sudo tee /usr/local/bin/hdfs <<<'exec /usr/local/hadoop/bin/hdfs $@'
-        sudo chmod a+x /usr/local/bin/hdfs
-        tar xf hadoop-3.3.0.tar.gz -C /usr/local/
-
     - name: Detect HAWQ RPM
       run: |
         export RPM_VER=${{ matrix.version }}
@@ -301,9 +266,7 @@ jobs:
         echo "PGHOST=localhost" >> $GITHUB_ENV
 
     - name: initialize HDFS
-      run: |
-        export HADOOP_HOME=/usr/local/hadoop/
-        .github/workflows/scripts/init_hdfs.sh
+      uses: ./.github/action/hdfs-deploy
 
     - name: initialize HAWQ
       run: |
@@ -419,8 +382,9 @@ jobs:
 
         mkdir -p $GITHUB_WORKSPACE/results/clickbench
         cd $GITHUB_WORKSPACE/results/clickbench
-        # cp -f $GITHUB_WORKSPACE/results*/*.out ./ # FIXME: ugly hack artifact
-        cp -f $GITHUB_WORKSPACE/results*/clickbench/*.out ./ # FIXME: ugly hack artifact
+        ls -ltr
+        cp -f $GITHUB_WORKSPACE/results*/clickbench/*.out ./ || true # FIXME: ugly hack artifact
+        cp -f $GITHUB_WORKSPACE/results-*/*.out ./ || true # FIXME: ugly hack artifact
 
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
         sed -i 's|curr_timing.toFixed(2)|curr_timing.toFixed(3)|' ~/dev/ClickBench/index.html

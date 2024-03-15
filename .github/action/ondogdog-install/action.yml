@@ -1,0 +1,17 @@
+name: 'OnDogDog Actions Collection'
+description: ''
+author: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Aha
+      shell: bash
+      run: |
+        ls -ltr
+
+        # ./install.sh
+
+        case $(uname -s) in
+          Darwin) .github/workflows/scripts/init_macos.sh ;;
+          Linux)  .github/workflows/scripts/init_linux.sh ;;
+        esac

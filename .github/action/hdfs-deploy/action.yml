@@ -1,0 +1,52 @@
+name: 'Hadoop Collection'
+description: ''
+author: ''
+
+inputs:
+  version:
+    description: 'hadoop version'
+    required: false
+    default: '3.3.0'
+  deploy:
+    description: 'whether to install and deploy'
+    required: false
+    default: 'true'
+
+runs:
+  using: "composite"
+  steps:
+      - name: Cache HDFS tar
+        id: cache-hdfs-tar
+        uses: actions/cache@main
+        with:
+          key: hadoop-${{ inputs.version }}
+          path: hadoop-${{ inputs.version }}.tar.gz
+          lookup-only: ${{ inputs.deploy != 'true' }}
+
+      - name: Download HDFS tar
+        if: ${{ steps.cache-hdfs-tar.outputs.cache-hit != 'true' }}
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: wget -nv https://archive.apache.org/dist/hadoop/common/hadoop-${{ inputs.version }}/hadoop-${INPUT_VERSION}.tar.gz
+
+      - uses: ./.github/action/ondogdog-install
+        if: ${{ inputs.deploy == 'true' }}
+
+      - name: install HDFS
+        if: ${{ inputs.deploy == 'true' }}
+        shell: bash
+        run: |
+          sudo install -o $USER -d /usr/local/hadoop-${{ inputs.version }}
+          sudo ln -snf hadoop-${{ inputs.version }} /usr/local/hadoop
+          sudo tee /usr/local/bin/hdfs <<<'exec /usr/local/hadoop/bin/hdfs $@'
+          sudo chmod a+x /usr/local/bin/hdfs
+          tar xf hadoop-${{ inputs.version }}.tar.gz -C /usr/local/
+
+      - name: initialize HDFS
+        if: ${{ inputs.deploy == 'true' }}
+        shell: bash
+        run: |
+          ls -ltr
+          export HADOOP_HOME=/usr/local/hadoop/
+          .github/workflows/scripts/init_hdfs.sh

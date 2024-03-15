@@ -47,9 +47,9 @@ set -e
 
 mkdir -p ~/.vim
 cp "$YZYPATH/config/cpp.vim" ~/.vim/
-[[ -f ~/.lldbinit ]] || ln -s ~/yizhiyang/config/lldbinit ~/.lldbinit
-[[ -f ~/.vimrc ]] || ln -s ~/yizhiyang/config/vimrc ~/.vimrc
+[[ -e ~/.lldbinit ]] || ln -s ~/yizhiyang/config/lldbinit ~/.lldbinit
+[[ -e ~/.vimrc ]] || ln -s ~/yizhiyang/config/vimrc ~/.vimrc
 
-[[ -f ~/.bash_profile ]] || ln -s ~/.bashrc ~/.bash_profile
+[[ -e ~/.bash_profile ]] || ln -s ~/.bashrc ~/.bash_profile
 echo 'test -f ~/yizhiyang/config/bashrc && source ~/yizhiyang/config/bashrc || true' >>~/.bashrc
 source ~/.bashrc

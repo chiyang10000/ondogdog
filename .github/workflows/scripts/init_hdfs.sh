@@ -63,4 +63,4 @@ $HADOOP_HOME/sbin/start-dfs.sh
 # Connect
 hdfs dfsadmin -report
 hdfs dfs -ls /
-hdfs dfs -touch /touch
+hdfs dfs -touchz /touchz

@@ -34,7 +34,7 @@ timestamp
 todo
 unhandled
 unittest
-orc
+ondogdog
 vseg
 
 # Library name
@@ -43,6 +43,7 @@ univplan
 jsoncpp
 zstd
 newexecutor
+orc
 
 # Postgres
 segno
