@@ -2,7 +2,7 @@
 set -e
 
 main_host=$(hostname)
-num_segment=4
+num_segment=1
 
 ssh ${main_host} 'echo hello' || tee >/usr/local/gpdb/bin/ssh <<EOF_ssh
 #!/bin/bash
@@ -125,6 +125,7 @@ psql -d postgres -a <<sql_EOF
 alter database postgres set timezone_abbreviations to 'Default';
 alter database postgres set timezone to 'PST8PDT';
 alter database postgres set datestyle to 'postgres,MDY';
+alter database postgres set max_parallel_workers_per_gather = 4;
 sql_EOF
 
 psql -ac 'alter database postgres set gp_enable_explain_allstat = on;'
