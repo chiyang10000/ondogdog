@@ -156,7 +156,7 @@ jobs:
 
           # release candidate
           - 5.4.0.0
-          # - 6.0.0.0 FIXME(tpc-h)
+          - 6.0.0.0
 
         benchmark:
           - tpc-h
@@ -283,8 +283,10 @@ jobs:
         psql -d postgres -f sql/tpc-h-schema.sql 
         if hawq version | grep 'version 4\.[0-5]'; then
           psql -d postgres -f sql/tpc-h.ext.exec.dbgen.2.6.sql
-        else
+        elif hawq version | grep 'version 5\.'; then
           psql -d postgres -f sql/tpc-h-ext-exec-dbgen.sql
+        else
+          psql -d postgres -f sql/tpc-h-ext-exec-dbgen-single-segment.sql
         fi
         psql -d postgres -f sql/tpc-h.analyze.sql
 
@@ -338,6 +340,7 @@ jobs:
         psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;' || true
         psql -c 'ALTER DATABASE postgres set new_interconnect_type to tcp;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_enable_proxy_dispatcher to on;' || true
+        psql -c 'ALTER DATABASE postgres set magma_client_enable_read_file =off;' || true
         # psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
         
         # psql -f <(echo '\timing on'; cat sql/clickbench/queries.sql;) |
