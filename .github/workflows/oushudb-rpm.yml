@@ -306,6 +306,7 @@ jobs:
         source /usr/local/oushudb/greenplum_path.sh
         psql -d postgres -af sql/tpc-h.sql | tee tpc-h/$RPM_NAME.out |
           sed -n 's/Time://p' | awk '{print NR, $0}'
+        psql -d postgres -af <(sed 's/:sql_prefix/explain analyze/' sql/tpc-h.sql) >tpc-h/$RPM_NAME.out.explain.analyze
 
     - name: Cache ClickBench tar
       if: ${{ matrix.benchmark == 'clickbench' && matrix.version >= '4.9' }}
@@ -338,9 +339,12 @@ jobs:
         psql -c 'ALTER DATABASE postgres set new_executor_enable_partitioned_hashagg to off;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_enable_external_sort to off;' || true
         psql -c 'ALTER DATABASE postgres set standard_conforming_strings to on;' || true
-        psql -c 'ALTER DATABASE postgres set new_interconnect_type to tcp;' || true
+        psql -c 'ALTER DATABASE postgres set new_interconnect_type to udp;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_enable_proxy_dispatcher to on;' || true
         psql -c 'ALTER DATABASE postgres set magma_client_enable_read_file =off;' || true
+        psql -c 'ALTER DATABASE postgres set oushu_enable_bypass_local_interconnect = on;' || true
+        psql -c 'ALTER DATABASE postgres set new_executor_enable_notnull_optimizer = on;' || true
+        psql -c 'ALTER DATABASE postgres set new_executor_agg_degradation_min_threshold = 0.6;' || true
         # psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
         
         # psql -f <(echo '\timing on'; cat sql/clickbench/queries.sql;) |
@@ -355,7 +359,7 @@ jobs:
       with:
         name: results-${{ matrix.version }}-${{ matrix.benchmark }}
         path: |
-          tpc-h/${{ env.RPM_NAME }}.out
+          tpc-h/${{ env.RPM_NAME }}.out*
           clickbench/${{ env.RPM_NAME }}.out*
 
   report:
