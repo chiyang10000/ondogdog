@@ -30,7 +30,7 @@ jobs:
         # 1/10 of the full size
 
     - name: Cache ClickBench gz
-      id: cache-clickbench-gz
+      id:  clickbench_10M_row_gz
       uses: actions/cache@main
       with:
         key: clickbench_10M_row_gz
@@ -38,7 +38,7 @@ jobs:
         lookup-only: true
 
     - name: Download ClickBench gz
-      if: ${{ steps.cache-clickbench-gz.outputs.cache-hit != 'true' }}
+      if: ${{ steps.cache-clickbench_10M_row_gz.outputs.cache-hit != 'true' }}
       run: |
         curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
           gunzip  | head -n 10000000 | gzip --stdout >hits.tsv.gz
@@ -234,6 +234,7 @@ jobs:
       run: |
         wget --progress=dot:giga $RPM_REPO/$RPM_NAME
         sudo rpm -ivh --nodeps $RPM_NAME
+        rm $RPM_NAME
 
     - name: install HAWQ
       run: |
@@ -345,6 +346,8 @@ jobs:
         psql -c 'ALTER DATABASE postgres set oushu_enable_bypass_local_interconnect = on;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_enable_notnull_optimizer = on;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_agg_degradation_min_threshold = 0.6;' || true
+        psql -c 'ALTER DATABASE postgres set new_executor_agg_degradation_min_group_number = 65536;' || true
+        # psql -c 'ALTER DATABASE postgres set optimizer_enable_groupagg = off;' || true
         # psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
         
         # psql -f <(echo '\timing on'; cat sql/clickbench/queries.sql;) |
@@ -390,8 +393,8 @@ jobs:
         mkdir -p $GITHUB_WORKSPACE/results/clickbench
         cd $GITHUB_WORKSPACE/results/clickbench
         ls -ltr
-        cp -f $GITHUB_WORKSPACE/results*/clickbench/*.out ./ || true # FIXME: ugly hack artifact
-        cp -f $GITHUB_WORKSPACE/results-*/*.out ./ || true # FIXME: ugly hack artifact
+        cp -f $GITHUB_WORKSPACE/results*/clickbench/*.out* ./ || true # FIXME: ugly hack artifact
+        cp -f $GITHUB_WORKSPACE/results-*/*.out* ./ || true # FIXME: ugly hack artifact
 
         $GITHUB_WORKSPACE/sql/clickbench/generate-result-html.sh
         sed -i 's|curr_timing.toFixed(2)|curr_timing.toFixed(3)|' ~/dev/ClickBench/index.html
