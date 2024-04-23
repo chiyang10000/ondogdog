@@ -79,6 +79,7 @@ pkill -SIGKILL -f magma_server || true
 rm -rf /tmp/magma_catalog /tmp/magma_data
 mkdir -p /tmp/magma_catalog /tmp/magma_data
 mkdir -p ${OUSHU_DATA_DIR}/magma_catalog ${OUSHU_DATA_DIR}/magma_data
+# perl -i -pe "s|num_ranges: 4|num_ranges: 1|" $OUSHUDB_CONF/magma-topology.yaml
 magma start cluster && magma create vscluster
 magma status
 
@@ -126,6 +127,7 @@ alter database postgres set timezone_abbreviations to 'Default';
 alter database postgres set timezone to 'PST8PDT';
 alter database postgres set datestyle to 'postgres,MDY';
 alter database postgres set max_parallel_workers_per_gather = 4;
+ALTER DATABASE postgres set optimizer = on;
 sql_EOF
 
 psql -ac 'alter database postgres set gp_enable_explain_allstat = on;'

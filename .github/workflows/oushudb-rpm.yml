@@ -343,12 +343,16 @@ jobs:
         psql -c 'ALTER DATABASE postgres set new_interconnect_type to udp;' || true
         psql -c 'ALTER DATABASE postgres set new_executor_enable_proxy_dispatcher to on;' || true
         psql -c 'ALTER DATABASE postgres set magma_client_enable_read_file =off;' || true
-        psql -c 'ALTER DATABASE postgres set oushu_enable_bypass_local_interconnect = on;' || true
-        psql -c 'ALTER DATABASE postgres set new_executor_enable_notnull_optimizer = on;' || true
-        psql -c 'ALTER DATABASE postgres set new_executor_agg_degradation_min_threshold = 0.6;' || true
-        psql -c 'ALTER DATABASE postgres set new_executor_agg_degradation_min_group_number = 65536;' || true
+        # psql -c 'ALTER DATABASE postgres set oushu_enable_bypass_local_interconnect = on;' || true
+        # psql -c 'ALTER DATABASE postgres set new_executor_enable_notnull_optimizer = on;' || true
+        # psql -c 'ALTER DATABASE postgres set new_executor_agg_degradation_min_threshold = 0.6;' || true
+        # psql -c 'ALTER DATABASE postgres set new_executor_agg_degradation_min_group_number = 65536;' || true
         # psql -c 'ALTER DATABASE postgres set optimizer_enable_groupagg = off;' || true
         # psql -c 'ALTER DATABASE postgres set gp_eager_one_phase_agg to on;'
+        if [[ $RPM_NAME =~ 6. ]]; then
+          perl -i -pe 's/AVG\(([^O)]+)\)/AVG(\1::float)/g' sql/clickbench/queries.sql # debug AVG(int)->float
+          perl -i -pe 's/AVG\((O[^)]+\))\)/AVG(\1::float)/g' sql/clickbench/queries.sql
+        fi
         
         # psql -f <(echo '\timing on'; cat sql/clickbench/queries.sql;) |
         #  tee clickbench/$RPM_NAME.out |
