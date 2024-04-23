@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Cache ClickBench tar
-      id: cache-clickbench-tar
+      id: cache-clickbench_10M_row
       uses: actions/cache@main
       with:
         key: clickbench_10M_row
@@ -22,7 +22,7 @@ jobs:
         lookup-only: true
 
     - name: Download ClickBench tar
-      if: ${{ steps.cache-clickbench-tar.outputs.cache-hit != 'true' }}
+      if: ${{ steps.cache-clickbench_10M_row.outputs.cache-hit != 'true' }}
       run: |
         curl https://datasets.clickhouse.com/hits_compatible/hits.tsv.gz |
           gunzip  | head -n 10000000 > hits.tsv
@@ -30,7 +30,7 @@ jobs:
         # 1/10 of the full size
 
     - name: Cache ClickBench gz
-      id:  clickbench_10M_row_gz
+      id:  cache-clickbench_10M_row_gz
       uses: actions/cache@main
       with:
         key: clickbench_10M_row_gz
