@@ -64,14 +64,18 @@ echo localhost >${OUSHU_DATA_DIR}/hostfile
 
 
 
-perl -i -pe 's|.*OUSHUDB_CONF.*|export OUSHUDB_CONF=/usr/local/oushu/conf/oushudb6|' /usr/local/gpdb/greenplum_path.sh
-perl -i -pe 's|.*OUSHUDB_LOG_PATH.*|export OUSHUDB_LOG_PATH=/usr/local/oushu/log/oushudb6|' /usr/local/gpdb/greenplum_path.sh
+perl -i -pe 's|.*OUSHUDB_CONF=.*|export OUSHUDB_CONF=/usr/local/oushu/conf/oushudb6|' /usr/local/gpdb/greenplum_path.sh
+perl -i -pe 's|.*OUSHUDB_LOG_PATH=.*|export OUSHUDB_LOG_PATH=/usr/local/oushu/log/oushudb6|' /usr/local/gpdb/greenplum_path.sh
 grep 'dependency-6.0' /usr/local/gpdb/greenplum_path.sh ||
   echo 'test ! -f /opt/dependency-6.0/package/env.sh || source /opt/dependency-6.0/package/env.sh' >>/usr/local/gpdb/greenplum_path.sh
 source /usr/local/gpdb/greenplum_path.sh
 mkdir -p $OUSHUDB_CONF $OUSHUDB_LOG_PATH
 cp -a -n /usr/local/gpdb/conf.empty/* $OUSHUDB_CONF || true
 gpssh -f ${OUSHU_DATA_DIR}/hostfile 'source /usr/local/gpdb/greenplum_path.sh ; postgres -V'
+
+# XXX: nasty dependency packaging ...
+sudo rpm -ivh http://82.157.61.64:12000/oushurepo/yumrepo/lava-util/centos7/4.0.0.0/jdk17/jdk-17.0.11-for_oushudb_linux.x86_64.rpm
+# install -o $USER -d /usr/local/oushu/jdk # XXX: nonsense dir ?
 
 
 
@@ -94,11 +98,27 @@ rm -rf ${OUSHU_DATA_DIR}/qedir && mkdir -p ${OUSHU_DATA_DIR}/qedir
 perl -i -pe "s|/tmp|${OUSHU_DATA_DIR}|" $OUSHUDB_CONF/oushudb-site.xml
 perl -i -pe "s|7000|5432|" $OUSHUDB_CONF/oushudb-site.xml
 perl -i -pe "s|m1,m1.*|${SEG_LIST}|" $OUSHUDB_CONF/oushudb-topology.yaml
-oushudb init cluster -a
+
+tee $OUSHUDB_CONF/oushudb-tablespace.yaml <<tablespace_EOF
+- name: magma_default
+  url: [magma://default_nameservice/vsc_default]
+  default: false
+  default_create_table_option: appendonly=true,orientation=magmaap
+- name: dfs_default
+  url: [hdfs://localhost:8020/hawq_default]
+  default: true
+  default_create_table_option: appendonly=true,orientation=horc
+  bucket_number: 4
+tablespace_EOF
+
+oushudb init cluster -a || err=1
 
 if [[ -n $err ]]; then
-  ls -ltr $HOME/gpAdminLogs/
-  cat $HOME/gpAdminLogs/*.log
+  ls -ltr $HOME/gpAdminLogs/ || true
+  cat $HOME/gpAdminLogs/*.log || true
+  cat /usr/local/oushu/log/oushudb6/main/startup.log || true
+  cat /usr/local/oushu/log/oushudb6/segment/startup.log || true
+  exit 233
 fi
 
 
@@ -117,6 +137,9 @@ psql -c "grant all on tablespace magma_default to public;" || true
 oushudb config --skipvalidation -c max_connections -v 128 || true
 oushudb config --skipvalidation -c default_tablespace -v magma_default || true
 oushudb config --skipvalidation -c temp_tablespaces -v magma_default || true
+
+oushudb config --skipvalidation -c default_tablespace -v dfs_default || true
+oushudb config --skipvalidation -c temp_tablespaces -v dfs_default || true
 oushudb restart cluster -a
 
 # psql -c 'alter database postgres set default_tablespace = magma_default;'
@@ -126,8 +149,9 @@ psql -d postgres -a <<sql_EOF
 alter database postgres set timezone_abbreviations to 'Default';
 alter database postgres set timezone to 'PST8PDT';
 alter database postgres set datestyle to 'postgres,MDY';
-alter database postgres set max_parallel_workers_per_gather = 4;
+alter database postgres set max_parallel_workers_per_gather = 0;
 ALTER DATABASE postgres set optimizer = on;
+ALTER DATABASE postgres set enable_data_cache = off;
 sql_EOF
 
 psql -ac 'alter database postgres set gp_enable_explain_allstat = on;'
