@@ -138,8 +138,10 @@ oushudb config --skipvalidation -c max_connections -v 128 || true
 oushudb config --skipvalidation -c default_tablespace -v magma_default || true
 oushudb config --skipvalidation -c temp_tablespaces -v magma_default || true
 
-oushudb config --skipvalidation -c default_tablespace -v dfs_default || true
-oushudb config --skipvalidation -c temp_tablespaces -v dfs_default || true
+# oushudb config --skipvalidation -c default_tablespace -v dfs_default || true
+# oushudb config --skipvalidation -c temp_tablespaces -v dfs_default || true
+# oushudb config --skipvalidation -c enable_data_cache -v off || true
+
 oushudb restart cluster -a
 
 # psql -c 'alter database postgres set default_tablespace = magma_default;'
@@ -151,7 +153,6 @@ alter database postgres set timezone to 'PST8PDT';
 alter database postgres set datestyle to 'postgres,MDY';
 alter database postgres set max_parallel_workers_per_gather = 0;
 ALTER DATABASE postgres set optimizer = on;
-ALTER DATABASE postgres set enable_data_cache = off;
 sql_EOF
 
 psql -ac 'alter database postgres set gp_enable_explain_allstat = on;'
