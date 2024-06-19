@@ -11,4 +11,5 @@ if [[ -z $1 ]]; then
 fi
 
 export FEATURE_TEST_ROOT_DIR=$PWD/src/test/feature/
+export SUPERUSER=$USER
 [[ -z $1 ]] || ./build/cmake-debug/src/test/feature/feature-test --gtest_filter=$1

@@ -2,7 +2,9 @@
 
 export BOLD=$(echo -e '\033[1m')
 export UNDERLINE=$(echo -e '\033[4m')
+export UNDERLINE_CLEAR=$(echo -e '\033[24m')
 export CLEAR=$(echo -e '\033[0m')
+export CLEAR=$(echo -e '\033[39m')
 
 export BLUE=$(echo -e '\033[34m')
 export GREEN=$(echo -e '\033[32m')
@@ -37,13 +39,15 @@ echo
 # -e "s/^/${GREEN}   > ${CLEAR}/" \
 sed -E \
   -e "s/(-+)\\+/\\1|/g" \
-  -e "s/(InputStream.*)/${UNDERLINE}\\1${CLEAR}/" \
+  -e "s/(InputStream.*)/${UNDERLINE}\\1${UNDERLINE_CLEAR}/" \
+  -e "s/(Filter:.*)/${UNDERLINE}\\1${UNDERLINE_CLEAR}/" \
   -e "s/(.+ statistics|Settings)/${CYAN}\\1${CLEAR}/" \
   -e "s/([A-Za-z]+ statistics)/${CYAN}\\1${CLEAR}/" \
   -e "s/(Total runtime.*)/${GREEN}\\1${CLEAR}/" \
-  -e "s/(New.*mode)/${CYAN}\\1${CLEAR}/" \
+  -e "s/(New.*)/${CYAN}\\1${CLEAR}/" \
   -e "s/(slice[0-9]+)/${MAGENTA}\\1${CLEAR}/" \
   -e "s/(EXPERIMENTAL)/${MAGENTA}\\1${CLEAR}/" \
+  -e "s/(Worker)/${MAGENTA}\\1${CLEAR}/" \
   -e "s/(operatorMem=[0-9]+KB)/${CYAN}\\1${CLEAR}/" \
   -e "" /tmp/psql_pager.in.txt >/tmp/pager.txt
 

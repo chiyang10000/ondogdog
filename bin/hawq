@@ -1,12 +1,12 @@
 #!/bin/bash
+export PGPORT=7432
 export PAGER=pager_psql
-if [[ -f /usr/local/oushu/oushudb/oushudb_path.sh ]]; then
-  source /usr/local/oushu/oushudb/oushudb_path.sh
-  exec oushudb "$@"
-fi
 if [[ ! -f /usr/local/hawq/greenplum_path.sh ]]; then
   echo 'hawq not found in /usr/local/hawq/'
-  exit 1
 fi
-source /usr/local/hawq/greenplum_path.sh
-exec hawq "$@"
+source /usr/local/hawq/oushudb_path.sh
+if [[ "$*" == sql ]]; then
+  exec psql
+  exit 0
+fi
+exec /usr/local/hawq/bin/oushudb "$@"

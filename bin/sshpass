@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# color cyan
-echo -e "\033]6;1;bg;green;brightness;255\a \033]6;1;bg;blue;brightness;255\a"
-
-exec /usr/local/bin/sshpass "$@"

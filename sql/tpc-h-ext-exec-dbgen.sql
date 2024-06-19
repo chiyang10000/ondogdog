@@ -58,6 +58,7 @@ CREATE external web TABLE e_REGION (
             '($GPHOME/bin/dbgen -b $GPHOME/bin/dists.dss -T r -s ':'scale_factor''&);'
     'cat region.tbl'
     on 1 format 'text' (delimiter '|');
+select * from e_REGION; -- ensure workable
 
 CREATE external web TABLE e_PART (
     P_PARTKEY INTEGER,
