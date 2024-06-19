@@ -3,7 +3,8 @@ name: OushuDB RPM
 on:
   push:
     paths:
-      - '.github/workflows/**'
+      - '.github/workflows/scripts/**'
+      - '.github/workflows/oushudb-rpm.yml'
       - 'sql/**'
   schedule:
     - cron: '0 8 * * *'

@@ -21,7 +21,10 @@ jobs:
       - uses: ./.github/action/ondogdog-install
 
   call-workflow-hdfs-steps:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
     steps:
       - uses: actions/checkout@main
       - uses: ./.github/action/hdfs-deploy
