@@ -1,0 +1,4 @@
+#!/bin/bash
+export PAGER=pager_psql
+source /usr/local/gpdb/greenplum_path.sh
+exec /usr/local/gpdb/bin/oushudb "$@"

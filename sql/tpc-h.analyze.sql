@@ -10,10 +10,16 @@ ANALYZE lineitem;
 
 SELECT nspname || '.' || relname AS "relation",
        pg_size_pretty(pg_total_relation_size(C.oid)) AS "total_size",
-       C.relkind, C.relstorage
+       pg_size_pretty(pg_relation_size(C.oid)) AS "rel_size",
+       reltuples::numeric, relpages,
+       -- C.relstorage,
+       C.relkind
 FROM pg_class C
          LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace)
 WHERE nspname = current_schema()
   AND C.relkind <> 'i'
-  AND C.relstorage <> 'x' -- external table
+  and relname in ('lineitem', 'orders', 'customer',
+                  'partsupp', 'part', 'supplier',
+                  'region', 'nation')
+  -- AND C.relstorage <> 'x' -- external table
 ORDER BY pg_total_relation_size(C.oid) DESC;
