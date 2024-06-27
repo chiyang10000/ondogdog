@@ -3,6 +3,7 @@ set -e
 
 main_host=$(hostname)
 num_segment=1
+num_bucket=$(nproc)
 
 ssh ${main_host} 'echo hello' || tee >/usr/local/gpdb/bin/ssh <<EOF_ssh
 #!/bin/bash
@@ -74,7 +75,7 @@ cp -a -n /usr/local/gpdb/conf.empty/* $OUSHUDB_CONF || true
 gpssh -f ${OUSHU_DATA_DIR}/hostfile 'source /usr/local/gpdb/greenplum_path.sh ; postgres -V'
 
 # XXX: nasty dependency packaging ...
-sudo rpm -ivh http://82.157.61.64:12000/oushurepo/yumrepo/lava-util/centos7/4.0.0.0/jdk17/jdk-17.0.11-for_oushudb_linux.x86_64.rpm
+sudo rpm -ivh http://82.157.61.64:12000/oushurepo/yumrepo/lava-util/centos7/4.0.0.0/jdk17/jdk-17.0.11-for_oushudb_linux.x86_64.rpm || true
 # install -o $USER -d /usr/local/oushu/jdk # XXX: nonsense dir ?
 
 
@@ -108,7 +109,7 @@ tee $OUSHUDB_CONF/oushudb-tablespace.yaml <<tablespace_EOF
   url: [hdfs://localhost:8020/hawq_default]
   default: true
   default_create_table_option: appendonly=true,orientation=horc
-  bucket_number: 4
+  bucket_number: ${num_bucket}
 tablespace_EOF
 
 oushudb init cluster -a || err=1
@@ -158,6 +159,13 @@ sql_EOF
 psql -ac 'alter database postgres set gp_enable_explain_allstat = on;'
 psql -ac "alter database postgres set max_statement_mem = '8GB';"
 psql -ac "alter database postgres set statement_mem = '4GB';"
+
+# XXX: manual status check
+until [[ $(psql -c "copy (select count(*) from gp_segment_configuration where role = 'p' and status = 'u') to stdout;") -ge 2 ]]; do
+  sleep 1
+  psql -c 'select * from gp_segment_configuration;'
+done
+
 psql -ac 'create table test(i int); select * from test;'
 psql -ac 'create table t as select generate_series(1, 10) k, generate_series(10, 10, -1) v;'
 psql -ac 'explain analyze select * from t;'
