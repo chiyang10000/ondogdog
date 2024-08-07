@@ -96,7 +96,11 @@ mkdir -p ${OUSHU_DATA_DIR}/qddir ${OUSHU_DATA_DIR}/seg
 rm -rf ${OUSHU_DATA_DIR}/qedir && mkdir -p ${OUSHU_DATA_DIR}/qedir
 # mkdir -p ${OUSHU_DATA_DIR}/qddir/data-1/log
 # gpinitsystem --locale=C --lc-ctype=C -ac ${OUSHU_DATA_DIR}/nodeConfig || err=1
-perl -i -pe "s|/tmp|${OUSHU_DATA_DIR}|" $OUSHUDB_CONF/oushudb-site.xml
+perl -i -pe "s|/data[1-9]/oushudb|${OUSHU_DATA_DIR}|g" $OUSHUDB_CONF/oushudb-site.xml
+perl -i -pe "s|/tmp/|${OUSHU_DATA_DIR}/|" $OUSHUDB_CONF/oushudb-site.xml
+perl -i -pe "s|masterdd|qddir|" $OUSHUDB_CONF/oushudb-site.xml
+perl -i -pe "s|segmentdd|qedir|" $OUSHUDB_CONF/oushudb-site.xml
+perl -i -pe "s|请修改|8192|" $OUSHUDB_CONF/oushudb-site.xml
 perl -i -pe "s|7000|5432|" $OUSHUDB_CONF/oushudb-site.xml
 perl -i -pe "s|m1,m1.*|${SEG_LIST}|" $OUSHUDB_CONF/oushudb-topology.yaml
 
