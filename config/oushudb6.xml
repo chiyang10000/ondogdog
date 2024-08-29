@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+  <section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+    <language name="Object File"/>
+    <language id="org.eclipse.cdt.core.assembly" name="Assembly Source File"/>
+    <language id="org.eclipse.cdt.core.g++" name="C++ Source File">
+      <includepath>${ProjDirPath}/src/include</includepath>
+      <includepath>${ProjDirPath}/src/backend</includepath>
+      <includepath>${ProjDirPath}/src/interfaces/libpq</includepath>
+      <includepath>${ProjDirPath}/build/cmake-debug/src/include</includepath>
+      <includepath>${ProjDirPath}/build/cmake-debug/src/backend</includepath>
+      <includepath>${ProjDirPath}/core/hornet/dbcommon/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/univplan/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/storage/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/interconnect/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/executor/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/magma/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/storage-magma-format/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/rm/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/external-catalog/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/table-format/src</includepath>
+      <includepath>${ProjDirPath}/core/hornet/morsel_executor/src</includepath>
+      <includepath>${ProjDirPath}/src/test/feature/</includepath>
+      <includepath>/opt/dependency-6.0/package/include</includepath>
+    </language>
+    <language id="org.eclipse.cdt.core.gcc" name="C Source File"/>
+  </section>
+  <section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.Macros">
+    <language name="Object File"/>
+    <language id="org.eclipse.cdt.core.assembly" name="Assembly Source File"/>
+    <language id="org.eclipse.cdt.core.g++" name="C++ Source File"/>
+    <language id="org.eclipse.cdt.core.gcc" name="C Source File"/>
+  </section>
+</cdtprojectproperties>
